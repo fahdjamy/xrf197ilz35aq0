@@ -1,3 +1,6 @@
+# workspace files to ignore
+.idea/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
