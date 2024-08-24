@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd/cli/dependency"
@@ -31,7 +32,13 @@ func generateRequestId() (string, error) {
 	}
 
 	uniqueInt64 := random.PositiveInt64()
-	partStr := uniqueStr[0:7]
+	uniqueInt64Str := strconv.Itoa(int(uniqueInt64))
 
-	return fmt.Sprintf("%s.%d", partStr, uniqueInt64), nil
+	if len(uniqueInt64Str) > 10 {
+		uniqueInt64Str = uniqueInt64Str[:11]
+	}
+
+	partStr := uniqueStr[0:12]
+
+	return fmt.Sprintf("%s.%s", partStr, uniqueInt64Str), nil
 }
