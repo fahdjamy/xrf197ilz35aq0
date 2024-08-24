@@ -7,8 +7,8 @@ import (
 )
 
 func TimeBasedString(seconds int64, length int) (string, error) {
-	if length < 30 {
-		return "", fmt.Errorf("for improved uniqueness, length must be greater than: '%d'", length)
+	if length < 21 {
+		return "", fmt.Errorf("for improved uniqueness, length must be greater than: 21")
 	}
 
 	// Generate a cryptographically secure random byte slice

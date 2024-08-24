@@ -35,12 +35,15 @@ func PositiveInt64() int64 {
 
 	// Generate a random int64 to add further uniqueness
 	// The maximum value for rand.Int is adjusted to 1<<62 - 1 to ensure the random part is always positive.
-	randomPart, _ := rand.Int(rand.Reader, big.NewInt(1<<62-1)) // Max positive int64
+	randomPart, _ := rand.Int(rand.Reader, big.NewInt(1<<31-1)) // Max positive int64
+
+	// Clear the most significant 32 bits of the timestamp to ensure it's positive after the shift
+	now &= 1<<32 - 1
 
 	// Combine timestamp and random part
 	// The timestamp is shifted left by 31 bits instead of 32.
 	// This leaves the most significant bit free, guaranteeing the final uniqueValue is always positive.
-	uniqueValue := now<<31 + randomPart.Int64()
+	uniqueValue := (now << 31) | randomPart.Int64()
 
 	return uniqueValue
 }

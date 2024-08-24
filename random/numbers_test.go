@@ -66,7 +66,7 @@ func TestInt64FromUUID(t *testing.T) {
 
 func TestInt64(t *testing.T) {
 	t.Run("it generates unique positive values", func(t *testing.T) {
-		const numValues = 1000
+		const numValues = 10000
 		seenValues := make(map[int64]bool)
 		for i := 0; i < numValues; i++ {
 			positiveInt64 := random.PositiveInt64()
