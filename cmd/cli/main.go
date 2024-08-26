@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"go.uber.org/zap"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"strconv"
 	"time"
 	"xrf197ilz35aq0"
@@ -12,17 +13,24 @@ import (
 
 func main() {
 	health := xrf197ilz35aq0.NewHealth()
-	logger, err := dependency.NewZap(xrf197ilz35aq0.WARN, true, os.Stdout)
-
-	if err != nil {
-		panic(err)
-	}
-	processId, err := generateRequestId()
-	if err != nil {
-		logger.Error(err.Error())
+	logFileOutPut := &lumberjack.Logger{
+		Filename:   ".logs/xrf197ilz.log",
+		MaxSize:    5, // megabytes
+		MaxBackups: 3,
+		MaxAge:     7, // days
 	}
 
-	logger.Info(fmt.Sprintf("requestId=%s, application version '%s'", processId, health.Version()))
+	requestId, err := generateRequestId()
+	if err != nil {
+		requestId = strconv.Itoa(int(random.PositiveInt64()))
+	}
+	initialFields := []zap.Field{
+		zap.String("requestId", requestId),
+		zap.String("version", health.Version()),
+	}
+
+	logger := dependency.CustomZapLogger(true, xrf197ilz35aq0.DEBUG, logFileOutPut, initialFields)
+	logger.Info(fmt.Sprintf("application version '%s'", health.Version()))
 }
 
 func generateRequestId() (string, error) {
@@ -35,10 +43,10 @@ func generateRequestId() (string, error) {
 	uniqueInt64Str := strconv.Itoa(int(uniqueInt64))
 
 	if len(uniqueInt64Str) > 10 {
-		uniqueInt64Str = uniqueInt64Str[:11]
+		uniqueInt64Str = uniqueInt64Str[2:]
 	}
 
 	partStr := uniqueStr[0:12]
 
-	return fmt.Sprintf("%s.%s", partStr, uniqueInt64Str), nil
+	return fmt.Sprintf("%s.%s", uniqueInt64Str, partStr), nil
 }

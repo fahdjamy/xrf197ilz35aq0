@@ -1,10 +1,10 @@
 package dependency
 
 import (
-	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
+	"os"
 	"xrf197ilz35aq0"
 )
 
@@ -12,7 +12,6 @@ import (
 // https://betterstack.com/community/guides/logging/go/zap/
 
 type ZapLogger struct {
-	prefix string
 	logger *zap.Logger
 	sugar  *zap.SugaredLogger
 }
@@ -22,41 +21,51 @@ func (z ZapLogger) Info(message string) {
 }
 
 func (z ZapLogger) Warn(message string) {
-	z.sugar.Warn(message)
+	z.logger.Warn(message)
 }
 
 func (z ZapLogger) Debug(message string) {
-	z.sugar.Debug(message)
+	z.logger.Debug(message)
 }
 
 func (z ZapLogger) Error(message string) {
-	z.sugar.Error(message)
+	z.logger.Error(message)
 }
 
 func (z ZapLogger) Fatal(message string) {
-	z.sugar.Fatal(message)
+	z.logger.Fatal(message)
 }
 
 func (z ZapLogger) Panic(message string) {
-	z.sugar.Panic(message)
+	z.logger.Panic(message)
 }
 
-func NewZap(level string, dev bool, _ io.Writer) (ZapLogger, error) {
-	_, err := loggerLevel(level)
+func NewZap(level string, dev bool, initialFields map[string]interface{}) (ZapLogger, error) {
+	encoderCfg := zap.NewProductionEncoderConfig()
+	encoderCfg.TimeKey = "timestamp"
+	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	config := zap.Config{
+		Level:             zap.NewAtomicLevelAt(loggerLevel(level)),
+		Development:       dev,
+		Sampling:          nil,
+		DisableCaller:     false,
+		DisableStacktrace: false,
+		Encoding:          "json",
+		EncoderConfig:     encoderCfg,
+		OutputPaths: []string{
+			"stderr",
+		},
+		ErrorOutputPaths: []string{
+			"stderr",
+		},
+		InitialFields: initialFields,
+	}
+
+	logger, err := config.Build()
 	if err != nil {
 		return ZapLogger{}, err
 	}
-
-	logger, err := zap.NewProduction()
-
-	if err != nil {
-		return ZapLogger{}, err
-	}
-
-	if dev {
-		logger = logger.WithOptions(zap.Development())
-	}
-	//logger = logger.WithOptions(zap.Fields(zap.Object(initialFields)))
 
 	return ZapLogger{
 		logger: logger,
@@ -64,19 +73,63 @@ func NewZap(level string, dev bool, _ io.Writer) (ZapLogger, error) {
 	}, nil
 }
 
-func loggerLevel(level string) (zapcore.Level, error) {
+func CustomZapLogger(devEnv bool, level string, out io.Writer, initialFields []zapcore.Field) ZapLogger {
+	// log outputs
+	// log to multiple out puts. e.g file & console (os.Stdout)
+	file := zapcore.AddSync(out)
+	stdout := zapcore.AddSync(os.Stdout)
+
+	zapLevel := loggerLevel(level)
+
+	logLvl := zap.NewAtomicLevelAt(zapLevel)
+	encoderConfig := createEncoderConfig(devEnv)
+
+	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
+	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+
+	fileCore := zapcore.NewCore(fileEncoder, file, logLvl)
+	consoleCore := zapcore.NewCore(consoleEncoder, stdout, logLvl)
+	fileCore.With(initialFields)
+	consoleCore.With(initialFields)
+	// The NewTee() method duplicates log entries into two or more destinations.
+	// In this case, the logs are sent to the standard output using a colorized plaintext format,
+	// while the JSON equivalent is sent to the file
+	core := zapcore.NewTee(fileCore, consoleCore)
+
+	zapLogger := zap.New(core)
+	zapLogger = zapLogger.WithOptions(zap.Fields(initialFields...))
+	return ZapLogger{
+		logger: zapLogger,
+		sugar:  zapLogger.Sugar(),
+	}
+}
+
+func createEncoderConfig(dev bool) zapcore.EncoderConfig {
+	if dev {
+		developmentCfg := zap.NewDevelopmentEncoderConfig()
+		developmentCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		developmentCfg.TimeKey = "timestamp"
+		return developmentCfg
+	}
+	productionCfg := zap.NewProductionEncoderConfig()
+	productionCfg.TimeKey = "timestamp"
+	productionCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	return productionCfg
+}
+
+func loggerLevel(level string) zapcore.Level {
 	switch level {
 	case xrf197ilz35aq0.DEBUG:
-		return zapcore.DebugLevel, nil
+		return zapcore.DebugLevel
 	case xrf197ilz35aq0.INFO:
-		return zapcore.InfoLevel, nil
+		return zapcore.InfoLevel
 	case xrf197ilz35aq0.WARN:
-		return zapcore.WarnLevel, nil
+		return zapcore.WarnLevel
 	case xrf197ilz35aq0.ERROR:
-		return zapcore.ErrorLevel, nil
+		return zapcore.ErrorLevel
 	case xrf197ilz35aq0.FATAL:
-		return zapcore.FatalLevel, nil
+		return zapcore.FatalLevel
 	default:
-		return zapcore.InfoLevel, fmt.Errorf("unknown log level: %s", level)
+		return zapcore.InfoLevel
 	}
 }
