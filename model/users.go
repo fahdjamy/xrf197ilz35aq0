@@ -2,6 +2,7 @@ package model
 
 import (
 	"time"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/random"
 )
 
@@ -11,9 +12,9 @@ type User struct {
 	id          int64
 	FirstName   string
 	LastName    string
-	email       string
 	fingerPrint string
 	createdAt   time.Time
+	email       Secret[*xrf.SerializableString]
 }
 
 func newUser(firstName string, lastName string, email string) (*User, error) {
@@ -27,13 +28,17 @@ func newUser(firstName string, lastName string, email string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	serializableEmail := xrf.SerializableString(email)
+
+	var secretEmailPtr Secret[*xrf.SerializableString]
+	secretEmailPtr = *NewSecret(&serializableEmail)
 
 	return &User{
 		id:          id,
 		createdAt:   now,
-		email:       email,
 		LastName:    lastName,
 		FirstName:   firstName,
 		fingerPrint: uniqueStr,
+		email:       secretEmailPtr,
 	}, nil
 }
