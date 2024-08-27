@@ -1,4 +1,4 @@
-package xrf197ilz35aq0
+package custom
 
 import "encoding/json"
 

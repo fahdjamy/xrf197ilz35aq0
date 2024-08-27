@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/constants"
+	xrf "xrf197ilz35aq0/custom"
 	"xrf197ilz35aq0/random"
 )
 
