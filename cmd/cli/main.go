@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/cmd/cli/dependency"
+	"xrf197ilz35aq0/dependency"
 	"xrf197ilz35aq0/random"
 )
 
