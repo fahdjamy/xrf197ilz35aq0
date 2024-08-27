@@ -5,38 +5,38 @@ import (
 	"xrf197ilz35aq0/random"
 )
 
-type RungTrailMeta struct {
+type TrailMetaData struct {
 	rating int
 }
 
-type RungTrail struct {
+type Trail struct {
 	id       int64
 	score    int
 	created  time.Time
-	tradeIds map[string]RungTrailMeta // a set of Ids
+	tradeIds map[string]TrailMetaData // a set metadata trade trails
 }
 
-func (rt *RungTrail) UpdateMetaData(tradeId string, customerRating int) {
+func (rt *Trail) UpdateMetaData(tradeId string, customerRating int) {
 	trailMetaData, ok := rt.tradeIds[tradeId]
 	if ok {
 		trailMetaData.rating = customerRating
 	} else {
-		rt.tradeIds[tradeId] = RungTrailMeta{
+		rt.tradeIds[tradeId] = TrailMetaData{
 			rating: customerRating,
 		}
 	}
 }
 
-func (rt *RungTrail) Score() int {
+func (rt *Trail) Score() int {
 	return rt.score
 }
 
-func NewRungTrail() *RungTrail {
+func NewRungTrail() *Trail {
 	id := random.PositiveInt64()
-	return &RungTrail{
+	return &Trail{
 		id:       id,
 		score:    0,
 		created:  time.Now(),
-		tradeIds: make(map[string]RungTrailMeta),
+		tradeIds: make(map[string]TrailMetaData),
 	}
 }

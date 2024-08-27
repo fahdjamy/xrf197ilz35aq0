@@ -15,7 +15,7 @@ type Rung struct {
 	updated     time.Time
 	created     time.Time
 	ownerFP     string
-	tradeTrails map[string]RungTrail
+	tradeTrails map[string]Trail
 }
 
 func (r *Rung) AddTradeTrail(customerFP string, tradeId string) {
@@ -42,14 +42,14 @@ func (r *Rung) Created() time.Time {
 	return r.created
 }
 
-func (r *Rung) TradeTrails() map[string]RungTrail {
+func (r *Rung) TradeTrails() map[string]Trail {
 	return r.tradeTrails
 }
 
 func NewRung(ownerFingerprint string) *Rung {
 	now := time.Now()
 	id := random.PositiveInt64()
-	trails := make(map[string]RungTrail)
+	trails := make(map[string]Trail)
 
 	return &Rung{
 		id:          id,
