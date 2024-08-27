@@ -6,54 +6,54 @@ import (
 	"strings"
 	"time"
 	"xrf197ilz35aq0/constants"
-	xrf "xrf197ilz35aq0/custom"
+	"xrf197ilz35aq0/custom"
 	"xrf197ilz35aq0/random"
 )
 
 const fingerPrintLength = 31
 
 type User struct {
-	anonymous   bool
-	id          int64
+	masked      bool
+	Id          int64
 	FirstName   string
 	LastName    string
 	fingerPrint string
-	createdAt   time.Time
-	email       Secret[*xrf.SerializableString]
-	password    Secret[*xrf.SerializableString]
+	joined      time.Time
+	email       custom.Secret[*custom.SerializableString]
+	password    custom.Secret[*custom.SerializableString]
 }
 
 func (u *User) String() string {
-	format := "id: %d, FirstName: %s, LastName: %s, Anonymous, %t"
-	return fmt.Sprintf(format, u.id, u.FirstName, u.LastName, u.anonymous)
+	format := "Id: %d, FirstName: %s, LastName: %s, Anonymous, %t"
+	return fmt.Sprintf(format, u.Id, u.FirstName, u.LastName, u.masked)
 }
 
 func (u *User) IsAnonymous() bool {
-	return u.anonymous
+	return u.masked
 }
 
 func (u *User) FingerPrint() string {
 	// send last part of the fingerprint
-	return strings.Split(u.fingerPrint, strconv.Itoa(int(u.id)))[0]
+	return strings.Split(u.fingerPrint, strconv.Itoa(int(u.Id)))[0]
 }
 
 func NewUser(firstName string, lastName string, email string, password string) *User {
 	now := time.Now()
 
 	id := random.PositiveInt64()
-	serializableEmail := xrf.SerializableString(email)
-	serializablePassword := xrf.SerializableString(password)
+	serializableEmail := custom.SerializableString(email)
+	serializablePassword := custom.SerializableString(password)
 
-	var secretEmailPtr Secret[*xrf.SerializableString]
-	var secretPasswordPtr Secret[*xrf.SerializableString]
+	var secretEmailPtr custom.Secret[*custom.SerializableString]
+	var secretPasswordPtr custom.Secret[*custom.SerializableString]
 
-	secretEmailPtr = *NewSecret(&serializableEmail)
-	secretPasswordPtr = *NewSecret(&serializablePassword)
+	secretEmailPtr = *custom.NewSecret(&serializableEmail)
+	secretPasswordPtr = *custom.NewSecret(&serializablePassword)
 
 	newUser := &User{
-		id:        id,
-		createdAt: now,
-		anonymous: false,
+		Id:        id,
+		joined:    now,
+		masked:    false,
 		LastName:  lastName,
 		FirstName: firstName,
 		email:     secretEmailPtr,
@@ -65,7 +65,7 @@ func NewUser(firstName string, lastName string, email string, password string) *
 }
 
 func (u *User) createFingerPrint() {
-	uniqueStr, err := random.TimeBasedString(u.createdAt.Unix(), fingerPrintLength)
+	uniqueStr, err := random.TimeBasedString(u.joined.Unix(), fingerPrintLength)
 	if err != nil {
 		uniqueStr = ""
 	}
@@ -81,7 +81,7 @@ func (u *User) createFingerPrint() {
 	lastPart := splitParts[1]
 	firstPart := splitParts[0][2:] // remove the first 2 letters of the first part
 
-	uniqueStr = fmt.Sprintf("%s%d%s", firstPart, u.id, lastPart)
+	uniqueStr = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
 	u.fingerPrint = uniqueStr
 }
 

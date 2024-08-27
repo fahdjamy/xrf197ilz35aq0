@@ -25,7 +25,7 @@ func TestUser(t *testing.T) {
 		}
 
 		if user.IsAnonymous() {
-			t.Error("User should not be anonymous")
+			t.Error("User should not be masked")
 		}
 	})
 }

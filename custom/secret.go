@@ -1,4 +1,4 @@
-package model
+package custom
 
 import (
 	"encoding/json"
