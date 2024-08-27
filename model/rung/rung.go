@@ -1,4 +1,4 @@
-package model
+package rung
 
 import (
 	"time"
@@ -19,12 +19,12 @@ type Rung struct {
 }
 
 func (r *Rung) AddTradeTrail(customerFP string, tradeId string) {
-	if _, ok := r.tradeTrails[customerFP]; ok {
-		r.tradeTrails[customerFP].tradeIds[tradeId] = true
+	tradeTrail, ok := r.tradeTrails[customerFP]
+	if ok {
+		tradeTrail.UpdateMetaData(tradeId, 0)
 	} else {
 		rungTrail := NewRungTrail()
-		rungTrail.tradeIds[tradeId] = true
-
+		rungTrail.UpdateMetaData(tradeId, 0)
 		r.tradeTrails[customerFP] = *rungTrail
 	}
 	r.updated = time.Now()
