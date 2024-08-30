@@ -15,19 +15,35 @@ type Rung struct {
 	updated     time.Time
 	created     time.Time
 	ownerFP     string
-	tradeTrails map[string]Trail
+	tradeTrails map[string]Trail // customer: rungTrails
 }
 
-func (r *Rung) AddTradeTrail(customerFP string, tradeId string) {
+func (r *Rung) AddTradeTrail(customerFP string, tradeId string, metadata TrailMetaData) (bool, error) {
 	tradeTrail, ok := r.tradeTrails[customerFP]
+
+	isRungTrailUpdated := false
 	if ok {
-		tradeTrail.UpdateMetaData(tradeId, 0)
+		updated, err := tradeTrail.UpdateMetaData(tradeId, metadata)
+		if err != nil {
+			return false, err
+		}
+		isRungTrailUpdated = updated
 	} else {
 		rungTrail := NewRungTrail()
-		rungTrail.UpdateMetaData(tradeId, 0)
+		_, err := rungTrail.UpdateMetaData(tradeId, metadata)
+		if err != nil {
+			return false, err
+		}
 		r.tradeTrails[customerFP] = *rungTrail
+		isRungTrailUpdated = true
 	}
-	r.updated = time.Now()
+
+	if isRungTrailUpdated {
+		r.calculateMagnitude()
+		r.updated = time.Now()
+	}
+
+	return true, nil
 }
 
 func (r *Rung) Magnitude() int {
@@ -44,6 +60,12 @@ func (r *Rung) Created() time.Time {
 
 func (r *Rung) TradeTrails() map[string]Trail {
 	return r.tradeTrails
+}
+
+func (r *Rung) calculateMagnitude() {
+	if len(r.tradeTrails) > 0 {
+
+	}
 }
 
 func NewRung(ownerFingerprint string) *Rung {

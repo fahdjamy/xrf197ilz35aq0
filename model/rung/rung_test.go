@@ -1,9 +1,15 @@
 package rung_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0/model/rung"
 )
+
+var validMetadataTrail = rung.TrailMetaData{
+	Rating:  1,
+	Comment: "This is the comment",
+}
 
 func TestRung(t *testing.T) {
 	t.Run("creates a new Rung", func(t *testing.T) {
@@ -24,7 +30,8 @@ func TestRungAddTradeTrail(t *testing.T) {
 		tradeId := "polly"
 		newRung := rung.NewRung(randomUserFP)
 
-		newRung.AddTradeTrail(customerFP, tradeId)
+		_, err := newRung.AddTradeTrail(customerFP, tradeId, validMetadataTrail)
+		assert.NoError(t, err)
 
 		if len(newRung.TradeTrails()) <= 0 {
 			t.Errorf("Trails should have been added to the Rung")
@@ -37,8 +44,10 @@ func TestRungAddTradeTrail(t *testing.T) {
 		newRung := rung.NewRung(randomUserFP)
 		tradeId := "polly"
 
-		newRung.AddTradeTrail(customerFP, tradeId)
-		newRung.AddTradeTrail(customerFP, tradeId)
+		_, err := newRung.AddTradeTrail(customerFP, tradeId, validMetadataTrail)
+		assert.NoError(t, err)
+		_, err = newRung.AddTradeTrail(customerFP, tradeId, validMetadataTrail)
+		assert.NoError(t, err)
 
 		if len(newRung.TradeTrails()) > 1 {
 			t.Errorf("new TradeRung should have only been added once but was %d", len(newRung.TradeTrails()))
