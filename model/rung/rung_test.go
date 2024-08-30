@@ -6,11 +6,6 @@ import (
 	"xrf197ilz35aq0/model/rung"
 )
 
-var validMetadataTrail = rung.TrailMetaData{
-	Rating:  1,
-	Comment: "This is the comment",
-}
-
 func TestRung(t *testing.T) {
 	t.Run("creates a new Rung", func(t *testing.T) {
 		randomUserFP := "finger-printed"

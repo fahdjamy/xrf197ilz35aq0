@@ -62,6 +62,10 @@ func (rt *Trail) Score() int {
 	return rt.score
 }
 
+func (rt *Trail) UpdatedAt() time.Time {
+	return rt.updated
+}
+
 func (rt *Trail) calculateScore() {
 	newScore := 0
 	if len(rt.tradeIds) > 0 {
