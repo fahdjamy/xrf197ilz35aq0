@@ -2,6 +2,7 @@ package xrf197ilz35aq0
 
 import (
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -17,7 +18,7 @@ func TestNewConfig(t *testing.T) {
 	t.Run("should return a valid config", func(t *testing.T) {
 		config, err := NewConfig()
 		AssertNoError(t, err)
-		assertConfigNotNil(t, config)
+		assertConfigIsNotNil(t, config)
 	})
 
 	t.Run("should read config once a valid config", func(t *testing.T) {
@@ -42,7 +43,7 @@ func TestNewConfig(t *testing.T) {
 				// If it is 0, it atomically changes the value to 1.
 				// returns true if the swap was successful (i.e., the value was 0 and is now 1), false otherwise
 
-				assertConfigNotNil(t, config)
+				assertConfigIsNotNil(t, config)
 				if configSetCounter.CompareAndSwap(0, 1) {
 					// This comment explains the intent clearly there's no code in here just to make sure
 					// configSetCounter is set once to 1 indicating config was called once
@@ -68,7 +69,7 @@ func TestReadConfiguration(t *testing.T) {
 
 		AssertNoError(t, err)
 		assert.True(t, mock.closed)
-		assertConfigNotNil(t, config)
+		assertNonNilConfigPtr(t, config)
 	})
 
 	t.Run("should fail if file yaml content is invalid", func(t *testing.T) {
@@ -77,20 +78,34 @@ func TestReadConfiguration(t *testing.T) {
 		config, err := readConfiguration(mock)
 		AssertError(t, err)
 		assert.True(t, mock.closed)
-		assertNilConfig(t, config)
+		assertNilConfigPtr(t, config)
 	})
 }
 
-func assertConfigNotNil(t testing.TB, config *Config) {
+func assertConfigIsNotNil(t testing.TB, config Config) {
 	t.Helper()
-	if config == nil {
+	if reflect.DeepEqual(config, Config{}) {
 		t.Error("Configuration should not be nil")
 	}
 }
 
-func assertNilConfig(t testing.TB, config *Config) {
+func assertConfigIsNil(t testing.TB, config Config) {
+	t.Helper()
+	if !reflect.DeepEqual(config, Config{}) {
+		t.Error("Configuration should be nil")
+	}
+}
+
+func assertNilConfigPtr(t testing.TB, config *Config) {
 	t.Helper()
 	if config != nil {
 		t.Error("Configuration should be nil")
+	}
+}
+
+func assertNonNilConfigPtr(t testing.TB, config *Config) {
+	t.Helper()
+	if config == nil {
+		t.Error("Configuration should not be nil")
 	}
 }

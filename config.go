@@ -26,23 +26,24 @@ type Config struct {
 	}
 }
 
-func NewConfig() (*Config, error) {
-	// lock construction of config files for concurrent processes
-	mutex.Lock() // Acquire the lock at the beginning to ensure strict singleton
-	defer mutex.Unlock()
+func NewConfig() (Config, error) {
 
 	if configurations == nil {
+		// Acquire the lock to ensure strict singleton but only when creating a new config
+		mutex.Lock()
+		defer mutex.Unlock()
+
 		yamlFile, err := readFromFile(configFilename)
 		if err != nil {
-			return nil, err
+			return Config{}, err
 		}
 		configurations, err := readConfiguration(yamlFile)
 		if err != nil {
-			return nil, err
+			return Config{}, err
 		}
-		return configurations, nil
+		return *configurations, nil
 	}
-	return configurations, nil
+	return *configurations, nil
 }
 
 // Open the YAML file
