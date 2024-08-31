@@ -1,0 +1,8 @@
+environment: DEV
+
+log:
+  logger: zap
+  level: DEBUG
+
+rest:
+  port: 8081
