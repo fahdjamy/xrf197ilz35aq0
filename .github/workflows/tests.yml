@@ -58,4 +58,3 @@ jobs:
         with:
           name: go-test-results-${{ strategy.job-index }}-go-${{ matrix.go-version }}
           path: testResults-go-${{ matrix.go-version }}.json
-          merge-multiple: true
