@@ -50,11 +50,12 @@ jobs:
       - name: Upload build artifacts ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: xrf0-cli-build-artifact-os-${{ matrix.os }}
+          name: xrf0-cli-build-artifact-${{ strategy.job-index }}-os-${{ matrix.os }}
           path: bin/cli
 
       - name: Upload Go test results for ${{ matrix.go-version }}
         uses: actions/upload-artifact@v4
         with:
-          name: go-test-results-${{ matrix.go-version }}
+          name: go-test-results-${{ strategy.job-index }}-go-${{ matrix.go-version }}
           path: testResults-go-${{ matrix.go-version }}.json
+          merge-multiple: true
