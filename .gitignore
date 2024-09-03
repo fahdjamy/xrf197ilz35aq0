@@ -1,6 +1,7 @@
 # workspace files to ignore
 .idea/
 .logs/
+bin
 
 # Binaries for programs and plugins
 *.exe
