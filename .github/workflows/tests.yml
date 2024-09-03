@@ -45,16 +45,16 @@ jobs:
         run: go build -o bin/cli -v ./cmd/cli/main.go
 
       - name: Test with go CLI
-        run: go test
+        run: go test ./... -json > testResults-go-${{ matrix.go-version }}.json
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: xrf0-cli-artifact
+          name: xrf0-cli-build-artifact-os-${{ matrix.os }}
           path: bin/cli
 
       - name: Upload Go test results for ${{ matrix.go-version }}
         uses: actions/upload-artifact@v4
         with:
-          name: Go-results-${{ matrix.go-version }}
-          path: TestResults-${{ matrix.go-version }}.json
+          name: go-test-results-${{ matrix.go-version }}
+          path: testResults-go-${{ matrix.go-version }}.json
