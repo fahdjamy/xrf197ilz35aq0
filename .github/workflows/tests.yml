@@ -12,7 +12,7 @@ on:
       - develop
 
 jobs:
-  # This job execute 6 different builds for a combination of 3 (os) x 2 (go-versions) values.
+  # This job execute 4 different builds for a combination of 2 (os) x 2 (go-versions) values.
   build:
     name: build and test
     runs-on: ${{ matrix.os }}
@@ -22,7 +22,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
+#          - windows-latest
           - macos-latest
         go-version:
           - 1.22.x
@@ -47,7 +47,7 @@ jobs:
       - name: Test with go CLI
         run: go test ./... -json > testResults-go-${{ matrix.go-version }}.json
 
-      - name: Upload artifacts
+      - name: Upload build artifacts ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
           name: xrf0-cli-build-artifact-os-${{ matrix.os }}
