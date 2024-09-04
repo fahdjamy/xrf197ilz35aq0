@@ -52,9 +52,16 @@ jobs:
         with:
           name: xrf0-cli-build-artifact-${{ strategy.job-index }}-os-${{ matrix.os }}
           path: bin/cli
+          retention-days: 10
 
       - name: Upload Go test results for ${{ matrix.go-version }}
         uses: actions/upload-artifact@v4
+        # https://github.com/actions/upload-artifact
         with:
           name: go-test-results-${{ strategy.job-index }}-go-${{ matrix.go-version }}
           path: testResults-go-${{ matrix.go-version }}.json
+          # Duration after which artifact will expire in days. 0 means using default retention.
+          # Minimum 1 day.
+          # Maximum 90 days unless changed from the repository settings page.
+          # Optional. Defaults to repository settings.
+          retention-days: 10
