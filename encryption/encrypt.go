@@ -19,6 +19,16 @@ const maxKeySize = 256
 
 // Encrypt has Separate Nonces: We generate gcmNonce and aadNonce separately.
 func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
+	if len(plaintext) < 3 {
+		return nil, &Error{
+			message: "plaintext should at least be of length 3",
+		}
+	}
+	if len(key) < minKeySize {
+		return nil, &Error{
+			message: "for security, encryption key should at least be 32 bytes",
+		}
+	}
 	// Create the AES cipher block using the provided key
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -49,6 +59,12 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 }
 
 func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
+	if len(key) < minKeySize {
+		return nil, &Error{
+			message: "for security, encryption key should at least be 32 bytes",
+		}
+	}
+
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
