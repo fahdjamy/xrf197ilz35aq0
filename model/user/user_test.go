@@ -1,6 +1,8 @@
-package model
+package user
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestUser(t *testing.T) {
 	t.Run("Create User", func(t *testing.T) {
