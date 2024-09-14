@@ -8,7 +8,7 @@ import (
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/dependency"
-	"xrf197ilz35aq0/random"
+	random2 "xrf197ilz35aq0/internal/random"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 
 	requestId, err := generateRequestId()
 	if err != nil {
-		requestId = strconv.Itoa(int(random.PositiveInt64()))
+		requestId = strconv.Itoa(int(random2.PositiveInt64()))
 	}
 	initialFields := []zap.Field{
 		zap.String("requestId", requestId),
@@ -34,12 +34,12 @@ func main() {
 }
 
 func generateRequestId() (string, error) {
-	uniqueStr, err := random.TimeBasedString(time.Now().Unix(), 21)
+	uniqueStr, err := random2.TimeBasedString(time.Now().Unix(), 21)
 	if err != nil {
 		return "", err
 	}
 
-	uniqueInt64 := random.PositiveInt64()
+	uniqueInt64 := random2.PositiveInt64()
 	uniqueInt64Str := strconv.Itoa(int(uniqueInt64))
 
 	if len(uniqueInt64Str) > 10 {

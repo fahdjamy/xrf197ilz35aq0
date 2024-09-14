@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/random"
+	"xrf197ilz35aq0/internal/random"
 )
 
 func TestInt64FromUUID(t *testing.T) {

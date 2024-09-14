@@ -2,7 +2,7 @@ package user
 
 import (
 	"time"
-	"xrf197ilz35aq0/model"
+	"xrf197ilz35aq0/core/model"
 )
 
 // Settings defines the fields that indicate how a user wants their data to be handled/stored or

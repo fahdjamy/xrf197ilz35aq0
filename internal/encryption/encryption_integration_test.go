@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/encryption"
+	"xrf197ilz35aq0/internal/encryption"
 )
 
 func TestEncryptAndDecrypt(t *testing.T) {

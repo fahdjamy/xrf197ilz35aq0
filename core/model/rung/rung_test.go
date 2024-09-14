@@ -3,7 +3,7 @@ package rung_test
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"xrf197ilz35aq0/model/rung"
+	"xrf197ilz35aq0/core/model/rung"
 )
 
 func TestRung(t *testing.T) {

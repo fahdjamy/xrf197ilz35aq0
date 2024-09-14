@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 	"xrf197ilz35aq0/constants"
-	"xrf197ilz35aq0/custom"
-	"xrf197ilz35aq0/random"
+	"xrf197ilz35aq0/internal/custom"
+	"xrf197ilz35aq0/internal/random"
 )
 
 const fingerPrintLength = 31

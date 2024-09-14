@@ -2,7 +2,7 @@ package rung
 
 import (
 	"time"
-	"xrf197ilz35aq0/random"
+	"xrf197ilz35aq0/internal/random"
 )
 
 // Rung has a 1:1 relationship with the User's table

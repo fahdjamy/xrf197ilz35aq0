@@ -3,8 +3,8 @@ package rung
 import (
 	"fmt"
 	"time"
-	"xrf197ilz35aq0/model"
-	"xrf197ilz35aq0/random"
+	"xrf197ilz35aq0/core/model"
+	"xrf197ilz35aq0/internal/random"
 )
 
 type TrailMetaData struct {

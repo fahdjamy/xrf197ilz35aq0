@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/model/rung"
+	"xrf197ilz35aq0/core/model/rung"
 )
 
 var validMetadataTrail = rung.TrailMetaData{
