@@ -5,8 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"xrf197ilz35aq0/constants"
-	"xrf197ilz35aq0/internal/custom"
+	"xrf197ilz35aq0/internal/constants"
 	"xrf197ilz35aq0/internal/random"
 )
 
@@ -18,9 +17,10 @@ type User struct {
 	FirstName   string
 	LastName    string
 	fingerPrint string
-	joined      time.Time
-	email       custom.Secret[*custom.SerializableString]
-	password    custom.Secret[*custom.SerializableString]
+	email       string
+	password    string
+	Joined      time.Time
+	UpdatedAt   time.Time
 }
 
 func (u *User) String() string {
@@ -41,23 +41,24 @@ func NewUser(firstName string, lastName string, email string, password string) *
 	now := time.Now()
 
 	id := random.PositiveInt64()
-	serializableEmail := custom.SerializableString(email)
-	serializablePassword := custom.SerializableString(password)
-
-	var secretEmailPtr custom.Secret[*custom.SerializableString]
-	var secretPasswordPtr custom.Secret[*custom.SerializableString]
-
-	secretEmailPtr = *custom.NewSecret(&serializableEmail)
-	secretPasswordPtr = *custom.NewSecret(&serializablePassword)
+	//serializableEmail := custom.SerializableString(email)
+	//serializablePassword := custom.SerializableString(password)
+	//
+	//var secretEmailPtr custom.Secret[*custom.SerializableString]
+	//var secretPasswordPtr custom.Secret[*custom.SerializableString]
+	//
+	//secretEmailPtr = *custom.NewSecret(&serializableEmail)
+	//secretPasswordPtr = *custom.NewSecret(&serializablePassword)
 
 	newUser := &User{
 		Id:        id,
-		joined:    now,
+		Joined:    now,
+		UpdatedAt: now,
 		masked:    false,
+		email:     email,
+		password:  password,
 		LastName:  lastName,
 		FirstName: firstName,
-		email:     secretEmailPtr,
-		password:  secretPasswordPtr,
 	}
 	newUser.createFingerPrint()
 
@@ -65,12 +66,12 @@ func NewUser(firstName string, lastName string, email string, password string) *
 }
 
 func (u *User) createFingerPrint() {
-	uniqueStr, err := random.TimeBasedString(u.joined.Unix(), fingerPrintLength)
+	uniqueStr, err := random.TimeBasedString(u.Joined.Unix(), fingerPrintLength)
 	if err != nil {
 		uniqueStr = ""
 	}
 
-	// remove any "-" in uniqueStr
+	// remove any "-,=,_" in uniqueStr
 	uniqueStr = strings.Join(strings.Split(uniqueStr, constants.DASH), constants.EMPTY)
 	uniqueStr = strings.Join(strings.Split(uniqueStr, constants.EQUALS), constants.EMPTY)
 	uniqueStr = strings.Join(strings.Split(uniqueStr, constants.UNDERSCORE), constants.EMPTY)
@@ -81,8 +82,7 @@ func (u *User) createFingerPrint() {
 	lastPart := splitParts[1]
 	firstPart := splitParts[0][2:] // remove the first 2 letters of the first part
 
-	uniqueStr = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
-	u.fingerPrint = uniqueStr
+	u.fingerPrint = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
 }
 
 func splitAtIndex(str string, stringPart int) []string {

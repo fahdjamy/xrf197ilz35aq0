@@ -3,7 +3,7 @@ package rung
 import (
 	"fmt"
 	"time"
-	"xrf197ilz35aq0/core/model"
+	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/internal/random"
 )
 
@@ -35,7 +35,7 @@ type Trail struct {
 
 func (rt *Trail) UpdateMetaData(tradeId string, metadata TrailMetaData) (bool, error) {
 	if metadata.Rating < scoreMin || metadata.Rating > scoreMax {
-		return false, model.InvalidRequest{Message: "Trail Rating out of bounds"}
+		return false, core.InvalidRequest{Message: "Trail Rating out of bounds"}
 	}
 
 	trailMetaData, ok := rt.tradeIds[tradeId]

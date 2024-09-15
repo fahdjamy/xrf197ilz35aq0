@@ -1,4 +1,4 @@
-package model
+package core
 
 type InvalidRequest struct {
 	Message string

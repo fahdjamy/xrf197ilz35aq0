@@ -2,10 +2,13 @@ package custom
 
 import (
 	"encoding/json"
-	xrf "xrf197ilz35aq0"
 )
 
-type Secret[T xrf.Serializable] struct {
+type Field interface {
+	string | float64 | complex64 | int | int8 | int16 | int32 | int64
+}
+
+type Secret[T Field] struct {
 	data T
 }
 
@@ -25,6 +28,6 @@ func (s Secret[T]) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, &s.data)
 }
 
-func NewSecret[T xrf.Serializable](data T) *Secret[T] {
+func NewSecret[T Field](data T) *Secret[T] {
 	return &Secret[T]{data: data}
 }

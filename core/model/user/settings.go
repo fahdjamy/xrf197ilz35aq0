@@ -2,7 +2,7 @@ package user
 
 import (
 	"time"
-	"xrf197ilz35aq0/core/model"
+	"xrf197ilz35aq0/core"
 )
 
 // Settings defines the fields that indicate how a user wants their data to be handled/stored or
@@ -20,13 +20,13 @@ func NewSettings(rotateEncKey bool, encryptAfter time.Duration, userFP string) (
 	now := time.Now()
 	futureTime := time.Now().Add(encryptAfter) // Convert encryptAfter to time.Time
 	if now.After(futureTime) {
-		return nil, model.InvalidRequest{
+		return nil, core.InvalidRequest{
 			Message: "encryptAfter can not be in the past",
 		}
 	}
 
 	if isBeforeMonths(encryptAfter, 3) {
-		return nil, model.InvalidRequest{
+		return nil, core.InvalidRequest{
 			Message: "encryptAfter should at least be 3 months from now",
 		}
 	}
