@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
+	"xrf197ilz35aq0/core"
 )
 
 // Generate a 32-byte (256-bit) key, suitable for AES-256
@@ -103,6 +105,18 @@ func GenerateKey(keySize int) ([]byte, error) {
 	// fills the key slice with these random bytes.
 	_, err := rand.Read(key)
 	if err != nil {
+		if err == io.EOF {
+			// io.EOF: This error is returned if the underlying source of randomness (e.g., /dev/urandom)
+			// unexpectedly reaches its end. While rare, it's possible in scenarios where the system is under
+			// extreme stress or there's an issue with the entropy source.
+			fmt.Println("Unexpected end of randomness source")
+			return nil, core.InternalError{
+				Message: "Unexpected end of randomness source",
+				Time:    time.Now(),
+				Source:  "GenerateKey",
+				Err:     err,
+			}
+		}
 		return nil, fmt.Errorf("failed to generate key: %w", err)
 	}
 

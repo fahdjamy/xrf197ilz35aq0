@@ -1,4 +1,4 @@
-package service
+package user
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -6,6 +6,7 @@ import (
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
+	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal/custom"
 )
 
@@ -14,7 +15,22 @@ const (
 	validEmailAddress = "test@xrfaq.com"
 )
 
+type settingServiceMock struct {
+	Called int
+}
+
+var encryptionTestKey = xrf197ilz35aq0.RandomBytes(32)
+var settingResponseMock = &exchange.SettingResponse{
+	EncryptionKey: *custom.NewSecret[string](string(encryptionTestKey)),
+}
+
+func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ user.User) (*exchange.SettingResponse, error) {
+	s.Called++
+	return settingResponseMock, nil
+}
+
 func TestUserService_CreateUser(t *testing.T) {
+	settingServiceMock := &settingServiceMock{}
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -29,8 +45,8 @@ func TestUserService_CreateUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := &xrf197ilz35aq0.TestLogger{}
-			uc := NewUserService(logger)
-			got, err := uc.CreateUser(tt.request)
+			uc := NewUserManager(logger, settingServiceMock)
+			got, err := uc.NewUser(tt.request)
 			if tt.wantErr {
 				xrf197ilz35aq0.AssertError(t, err)
 			} else {
@@ -45,12 +61,10 @@ func createUserRequest(email, password string) *exchange.UserRequest {
 	secretEmail := custom.NewSecret(email)
 	secretPass := custom.NewSecret(password)
 	return &exchange.UserRequest{
-		RotateEncryptionKey: false,
-		LastName:            "lastName",
-		FirstName:           "firstName",
-		Password:            *secretPass,
-		Email:               *secretEmail,
-		EncryptAfter:        time.Since(time.Now()),
+		LastName:  "lastName",
+		FirstName: "firstName",
+		Password:  *secretPass,
+		Email:     *secretEmail,
 	}
 }
 
@@ -58,7 +72,6 @@ func assertUserResponse(t *testing.T, got *exchange.UserResponse) {
 	t.Helper()
 	assert.NotNil(t, got)
 	assert.False(t, got.Anonymous)
-	assert.False(t, got.RotateEncryptionKey)
 	assert.Equal(t, got.Anonymous, false)
 	assert.True(t, time.Since(got.CreatedAt) > 0)
 	assert.True(t, time.Since(got.UpdatedAt) > 0)

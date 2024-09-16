@@ -9,7 +9,7 @@ import (
 	"xrf197ilz35aq0/internal/random"
 )
 
-const fingerPrintLength = 31
+const fingerPrintLength = 55
 
 type User struct {
 	masked      bool
@@ -37,21 +37,14 @@ func (u *User) FingerPrint() string {
 	return strings.Split(u.fingerPrint, strconv.Itoa(int(u.Id)))[0]
 }
 
+func (u *User) UpdatePassword(password string) {
+	u.password = password
+}
+
 func NewUser(firstName string, lastName string, email string, password string) *User {
 	now := time.Now()
 
-	id := random.PositiveInt64()
-	//serializableEmail := custom.SerializableString(email)
-	//serializablePassword := custom.SerializableString(password)
-	//
-	//var secretEmailPtr custom.Secret[*custom.SerializableString]
-	//var secretPasswordPtr custom.Secret[*custom.SerializableString]
-	//
-	//secretEmailPtr = *custom.NewSecret(&serializableEmail)
-	//secretPasswordPtr = *custom.NewSecret(&serializablePassword)
-
 	newUser := &User{
-		Id:        id,
 		Joined:    now,
 		UpdatedAt: now,
 		masked:    false,
@@ -59,6 +52,7 @@ func NewUser(firstName string, lastName string, email string, password string) *
 		password:  password,
 		LastName:  lastName,
 		FirstName: firstName,
+		Id:        random.PositiveInt64(),
 	}
 	newUser.createFingerPrint()
 
