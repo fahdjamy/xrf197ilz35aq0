@@ -19,7 +19,6 @@ type settingServiceMock struct {
 	Called int
 }
 
-var encryptionTestKey = xrf197ilz35aq0.RandomBytes(32)
 var settingResponseMock = &exchange.SettingResponse{
 	EncryptionKey: *custom.NewSecret[string](string(encryptionTestKey)),
 }

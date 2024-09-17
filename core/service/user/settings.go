@@ -19,8 +19,7 @@ type SettingsManager interface {
 }
 
 type settingService struct {
-	log             xrf197ilz35aq0.Logger
-	settingsService SettingsManager
+	log xrf197ilz35aq0.Logger
 }
 
 func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error) {
@@ -92,6 +91,6 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest, now 
 	return nil
 }
 
-func NewSettingService(logger xrf197ilz35aq0.Logger) SettingsManager {
+func NewSettingManager(logger xrf197ilz35aq0.Logger) SettingsManager {
 	return &settingService{log: logger}
 }
