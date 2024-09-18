@@ -17,3 +17,4 @@ database:
     appName: xrf-user
     retryWrites: false
     uri: CLOUD_MONGO_URI
+    databaseName: xrf0user

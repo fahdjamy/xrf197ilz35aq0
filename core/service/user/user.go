@@ -9,6 +9,7 @@ import (
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal/encryption"
+	"xrf197ilz35aq0/storage"
 )
 
 // Manager is a port (Driven side)
@@ -19,6 +20,7 @@ type Manager interface {
 type service struct {
 	log             xrf197ilz35aq0.Logger
 	settingsService SettingsManager
+	store           storage.Store
 }
 
 func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
@@ -83,8 +85,12 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserManager(logger xrf197ilz35aq0.Logger, settingsService SettingsManager) Manager {
+func NewUserManager(logger xrf197ilz35aq0.Logger,
+	settingsService SettingsManager,
+	store storage.Store) Manager {
+
 	return &service{
+		store:           store,
 		log:             logger,
 		settingsService: settingsService,
 	}

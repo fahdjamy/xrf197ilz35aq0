@@ -76,3 +76,16 @@ func (t *TestLogger) Message() string {
 func (t *TestLogger) Called() int {
 	return t.called
 }
+
+type StoreMock struct {
+	Called     int
+	Document   any
+	Collection string
+}
+
+func (s *StoreMock) Save(collection string, obj Serializable) (any, error) {
+	s.Called++
+	s.Document = obj
+	s.Collection = collection
+	return nil, nil
+}

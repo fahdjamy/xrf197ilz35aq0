@@ -25,6 +25,14 @@ clean:
 	@echo "Cleaning up..."
 	rm -f $(BIN_DIR)/$(BINARY)
 
+local-mongo-start:
+	@echo "Starting mongo locally"
+	brew services start mongodb-community@7.0
+
+local-mongo-stop:
+	@echo "Stopping mongo locally"
+	brew services stop mongodb-community@7.0
+
 # Help target to display available commands
 help:
 	@echo "Available commands:"

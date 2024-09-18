@@ -30,6 +30,7 @@ func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ user.User
 
 func TestUserService_CreateUser(t *testing.T) {
 	settingServiceMock := &settingServiceMock{}
+	storeMock := &xrf197ilz35aq0.StoreMock{}
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -44,7 +45,7 @@ func TestUserService_CreateUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := &xrf197ilz35aq0.TestLogger{}
-			uc := NewUserManager(logger, settingServiceMock)
+			uc := NewUserManager(logger, settingServiceMock, storeMock)
 			got, err := uc.NewUser(tt.request)
 			if tt.wantErr {
 				xrf197ilz35aq0.AssertError(t, err)

@@ -6,8 +6,10 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"strconv"
+	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd"
+	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/dependency"
 	"xrf197ilz35aq0/internal/random"
 )
@@ -37,19 +39,29 @@ func main() {
 		panic(err)
 	}
 
-	dbUri := mongoUri(config)
-	fmt.Println(dbUri)
+	_, err = mongoUri(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, initialFields)
 	logger.Info(fmt.Sprintf("application version '%s'", health.Version()))
 }
 
-func mongoUri(config xrf197ilz35aq0.Config) string {
+func mongoUri(config xrf197ilz35aq0.Config) (string, error) {
 	mongoConfig := config.Database.Mongo
 	baseUri := os.Getenv(mongoConfig.Uri)
+	if baseUri == "" {
+		return "", core.InternalError{
+			Time:    time.Now(),
+			Source:  "cmd/cli/main#mongoUri",
+			Message: "missing environment variable $" + mongoConfig.Uri,
+		}
+	}
 	return fmt.Sprintf("%sretryWrites=%tw=%sappName=%s",
 		baseUri,
 		mongoConfig.RetryWrites,
 		mongoConfig.Acknowledgment,
 		mongoConfig.AppName,
-	)
+	), nil
 }

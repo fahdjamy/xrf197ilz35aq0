@@ -2,34 +2,51 @@ package mongo
 
 import (
 	"context"
-	"fmt"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/storage"
 )
 
-func mongoClient(ctx context.Context, dbUri string) (*mongo.Client, error) {
-	// Use the SetServerAPIOptions() method to set the version of the Stable API on the client
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(dbUri).SetServerAPIOptions(serverAPI)
+type Database struct {
+	log          xrf197ilz35aq0.Logger
+	db           *mongo.Database
+	client       *mongo.Client
+	databaseName string
+	context      context.Context
+	decodeTo     *xrf197ilz35aq0.Serializable
+}
 
-	// Create a new client and connect to the server
-	client, err := mongo.Connect(ctx, opts)
+func (d *Database) Save(collection string, obj xrf197ilz35aq0.Serializable) (any, error) {
+	d.log.Debug("saving new object")
+	document, err := d.db.Collection(collection).InsertOne(d.context, obj)
 	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
-	// Send a ping to confirm a successful connection
-	if err := client.Database("admin").RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
 		return nil, err
 	}
-	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
-	return client, nil
+	return document, nil
+}
+
+func (d *Database) SetContext(ctx context.Context) {
+	d.context = ctx
+}
+
+func (d *Database) FindById(collection string, id int64) (*xrf197ilz35aq0.Serializable, error) {
+	filter := bson.M{"Id": id}
+	coll := d.db.Collection(collection)
+	err := coll.FindOne(d.context, filter).Decode(d.decodeTo)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.decodeTo, nil
+}
+
+func MewMongoStore(log xrf197ilz35aq0.Logger, client *mongo.Client, dbName string, ctx context.Context) storage.Store {
+	database := client.Database(dbName)
+	return &Database{
+		log:     log,
+		context: ctx,
+		client:  client,
+		db:      database,
+	}
 }
