@@ -24,10 +24,12 @@ type Log struct {
 }
 
 type MongoConfig struct {
-	AppName        string `yaml:"appName"`
-	RetryWrites    bool   `yaml:"retryWrites"`
-	Uri            string `yaml:"uri"`
-	Acknowledgment string `yaml:"w"`
+	AppName          string `yaml:"appName"`
+	RetryWrites      bool   `yaml:"retryWrites"`
+	Uri              string `yaml:"uri"`
+	Acknowledgment   string `yaml:"w"`
+	DatabaseName     string `yaml:"databaseName"`
+	DirectConnection bool   `yaml:"directConnection"`
 }
 
 type Database struct {

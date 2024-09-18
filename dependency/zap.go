@@ -1,6 +1,7 @@
 package dependency
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"io"
@@ -14,33 +15,42 @@ import (
 type ZapLogger struct {
 	logger *zap.Logger
 	sugar  *zap.SugaredLogger
+	prefix string
 }
 
-func (z ZapLogger) Info(message string) {
-	z.logger.Info(message)
+func (z *ZapLogger) SetPrefix(prefix string) {
+	z.prefix = prefix
 }
 
-func (z ZapLogger) Warn(message string) {
-	z.logger.Warn(message)
+func (z *ZapLogger) Info(message string) {
+	z.logger.Info(z.logMessage(message))
 }
 
-func (z ZapLogger) Debug(message string) {
-	z.logger.Debug(message)
+func (z *ZapLogger) Warn(message string) {
+	z.logger.Warn(z.logMessage(message))
 }
 
-func (z ZapLogger) Error(message string) {
-	z.logger.Error(message)
+func (z *ZapLogger) Debug(message string) {
+	z.logger.Debug(z.logMessage(message))
 }
 
-func (z ZapLogger) Fatal(message string) {
-	z.logger.Fatal(message)
+func (z *ZapLogger) Error(message string) {
+	z.logger.Error(z.logMessage(message))
 }
 
-func (z ZapLogger) Panic(message string) {
-	z.logger.Panic(message)
+func (z *ZapLogger) Fatal(message string) {
+	z.logger.Fatal(z.logMessage(message))
 }
 
-func NewZap(level string, dev bool, initialFields map[string]interface{}) (ZapLogger, error) {
+func (z *ZapLogger) Panic(message string) {
+	z.logger.Panic(z.logMessage(message))
+}
+
+func (z *ZapLogger) logMessage(message string) string {
+	return fmt.Sprintf("%s :: %s", z.prefix, message)
+}
+
+func NewZap(level string, dev bool, initialFields map[string]interface{}, prefix string) (*ZapLogger, error) {
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.TimeKey = "timestamp"
 	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -64,10 +74,10 @@ func NewZap(level string, dev bool, initialFields map[string]interface{}) (ZapLo
 
 	logger, err := config.Build()
 	if err != nil {
-		return ZapLogger{}, err
+		return nil, err
 	}
 
-	return ZapLogger{
+	return &ZapLogger{
 		logger: logger,
 		sugar:  logger.Sugar(),
 	}, nil
@@ -77,7 +87,8 @@ func CustomZapLogger(
 	develop bool,
 	level string,
 	out io.Writer,
-	initialFields []zapcore.Field) ZapLogger {
+	prefix string,
+	initialFields []zapcore.Field) *ZapLogger {
 
 	// log outputs
 	// log to multiple out puts. e.g file & console (os.Stdout)
@@ -103,7 +114,8 @@ func CustomZapLogger(
 
 	zapLogger := zap.New(core)
 	zapLogger = zapLogger.WithOptions(zap.Fields(initialFields...))
-	return ZapLogger{
+	return &ZapLogger{
+		prefix: prefix,
 		logger: zapLogger,
 		sugar:  zapLogger.Sugar(),
 	}

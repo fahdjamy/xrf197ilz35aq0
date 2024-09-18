@@ -1,23 +1,35 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
-	"strconv"
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd"
 	"xrf197ilz35aq0/core"
+	"xrf197ilz35aq0/core/exchange"
+	"xrf197ilz35aq0/core/service/user"
 	"xrf197ilz35aq0/dependency"
-	"xrf197ilz35aq0/internal/random"
+	"xrf197ilz35aq0/storage/mongo"
 )
 
 func main() {
+	// get the globally set environment variables
 	environment := cmd.GetEnvironment()
 
+	// get the configuration for the application
+	config, err := xrf197ilz35aq0.NewConfig(environment.Name)
+	if err != nil {
+		panic(err)
+	}
+
+	// get the health information about the application
 	health := xrf197ilz35aq0.NewHealth()
+
+	// create a logger
 	logFileOutPut := &lumberjack.Logger{
 		Filename:   ".logs/xrf197ilz.log",
 		MaxSize:    5, // megabytes
@@ -25,27 +37,51 @@ func main() {
 		MaxAge:     7, // days
 	}
 
-	requestId, err := cmd.GenerateRequestId()
-	if err != nil {
-		requestId = strconv.Itoa(int(random.PositiveInt64()))
-	}
 	initialFields := []zap.Field{
-		zap.String("requestId", requestId),
-		zap.String("version", health.Version()),
+		zap.String("os", health.Runtime.OS),
 	}
 
-	config, err := xrf197ilz35aq0.NewConfig(environment.Name)
+	logPrefix := fmt.Sprintf("appVersion='%s' :: requestId='%s'", health.Version(), cmd.GenerateRequestId())
+	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, logPrefix, initialFields)
+
+	// connect to the Mongo Database
+	dbConnStr, err := mongoUri(config)
 	if err != nil {
-		panic(err)
+		logger.Panic(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		return
 	}
+	databaseName := config.Database.Mongo.DatabaseName
+	mongoClient, err := mongo.NewClient(context.Background(), dbConnStr, databaseName)
 
-	_, err = mongoUri(config)
 	if err != nil {
-		panic(err.Error())
+		internalError := core.InternalError{
+			Err:     err,
+			Time:    time.Now(),
+			Source:  "cmd/cli/main",
+			Message: "failed to connect to mongo",
+		}
+		logger.Panic(fmt.Sprintf("appStarted=false :: err%s", internalError.Error()))
+		return
 	}
 
-	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, initialFields)
-	logger.Info(fmt.Sprintf("application version '%s'", health.Version()))
+	// create a mongo store
+	mongoStore := mongo.NewStore(logger, mongoClient, databaseName, context.Background())
+
+	// create the services
+	settingsService := user.NewSettingManager(logger)
+	userManager := user.NewUserManager(logger, settingsService, mongoStore)
+
+	// start application
+	logger.Info("appStarted=success")
+
+	// Start the actions on the services
+	userResp, err := userManager.NewUser(&exchange.UserRequest{})
+
+	if err != nil {
+		logger.Panic(err.Error())
+		return
+	}
+	logger.Info(fmt.Sprintf("user created with id '%d'", userResp.UserId))
 }
 
 func mongoUri(config xrf197ilz35aq0.Config) (string, error) {
@@ -58,8 +94,9 @@ func mongoUri(config xrf197ilz35aq0.Config) (string, error) {
 			Message: "missing environment variable $" + mongoConfig.Uri,
 		}
 	}
-	return fmt.Sprintf("%sretryWrites=%tw=%sappName=%s",
+	return fmt.Sprintf("%s?directConnection=%t&retryWrites=%t&w=%s&appName=%s",
 		baseUri,
+		mongoConfig.DirectConnection,
 		mongoConfig.RetryWrites,
 		mongoConfig.Acknowledgment,
 		mongoConfig.AppName,

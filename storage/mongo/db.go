@@ -41,7 +41,7 @@ func (d *Database) FindById(collection string, id int64) (*xrf197ilz35aq0.Serial
 	return d.decodeTo, nil
 }
 
-func MewMongoStore(log xrf197ilz35aq0.Logger, client *mongo.Client, dbName string, ctx context.Context) storage.Store {
+func NewStore(log xrf197ilz35aq0.Logger, client *mongo.Client, dbName string, ctx context.Context) storage.Store {
 	database := client.Database(dbName)
 	return &Database{
 		log:     log,

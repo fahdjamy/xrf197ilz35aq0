@@ -25,13 +25,13 @@ type service struct {
 
 func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
 	now := time.Now()
-	userName := request.FirstName + " " + request.LastName
-	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: user=%s", userName))
-
 	err := uc.validateUser(request)
 	if err != nil {
 		return nil, err
 	}
+
+	userName := request.FirstName + " " + request.LastName
+	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: user=%s", userName))
 
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), request.Password.Data())
 	settings, err := uc.settingsService.NewSettings(request.Settings, *newUser)

@@ -1,10 +1,12 @@
 package user
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
+	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/internal/constants"
 	"xrf197ilz35aq0/internal/random"
 )
@@ -12,24 +14,19 @@ import (
 const fingerPrintLength = 55
 
 type User struct {
-	masked      bool
-	Id          int64
-	FirstName   string
-	LastName    string
 	fingerPrint string
-	email       string
-	password    string
-	Joined      time.Time
-	UpdatedAt   time.Time
-}
-
-func (u *User) String() string {
-	format := "Id: %d, FirstName: %s, LastName: %s, Anonymous, %t"
-	return fmt.Sprintf(format, u.Id, u.FirstName, u.LastName, u.masked)
+	Masked      bool      `json:"masked"`
+	Id          int64     `json:"id"`
+	FirstName   string    `json:"firstName"`
+	Email       string    `json:"email"`
+	LastName    string    `json:"lastName"`
+	Password    string    `json:"password"`
+	Joined      time.Time `json:"joined"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func (u *User) IsAnonymous() bool {
-	return u.masked
+	return u.Masked
 }
 
 func (u *User) FingerPrint() string {
@@ -38,7 +35,73 @@ func (u *User) FingerPrint() string {
 }
 
 func (u *User) UpdatePassword(password string) {
-	u.password = password
+	u.Password = password
+}
+
+func (u *User) UnmarshalJSON(bytes []byte) error {
+	type Alias User // Create an alias to avoid infinite recursion
+	aux := &struct {
+		*Alias
+		Joined  string `json:"joined"`
+		Updated string `json:"updatedAt"`
+	}{
+		Alias: (*Alias)(u),
+	}
+	now := time.Now()
+	if err := json.Unmarshal(bytes, &aux); err != nil {
+		return core.InternalError{
+			Err:     err,
+			Time:    now,
+			Message: "failed to unmarshal json",
+			Source:  "core/model/user#UnmarshalJSON",
+		}
+	}
+
+	var err error
+	// RFC3339 -> "YYYY-MM-DDTHH:mm:ssZ"
+	u.Joined, err = time.Parse(time.RFC3339, aux.Joined)
+	if err != nil {
+		return core.InternalError{
+			Err:     err,
+			Time:    now,
+			Message: "failed to parse Joined",
+			Source:  "core/model/user#UnmarshalJSON",
+		}
+	}
+
+	updatedAt, err := time.Parse(time.RFC3339, aux.Updated)
+	if err != nil {
+		return core.InternalError{
+			Err:     err,
+			Time:    now,
+			Message: "failed to parse Updated",
+			Source:  "core/model/user#UnmarshalJSON",
+		}
+	}
+	u.UpdatedAt = updatedAt
+	return nil
+}
+
+func (u *User) MarshalJSON() ([]byte, error) {
+	type Alias User
+	// dereference u to get the User value, convert it to an Alias, and store the result in the auxAlias variable.
+	auxAlias := (Alias)(*u) // Store the converted Alias in a variable
+
+	return json.Marshal(&struct {
+		*Alias
+		Joined    string `json:"joined"`
+		UpdatedAt string `json:"updatedAt"`
+	}{
+		// take the address of the auxAlias variable, which is a valid *Alias, and assign it to the Alias field in the anonymous struct
+		Alias:     &auxAlias,
+		Joined:    u.Joined.Format(time.RFC3339),
+		UpdatedAt: u.UpdatedAt.Format(time.RFC3339),
+	})
+}
+
+func (u *User) String() string {
+	format := "Id: %d, FirstName: %s, LastName: %s, Anonymous, %t"
+	return fmt.Sprintf(format, u.Id, u.FirstName, u.LastName, u.Masked)
 }
 
 func NewUser(firstName string, lastName string, email string, password string) *User {
@@ -47,9 +110,9 @@ func NewUser(firstName string, lastName string, email string, password string) *
 	newUser := &User{
 		Joined:    now,
 		UpdatedAt: now,
-		masked:    false,
-		email:     email,
-		password:  password,
+		Masked:    false,
+		Email:     email,
+		Password:  password,
 		LastName:  lastName,
 		FirstName: firstName,
 		Id:        random.PositiveInt64(),

@@ -21,10 +21,10 @@ type Environment struct {
 	LogMode bool
 }
 
-func GenerateRequestId() (string, error) {
+func GenerateRequestId() string {
 	uniqueStr, err := random.TimeBasedString(time.Now().Unix(), 21)
 	if err != nil {
-		return "", err
+		return strconv.Itoa(int(random.PositiveInt64()))
 	}
 
 	uniqueInt64 := random.PositiveInt64()
@@ -36,7 +36,7 @@ func GenerateRequestId() (string, error) {
 
 	partStr := uniqueStr[0:12]
 
-	return fmt.Sprintf("%s.%s", uniqueInt64Str, partStr), nil
+	return fmt.Sprintf("%s.%s", uniqueInt64Str, partStr)
 }
 
 func GetEnvironment() Environment {
