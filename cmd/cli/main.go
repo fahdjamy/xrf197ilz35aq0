@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"os"
 	"strconv"
-	"time"
 	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/cmd"
 	"xrf197ilz35aq0/dependency"
-	random2 "xrf197ilz35aq0/internal/random"
+	"xrf197ilz35aq0/internal/random"
 )
 
 func main() {
+	environment := cmd.GetEnvironment()
+
 	health := xrf197ilz35aq0.NewHealth()
 	logFileOutPut := &lumberjack.Logger{
 		Filename:   ".logs/xrf197ilz.log",
@@ -20,33 +23,33 @@ func main() {
 		MaxAge:     7, // days
 	}
 
-	requestId, err := generateRequestId()
+	requestId, err := cmd.GenerateRequestId()
 	if err != nil {
-		requestId = strconv.Itoa(int(random2.PositiveInt64()))
+		requestId = strconv.Itoa(int(random.PositiveInt64()))
 	}
 	initialFields := []zap.Field{
 		zap.String("requestId", requestId),
 		zap.String("version", health.Version()),
 	}
 
-	logger := dependency.CustomZapLogger(true, xrf197ilz35aq0.DEBUG, logFileOutPut, initialFields)
+	config, err := xrf197ilz35aq0.NewConfig(environment.Name)
+	if err != nil {
+		panic(err)
+	}
+
+	dbUri := mongoUri(config)
+	fmt.Println(dbUri)
+	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, initialFields)
 	logger.Info(fmt.Sprintf("application version '%s'", health.Version()))
 }
 
-func generateRequestId() (string, error) {
-	uniqueStr, err := random2.TimeBasedString(time.Now().Unix(), 21)
-	if err != nil {
-		return "", err
-	}
-
-	uniqueInt64 := random2.PositiveInt64()
-	uniqueInt64Str := strconv.Itoa(int(uniqueInt64))
-
-	if len(uniqueInt64Str) > 10 {
-		uniqueInt64Str = uniqueInt64Str[2:]
-	}
-
-	partStr := uniqueStr[0:12]
-
-	return fmt.Sprintf("%s.%s", uniqueInt64Str, partStr), nil
+func mongoUri(config xrf197ilz35aq0.Config) string {
+	mongoConfig := config.Database.Mongo
+	baseUri := os.Getenv(mongoConfig.Uri)
+	return fmt.Sprintf("%sretryWrites=%tw=%sappName=%s",
+		baseUri,
+		mongoConfig.RetryWrites,
+		mongoConfig.Acknowledgment,
+		mongoConfig.AppName,
+	)
 }

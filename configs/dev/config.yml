@@ -6,3 +6,14 @@ log:
 
 rest:
   port: 8081
+
+database:
+  mongo:
+    # Connection String Options
+    # https://www.mongodb.com/docs/manual/reference/connection-string-options/#miscellaneous-configuration
+    # https://www.mongodb.com/docs/manual/reference/connection-string-options/#miscellaneous-configuration
+    # https://www.mongodb.com/docs/manual/reference/write-concern/#mongodb-writeconcern-writeconcern.-majority-
+    w: majority
+    appName: xrf-user
+    retryWrites: false
+    uri: CLOUD_MONGO_URI

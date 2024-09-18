@@ -73,7 +73,12 @@ func NewZap(level string, dev bool, initialFields map[string]interface{}) (ZapLo
 	}, nil
 }
 
-func CustomZapLogger(devEnv bool, level string, out io.Writer, initialFields []zapcore.Field) ZapLogger {
+func CustomZapLogger(
+	develop bool,
+	level string,
+	out io.Writer,
+	initialFields []zapcore.Field) ZapLogger {
+
 	// log outputs
 	// log to multiple out puts. e.g file & console (os.Stdout)
 	file := zapcore.AddSync(out)
@@ -82,7 +87,7 @@ func CustomZapLogger(devEnv bool, level string, out io.Writer, initialFields []z
 	zapLevel := loggerLevel(level)
 
 	logLvl := zap.NewAtomicLevelAt(zapLevel)
-	encoderConfig := createEncoderConfig(devEnv)
+	encoderConfig := createEncoderConfig(develop)
 
 	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
 	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)

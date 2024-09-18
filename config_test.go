@@ -16,7 +16,7 @@ field:
 
 func TestNewConfig(t *testing.T) {
 	t.Run("should return a valid config", func(t *testing.T) {
-		config, err := NewConfig()
+		config, err := NewConfig("dev")
 		AssertNoError(t, err)
 		assertConfigIsNotNil(t, config)
 	})
@@ -35,7 +35,7 @@ func TestNewConfig(t *testing.T) {
 			go func() {
 				defer wg.Done()
 
-				config, err := NewConfig()
+				config, err := NewConfig("dev")
 				AssertNoError(t, err)
 
 				// configSetCount.CompareAndSwap(0, 1): This is an atomic operation:

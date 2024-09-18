@@ -12,28 +12,41 @@ import (
 const (
 	maxRetries     = 3
 	retryAfter     = 2 * time.Second
-	configFilename = "configs/dev/config.yml"
+	configFilename = "configs/%s/config.yml"
 )
 
 var mutex = sync.Mutex{}
 var configurations *Config
 
-type Config struct {
-	Environment string `yaml:"environment"`
-	Log         struct {
-		Level  string `yaml:"level"`
-		Logger string `yaml:"logger"`
-	}
+type Log struct {
+	Level  string `yaml:"level"`
+	Logger string `yaml:"logger"`
 }
 
-func NewConfig() (Config, error) {
+type MongoConfig struct {
+	AppName        string `yaml:"appName"`
+	RetryWrites    bool   `yaml:"retryWrites"`
+	Uri            string `yaml:"uri"`
+	Acknowledgment string `yaml:"w"`
+}
 
+type Database struct {
+	Mongo MongoConfig `yaml:"mongo"`
+}
+
+type Config struct {
+	Environment string   `yaml:"environment"`
+	Log         Log      `yaml:"log"`
+	Database    Database `yaml:"database"`
+}
+
+func NewConfig(env string) (Config, error) {
 	if configurations == nil {
 		// Acquire the lock to ensure strict singleton but only when creating a new config
 		mutex.Lock()
 		defer mutex.Unlock()
 
-		yamlFile, err := readFromFile(configFilename)
+		yamlFile, err := readFromFile(fmt.Sprintf(configFilename, env))
 		if err != nil {
 			return Config{}, err
 		}
