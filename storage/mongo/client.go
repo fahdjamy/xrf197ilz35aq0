@@ -30,6 +30,6 @@ func NewClient(ctx context.Context, dbUri, dbName string) (*mongo.Client, error)
 	if err := client.Database(dbName).RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
 		return nil, err
 	}
-	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
+	fmt.Println("Successfully connected to MongoDB")
 	return client, nil
 }
