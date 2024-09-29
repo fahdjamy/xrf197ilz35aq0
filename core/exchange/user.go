@@ -7,8 +7,8 @@ import (
 )
 
 type UserRequest struct {
-	FirstName string                `json:"first_name"`
-	LastName  string                `json:"last_name"`
+	FirstName string                `json:"firstName"`
+	LastName  string                `json:"lastName"`
 	Email     custom.Secret[string] `json:"email"`
 	Password  custom.Secret[string] `json:"password"`
 	Anonymous bool                  `json:"anonymous"`

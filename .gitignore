@@ -2,6 +2,7 @@
 .idea/
 .logs/
 bin
+ignoreDir/
 
 # Binaries for programs and plugins
 *.exe
