@@ -10,6 +10,10 @@ type Time struct {
 	time.Time
 }
 
+func (t *Time) String() string {
+	return t.Time.Format(time.RFC3339)
+}
+
 func (t *Time) MarshalJSON() ([]byte, error) {
 	if t.Time.IsZero() {
 		return []byte("null"), core.InternalError{

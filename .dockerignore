@@ -1,0 +1,8 @@
+deploy/
+tools/
+bin/
+.logs/
+.github/
+README.md
+Makefile
+migrations/

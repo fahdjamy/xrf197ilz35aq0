@@ -66,13 +66,9 @@ func (u *User) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		*Alias
-		Joined    string `json:"joined"`
-		UpdatedAt string `json:"updatedAt"`
 	}{
 		// take the address of the auxAlias variable, which is a valid *UserAlias, and assign it to the UserAlias field in the anonymous struct
-		Alias:     &auxAlias,
-		Joined:    u.Joined.Format(time.RFC3339),
-		UpdatedAt: u.UpdatedAt.Format(time.RFC3339),
+		Alias: &auxAlias,
 	})
 }
 

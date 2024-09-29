@@ -1,6 +1,7 @@
 package xrf197ilz35aq0
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"testing"
@@ -81,11 +82,40 @@ type StoreMock struct {
 	Called     int
 	Document   any
 	Collection string
+	context    context.Context
+	calledFunc map[string]int
+}
+
+func (s *StoreMock) SetContext(ctx context.Context) {
+	methodName := "StoreMock.SetContext"
+	s.context = ctx
+	val, ok := s.calledFunc[methodName]
+	if !ok {
+		s.calledFunc[methodName] = 0
+	}
+	s.calledFunc[methodName] += val
+}
+
+func (s *StoreMock) FindById(collection string, _ int64) (*Serializable, error) {
+	methodName := "StoreMock.FindById"
+	s.Collection = collection
+	val, ok := s.calledFunc[methodName]
+	if !ok {
+		s.calledFunc[methodName] = 0
+	}
+	s.calledFunc[methodName] += val
+	return nil, nil
 }
 
 func (s *StoreMock) Save(collection string, obj Serializable) (any, error) {
-	s.Called++
 	s.Document = obj
 	s.Collection = collection
+
+	methodName := "StoreMock.Save"
+	val, ok := s.calledFunc[methodName]
+	if !ok {
+		s.calledFunc[methodName] = 0
+	}
+	s.calledFunc[methodName] += val
 	return nil, nil
 }

@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"time"
+	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/internal/custom"
 )
 
@@ -20,8 +21,8 @@ type UserResponse struct {
 	LastName  string                `json:"lastName"`
 	Email     custom.Secret[string] `json:"email"`
 	Anonymous bool                  `json:"anonymous"`
-	CreatedAt time.Time             `json:"createdAt"`
-	UpdatedAt time.Time             `json:"updatedAt"`
+	CreatedAt model.Time            `json:"createdAt"`
+	UpdatedAt model.Time            `json:"updatedAt"`
 	Settings  SettingResponse       `json:"settings"`
 }
 
