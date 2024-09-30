@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -10,7 +9,7 @@ import (
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd"
-	"xrf197ilz35aq0/core/service/user"
+	"xrf197ilz35aq0/cmd/cli/adapter"
 	"xrf197ilz35aq0/dependency"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/storage/mongo"
@@ -67,39 +66,11 @@ func main() {
 	// create a mongo store
 	mongoStore := mongo.NewStore(logger, mongoClient, databaseName, context.Background())
 
-	// create the services
-	settingsService := user.NewSettingManager(logger)
-	userManager := user.NewUserManager(logger, settingsService, mongoStore)
+	// create the app
+	app := adapter.NewApp(logger, mongoStore)
 
 	// start application
-	logger.Info("appStarted=success")
-
-	// Start the actions on the services
-
-	// parse flags
-	flags := NewFlags(logger)
-	userReq, err := flags.Parse()
-	if err != nil {
-		logErr(err, logger)
-	}
-	userResp, err := userManager.NewUser(userReq)
-
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-	logger.Info(fmt.Sprintf("user created with id '%d'", userResp.UserId))
-}
-
-func logErr(err error, log xrf197ilz35aq0.Logger) {
-	if errors.Is(err, ParseFlagExtErr) {
-		log.Panic(err.Error())
-		return
-	}
-	if errors.Is(err, ParseFlagIntErr) {
-		log.Error(err.Error())
-		return
-	}
+	app.Start()
 }
 
 func mongoUri(config xrf197ilz35aq0.Config) (string, error) {
