@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"time"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 	"xrf197ilz35aq0/internal/encryption"
+	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
 )
 
@@ -54,7 +54,7 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel
 
 func (s *settingService) validateEncryptionKey(request *exchange.SettingRequest, now time.Time) error {
 	if len(request.EncryptionKey) != 0 && len(request.EncryptionKey) < 31 {
-		return core.InvalidRequest{Message: "Encryption key must be at least 31 characters long", Time: now}
+		return &xrfErr.External{Message: "Encryption key must be at least 31 characters long", Time: now}
 	}
 	return nil
 }
@@ -83,9 +83,9 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest, now 
 	if request.RotateKey {
 		switch encryptAfter := request.RotateAfter; {
 		case encryptAfter < 3:
-			return core.InvalidRequest{Message: "Rotation should at least be between 3 and 12 months", Time: now}
+			return &xrfErr.External{Message: "Rotation should at least be between 3 and 12 months", Time: now}
 		case encryptAfter > 12:
-			return core.InvalidRequest{Message: "Key rotation should at least happen every year", Time: now}
+			return &xrfErr.External{Message: "Key rotation should at least happen every year", Time: now}
 		}
 	}
 	return nil

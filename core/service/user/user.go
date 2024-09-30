@@ -5,10 +5,10 @@ import (
 	"net/mail"
 	"time"
 	"xrf197ilz35aq0"
-	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal/encryption"
+	error2 "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/storage"
 )
 
@@ -41,7 +41,7 @@ func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserRespons
 
 	passCode, err := encryption.Encrypt([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
 	if err != nil {
-		return nil, core.InternalError{
+		return nil, &error2.Internal{
 			Message: "Encrypt user password failed",
 			Time:    now,
 			Source:  "createUser",
@@ -60,15 +60,15 @@ func (uc *service) validateUser(request *exchange.UserRequest) error {
 	// is validEmail
 	_, err := mail.ParseAddress(request.Email.Data())
 	if err != nil {
-		return core.InvalidRequest{Message: "Invalid email address"}
+		return &error2.External{Message: "Invalid email address"}
 	}
 	lastNameLen := len(request.LastName)
 	if lastNameLen != 0 && lastNameLen < 3 {
-		return core.InvalidRequest{Message: "If last name is specified, it should be at least 3 characters long"}
+		return &error2.External{Message: "If last name is specified, it should be at least 3 characters long"}
 	}
 	firstNameLen := len(request.FirstName)
 	if firstNameLen != 0 && firstNameLen < 3 {
-		return core.InvalidRequest{Message: "If first name is specified, it should be at least 3 characters long"}
+		return &error2.External{Message: "If first name is specified, it should be at least 3 characters long"}
 	}
 	return nil
 }

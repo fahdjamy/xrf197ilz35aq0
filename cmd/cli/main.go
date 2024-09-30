@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -9,10 +10,9 @@ import (
 	"time"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd"
-	"xrf197ilz35aq0/core"
-	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service/user"
 	"xrf197ilz35aq0/dependency"
+	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/storage/mongo"
 )
 
@@ -54,7 +54,7 @@ func main() {
 	mongoClient, err := mongo.NewClient(context.Background(), dbConnStr, databaseName)
 
 	if err != nil {
-		internalError := core.InternalError{
+		internalError := xrfErr.Internal{
 			Err:     err,
 			Time:    time.Now(),
 			Source:  "cmd/cli/main",
@@ -75,20 +75,38 @@ func main() {
 	logger.Info("appStarted=success")
 
 	// Start the actions on the services
-	userResp, err := userManager.NewUser(&exchange.UserRequest{})
+
+	// parse flags
+	flags := NewFlags(logger)
+	userReq, err := flags.Parse()
+	if err != nil {
+		logErr(err, logger)
+	}
+	userResp, err := userManager.NewUser(userReq)
 
 	if err != nil {
-		logger.Panic(err.Error())
+		logger.Error(err.Error())
 		return
 	}
 	logger.Info(fmt.Sprintf("user created with id '%d'", userResp.UserId))
+}
+
+func logErr(err error, log xrf197ilz35aq0.Logger) {
+	if errors.Is(err, ParseFlagExtErr) {
+		log.Panic(err.Error())
+		return
+	}
+	if errors.Is(err, ParseFlagIntErr) {
+		log.Error(err.Error())
+		return
+	}
 }
 
 func mongoUri(config xrf197ilz35aq0.Config) (string, error) {
 	mongoConfig := config.Database.Mongo
 	baseUri := os.Getenv(mongoConfig.Uri)
 	if baseUri == "" {
-		return "", core.InternalError{
+		return "", &xrfErr.Internal{
 			Time:    time.Now(),
 			Source:  "cmd/cli/main#mongoUri",
 			Message: "missing environment variable $" + mongoConfig.Uri,

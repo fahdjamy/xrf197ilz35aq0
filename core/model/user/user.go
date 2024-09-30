@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"xrf197ilz35aq0/core"
 	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/internal/constants"
+	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
 )
 
@@ -50,7 +50,7 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	}
 	now := time.Now()
 	if err := json.Unmarshal(bytes, &aux); err != nil {
-		return core.InternalError{
+		return &xrfErr.Internal{
 			Err:     err,
 			Time:    now,
 			Message: "failed to unmarshal json",

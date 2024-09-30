@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 	"time"
-	"xrf197ilz35aq0/core"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 // Generate a 32-byte (256-bit) key, suitable for AES-256
@@ -110,7 +110,7 @@ func GenerateKey(keySize int) ([]byte, error) {
 			// unexpectedly reaches its end. While rare, it's possible in scenarios where the system is under
 			// extreme stress or there's an issue with the entropy source.
 			fmt.Println("Unexpected end of randomness source")
-			return nil, core.InternalError{
+			return nil, &xrfErr.Internal{
 				Message: "Unexpected end of randomness source",
 				Time:    time.Now(),
 				Source:  "GenerateKey",
