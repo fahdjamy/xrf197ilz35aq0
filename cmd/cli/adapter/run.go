@@ -90,17 +90,6 @@ func (app *App) Start() {
 	}
 }
 
-//func logErr(err error, log xrf197ilz35aq0.Logger) {
-//	if errors.Is(err, parseFlagExtErr) {
-//		log.Panic(err.Error())
-//		return
-//	}
-//	if errors.Is(err, parseFlagIntErr) {
-//		log.Error(err.Error())
-//		return
-//	}
-//}
-
 func NewApp(logger xrf197ilz35aq0.Logger, store storage.Store) App {
 	return App{
 		log:   logger,
