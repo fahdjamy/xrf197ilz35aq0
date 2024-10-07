@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.9.0
-	go.mongodb.org/mongo-driver v1.17.0
+	go.mongodb.org/mongo-driver v1.17.1
 	go.uber.org/zap v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
