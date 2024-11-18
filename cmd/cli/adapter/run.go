@@ -40,8 +40,6 @@ func (app *App) Start() {
 	parseFlagExtErr.Time = now
 	parseFlagIntErr.Time = now
 
-	userAdapter := NewUserAdapter(app.mongo, app.log)
-
 	newUserReq := &exchange.UserRequest{}
 
 	app.log.Info("Provide flags to be evaluated")
@@ -84,9 +82,6 @@ func (app *App) Start() {
 			app.log.Error(fmt.Sprintf("err=can't unmarshal json file %s", *newUserFile))
 			return
 		}
-
-		// create user
-		userAdapter.CreateUser(newUserReq)
 	}
 }
 
