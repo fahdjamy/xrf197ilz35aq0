@@ -113,7 +113,7 @@ func CustomZapLogger(
 	core := zapcore.NewTee(fileCore, consoleCore)
 
 	zapLogger := zap.New(core)
-	zapLogger = zapLogger.WithOptions(zap.Fields(initialFields...))
+	//zapLogger = zapLogger.WithOptions(zap.Fields(initialFields...))
 	return &ZapLogger{
 		prefix: prefix,
 		logger: zapLogger,
