@@ -43,6 +43,6 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	api := routes.NewApi(logger, router)
+	api := routes.NewApi(logger, router, config)
 	api.Start()
 }

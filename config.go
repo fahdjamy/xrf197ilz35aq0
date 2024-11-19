@@ -32,14 +32,24 @@ type MongoConfig struct {
 	DirectConnection bool   `yaml:"directConnection"`
 }
 
+type ApplicationConfig struct {
+	Port int `yaml:"port"`
+
+	IdleTimeoutSecs     time.Duration `yaml:"idleTimeoutSecs"`
+	ReadTimeout         time.Duration `yaml:"readTimeoutSecs"`
+	WriteTimeout        time.Duration `yaml:"writeTimeoutSecs"`
+	GracefulTimeoutSecs time.Duration `yaml:"gracefulTimeoutSecs"`
+}
+
 type Database struct {
 	Mongo MongoConfig `yaml:"mongo"`
 }
 
 type Config struct {
-	Environment string   `yaml:"environment"`
-	Log         Log      `yaml:"log"`
-	Database    Database `yaml:"database"`
+	Environment string            `yaml:"environment"`
+	Log         Log               `yaml:"log"`
+	Database    Database          `yaml:"database"`
+	Application ApplicationConfig `yaml:"application"`
 }
 
 func NewConfig(env string) (Config, error) {

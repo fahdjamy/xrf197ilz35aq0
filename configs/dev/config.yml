@@ -4,8 +4,12 @@ log:
   logger: zap
   level: DEBUG
 
-rest:
-  port: 8081
+application:
+  port: 8009
+  readTimeoutSecs: "7s"
+  idleTimeoutSecs: "30s"
+  writeTimeoutSecs: "10s"
+  gracefulTimeoutSecs: "15s"
 
 database:
   mongo:
