@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -50,7 +51,7 @@ func (r *Route) Start() {
 
 	// Run the server in a goroutine so that it doesn't block.
 	go func() {
-		if err := svr.ListenAndServe(); err != nil {
+		if err := svr.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fmt.Printf("Error starting http server on port 8009: %s\n", err)
 			apiInternalErr.Time = time.Now()
 			apiInternalErr.Message = "error starting http server"
@@ -58,8 +59,8 @@ func (r *Route) Start() {
 		}
 	}()
 
-	timeTaken := time.Since(started)
-	r.logger.Info(fmt.Sprintf("serverStarted=true :: time=%s :: timeTake=%s :: message=http server started", started, timeTaken))
+	timeTaken := time.Since(started).Milliseconds()
+	r.logger.Info(fmt.Sprintf("serverStarted=true :: port=%d :: timeTaken='%d ms'", appConfig.Port, timeTaken))
 	r.started = true
 
 	ch := make(chan os.Signal, 1)
