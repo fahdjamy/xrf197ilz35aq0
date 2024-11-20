@@ -3,6 +3,7 @@ environment: DEV
 log:
   logger: zap
   level: DEBUG
+  filename: ".logs/xrf197ilz.log"
 
 application:
   port: 8009

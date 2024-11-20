@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"github.com/gorilla/mux"
@@ -12,10 +12,10 @@ type HealthRoutes struct {
 }
 
 func (hr *HealthRoutes) RegisterAndListen() {
-	hr.router.HandleFunc("/health", hr.healthCheckHandler).Methods("GET")
+	hr.router.HandleFunc("/health", hr.healthCheck).Methods("GET")
 }
 
-func (hr *HealthRoutes) healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
+func (hr *HealthRoutes) healthCheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("OK"))
 	if err != nil {

@@ -19,8 +19,9 @@ var mutex = sync.Mutex{}
 var configurations *Config
 
 type Log struct {
-	Level  string `yaml:"level"`
-	Logger string `yaml:"logger"`
+	Level    string `yaml:"level"`
+	Logger   string `yaml:"logger"`
+	Filename string `yaml:"filename"`
 }
 
 type MongoConfig struct {

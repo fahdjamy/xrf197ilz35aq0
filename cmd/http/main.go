@@ -5,10 +5,10 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/cmd"
-	"xrf197ilz35aq0/cmd/http/routes"
 	"xrf197ilz35aq0/dependency"
+	"xrf197ilz35aq0/server/http"
 )
 
 func main() {
@@ -16,17 +16,17 @@ func main() {
 	environment := cmd.GetEnvironment()
 
 	// get the configuration for the application
-	config, err := xrf197ilz35aq0.NewConfig(environment.Name)
+	config, err := xrf.NewConfig(environment.Name)
 	if err != nil {
 		panic(err)
 	}
 
 	// get the health information about the application
-	health := xrf197ilz35aq0.NewHealth()
+	health := xrf.NewHealth()
 
 	// create a logger
 	logFileOutPut := &lumberjack.Logger{
-		Filename:   ".logs/xrf197ilz.log",
+		Filename:   config.Log.Filename,
 		MaxSize:    5, // megabytes
 		MaxBackups: 3,
 		MaxAge:     7, // days
@@ -43,6 +43,6 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	api := routes.NewApi(logger, router, config)
-	api.Start()
+	apiServer := http.NewHttpServer(logger, router, config)
+	apiServer.Start()
 }

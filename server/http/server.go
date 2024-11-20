@@ -1,4 +1,4 @@
-package routes
+package http
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"time"
 	xrf "xrf197ilz35aq0"
 	xrfErr "xrf197ilz35aq0/internal/error"
+	"xrf197ilz35aq0/server/http/handlers"
 )
 
 type Route struct {
@@ -31,7 +32,7 @@ func (r *Route) Start() {
 	started := time.Now()
 
 	// handlers
-	NewHealthRoutes(r.logger, r.router).RegisterAndListen()
+	handlers.NewHealthRoutes(r.logger, r.router).RegisterAndListen()
 
 	// start the server
 	appConfig := r.config.Application
@@ -100,7 +101,7 @@ func (r *Route) Stop() {
 	r.started = false
 }
 
-func NewApi(logger xrf.Logger, router *mux.Router, config xrf.Config) *Route {
+func NewHttpServer(logger xrf.Logger, router *mux.Router, config xrf.Config) *Route {
 	return &Route{
 		logger: logger,
 		router: router,
