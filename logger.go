@@ -1,11 +1,11 @@
 package xrf197ilz35aq0
 
 const (
-	DEBUG = "debug"
-	INFO  = "info"
-	WARN  = "warn"
-	ERROR = "error"
-	FATAL = "fatal"
+	DEBUG = "DEBUG"
+	INFO  = "INFO"
+	WARN  = "WARN"
+	ERROR = "ERROR"
+	FATAL = "FATAL"
 )
 
 type Logger interface {

@@ -9,15 +9,15 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 type Route struct {
 	started bool
 	router  *mux.Router
-	logger  xrf197ilz35aq0.Logger
-	config  xrf197ilz35aq0.Config
+	logger  xrf.Logger
+	config  xrf.Config
 }
 
 var apiInternalErr = &xrfErr.Internal{
@@ -75,7 +75,7 @@ func (r *Route) Start() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*appConfig.ReadTimeout)
 	defer func() {
 		cancel()
-		r.started = false
+		r.Stop()
 	}()
 
 	// Doesn't block if no connections, but will otherwise wait
@@ -100,7 +100,7 @@ func (r *Route) Stop() {
 	r.started = false
 }
 
-func NewApi(logger xrf197ilz35aq0.Logger, router *mux.Router, config xrf197ilz35aq0.Config) *Route {
+func NewApi(logger xrf.Logger, router *mux.Router, config xrf.Config) *Route {
 	return &Route{
 		logger: logger,
 		router: router,
