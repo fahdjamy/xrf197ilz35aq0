@@ -36,10 +36,10 @@ type MongoConfig struct {
 type ApplicationConfig struct {
 	Port int `yaml:"port"`
 
-	IdleTimeoutSecs     time.Duration `yaml:"idleTimeoutSecs"`
-	ReadTimeout         time.Duration `yaml:"readTimeoutSecs"`
-	WriteTimeout        time.Duration `yaml:"writeTimeoutSecs"`
-	GracefulTimeoutSecs time.Duration `yaml:"gracefulTimeoutSecs"`
+	IdleTimeout     time.Duration `yaml:"idleTimeout"`
+	ReadTimeout     time.Duration `yaml:"readTimeout"`
+	WriteTimeout    time.Duration `yaml:"writeTimeout"`
+	GracefulTimeout time.Duration `yaml:"gracefulTimeout"`
 }
 
 type Database struct {

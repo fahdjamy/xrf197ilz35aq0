@@ -7,10 +7,10 @@ log:
 
 application:
   port: 8009
-  readTimeoutSecs: "7s"
-  idleTimeoutSecs: "30s"
-  writeTimeoutSecs: "10s"
-  gracefulTimeoutSecs: "15s"
+  readTimeout: 7s
+  idleTimeout: 30s
+  writeTimeout: 10s
+  gracefulTimeout: 15s
 
 database:
   mongo:

@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 )
 
 type HealthRoutes struct {
-	logger xrf197ilz35aq0.Logger
+	logger xrf.Logger
 	router *mux.Router
 }
 
@@ -19,12 +20,12 @@ func (hr *HealthRoutes) healthCheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("OK"))
 	if err != nil {
+		hr.logger.Error(fmt.Sprintf("event=healthCheckFailure :: message='Setting header failed' :: err=%s", err.Error()))
 		return
 	}
-	hr.logger.Info("api='/health' :: method='GET :: message='application health' :: status='ok'")
 }
 
-func NewHealthRoutes(logger xrf197ilz35aq0.Logger, router *mux.Router) *HealthRoutes {
+func NewHealthRoutes(logger xrf.Logger, router *mux.Router) *HealthRoutes {
 	return &HealthRoutes{
 		logger: logger,
 		router: router,
