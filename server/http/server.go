@@ -12,6 +12,7 @@ import (
 	xrf "xrf197ilz35aq0"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http/handlers"
+	"xrf197ilz35aq0/server/http/middleware"
 )
 
 type Route struct {
@@ -31,22 +32,26 @@ func (r *Route) Start() {
 	}
 	started := time.Now()
 
+	loggerMiddleware := middleware.NewLoggerHandler(r.logger)
+
 	// handlers
+	r.router.Use(loggerMiddleware.Handler)
 	handlers.NewHealthRoutes(r.logger, r.router).RegisterAndListen()
 
 	// start the server
 	appConfig := r.config.Application
-	r.logger.Debug(fmt.Sprintf("timeouts :: readTO=%d :: writeTO=%d :: idleTO=%d :: graceShutdown=%d",
-		time.Second*appConfig.ReadTimeout,
-		time.Second*appConfig.WriteTimeout,
-		appConfig.IdleTimeoutSecs,
-		appConfig.GracefulTimeoutSecs))
+
+	r.logger.Debug(fmt.Sprintf("timeouts :: readTO=%.2f :: writeTO=%.2f :: idleTO=%.2f :: graceShutdown=%.2f",
+		appConfig.ReadTimeout.Seconds(),
+		appConfig.WriteTimeout.Seconds(),
+		appConfig.IdleTimeout.Seconds(),
+		appConfig.GracefulTimeout.Seconds()))
 
 	svr := http.Server{
-		ReadTimeout:  time.Second * appConfig.ReadTimeout,
-		WriteTimeout: time.Second * appConfig.WriteTimeout,
-		IdleTimeout:  time.Second * appConfig.IdleTimeoutSecs,
 		Handler:      r.router,
+		ReadTimeout:  appConfig.ReadTimeout,
+		WriteTimeout: appConfig.WriteTimeout,
+		IdleTimeout:  appConfig.IdleTimeout,
 		Addr:         fmt.Sprintf(":%d", appConfig.Port),
 	}
 
