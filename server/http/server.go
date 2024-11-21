@@ -10,23 +10,26 @@ import (
 	"os/signal"
 	"time"
 	xrf "xrf197ilz35aq0"
+	"xrf197ilz35aq0/core/service/user"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http/handlers"
 	"xrf197ilz35aq0/server/http/middleware"
 )
 
-type Route struct {
-	started bool
-	router  *mux.Router
-	logger  xrf.Logger
-	config  xrf.Config
+type ApiServer struct {
+	started     bool
+	router      *mux.Router
+	logger      xrf.Logger
+	config      xrf.Config
+	userManager user.Manager
+	ctx         context.Context
 }
 
 var apiInternalErr = &xrfErr.Internal{
 	Source: "cmd/http/run#start",
 }
 
-func (r *Route) Start() {
+func (r *ApiServer) Start() {
 	if r.started {
 		return
 	}
@@ -37,6 +40,7 @@ func (r *Route) Start() {
 	// handlers
 	r.router.Use(loggerMiddleware.Handler)
 	handlers.NewHealthRoutes(r.logger, r.router).RegisterAndListen()
+	handlers.NewUser(r.logger, r.userManager, r.router)
 
 	// start the server
 	appConfig := r.config.Application
@@ -59,14 +63,13 @@ func (r *Route) Start() {
 	go func() {
 		if err := svr.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fmt.Printf("Error starting http server on port 8009: %s\n", err)
-			apiInternalErr.Time = time.Now()
 			apiInternalErr.Message = "error starting http server"
 			r.logger.Error(fmt.Sprintf("serverStarted=false :: %s", apiInternalErr))
 		}
 	}()
 
 	timeTaken := time.Since(started).Milliseconds()
-	r.logger.Info(fmt.Sprintf("serverStarted=true :: port=%d :: timeTaken='%d ms'", appConfig.Port, timeTaken))
+	r.logger.Info(fmt.Sprintf("serverStarted=true :: port=%d :: timeTaken='%d ms' message='application running...'", appConfig.Port, timeTaken))
 	r.started = true
 
 	ch := make(chan os.Signal, 1)
@@ -99,17 +102,19 @@ func (r *Route) Start() {
 	os.Exit(0)
 }
 
-func (r *Route) Stop() {
+func (r *ApiServer) Stop() {
 	if !r.started {
 		return
 	}
 	r.started = false
 }
 
-func NewHttpServer(logger xrf.Logger, router *mux.Router, config xrf.Config) *Route {
-	return &Route{
-		logger: logger,
-		router: router,
-		config: config,
+func NewHttpServer(logger xrf.Logger, router *mux.Router, config xrf.Config, userManager user.Manager, ctx context.Context) *ApiServer {
+	return &ApiServer{
+		ctx:         ctx,
+		logger:      logger,
+		router:      router,
+		config:      config,
+		userManager: userManager,
 	}
 }
