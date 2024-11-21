@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
@@ -112,7 +111,6 @@ func GenerateKey(keySize int) ([]byte, error) {
 			fmt.Println("Unexpected end of randomness source")
 			return nil, &xrfErr.Internal{
 				Message: "Unexpected end of randomness source",
-				Time:    time.Now(),
 				Source:  "GenerateKey",
 				Err:     err,
 			}

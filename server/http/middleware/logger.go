@@ -46,7 +46,16 @@ func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 		// Stop the timer.
 		duration := time.Since(start)
 
-		lh.logger.Info(fmt.Sprintf("event=response :: status=%d duration=%s", wrappedWriter.status, duration))
+		if wrappedWriter.status != http.StatusOK {
+			lh.logger.Error(fmt.Sprintf("event=response :: success=false :: method=%s :: url=%s :: status=%d",
+				r.Method,
+				r.URL.Path,
+				wrappedWriter.status))
+		} else {
+			lh.logger.Info(fmt.Sprintf("event=response :: success=true :: status=%d duration=%s",
+				wrappedWriter.status,
+				duration))
+		}
 	})
 }
 

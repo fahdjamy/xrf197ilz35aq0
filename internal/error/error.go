@@ -29,7 +29,6 @@ func (e *External) Error() string {
 
 type Internal struct {
 	Message string
-	Time    time.Time
 	Source  string
 	Err     error
 }
@@ -46,5 +45,5 @@ func (ie *Internal) WithErr(msg string, err error) *Internal {
 }
 
 func (ie *Internal) Error() string {
-	return fmt.Sprintf("message=%s :: time=%s :: source%s :: \n\terr=%s", ie.Message, ie.Time, ie.Source, ie.Err)
+	return fmt.Sprintf("message=%s :: source%s :: \n\terr=%s", ie.Message, ie.Source, ie.Err)
 }

@@ -3,12 +3,11 @@ package user
 import (
 	"fmt"
 	"net/mail"
-	"time"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal/encryption"
-	error2 "xrf197ilz35aq0/internal/error"
+	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/storage"
 )
 
@@ -18,13 +17,12 @@ type Manager interface {
 }
 
 type service struct {
-	log             xrf197ilz35aq0.Logger
+	log             xrf.Logger
 	settingsService SettingsManager
 	store           storage.Store
 }
 
 func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
-	now := time.Now()
 	err := uc.validateUser(request)
 	if err != nil {
 		return nil, err
@@ -41,9 +39,8 @@ func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserRespons
 
 	passCode, err := encryption.Encrypt([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
 	if err != nil {
-		return nil, &error2.Internal{
+		return nil, &xrfErr.Internal{
 			Message: "Encrypt user password failed",
-			Time:    now,
 			Source:  "createUser",
 			Err:     err,
 		}
@@ -60,15 +57,15 @@ func (uc *service) validateUser(request *exchange.UserRequest) error {
 	// is validEmail
 	_, err := mail.ParseAddress(request.Email.Data())
 	if err != nil {
-		return &error2.External{Message: "Invalid email address"}
+		return &xrfErr.External{Message: "Invalid email address"}
 	}
 	lastNameLen := len(request.LastName)
 	if lastNameLen != 0 && lastNameLen < 3 {
-		return &error2.External{Message: "If last name is specified, it should be at least 3 characters long"}
+		return &xrfErr.External{Message: "If last name is specified, it should be at least 3 characters long"}
 	}
 	firstNameLen := len(request.FirstName)
 	if firstNameLen != 0 && firstNameLen < 3 {
-		return &error2.External{Message: "If first name is specified, it should be at least 3 characters long"}
+		return &xrfErr.External{Message: "If first name is specified, it should be at least 3 characters long"}
 	}
 	return nil
 }
@@ -85,9 +82,7 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserManager(logger xrf197ilz35aq0.Logger,
-	settingsService SettingsManager,
-	store storage.Store) Manager {
+func NewUserManager(logger xrf.Logger, settingsService SettingsManager, store storage.Store) Manager {
 
 	return &service{
 		store:           store,

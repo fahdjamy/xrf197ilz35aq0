@@ -48,11 +48,9 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 	}{
 		Alias: (*Alias)(u),
 	}
-	now := time.Now()
 	if err := json.Unmarshal(bytes, &aux); err != nil {
 		return &xrfErr.Internal{
 			Err:     err,
-			Time:    now,
 			Message: "failed to unmarshal json",
 			Source:  "core/model/user#UnmarshalJSON",
 		}
