@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 )
 
 // responseWriter is a wrapper around http.ResponseWriter that captures the status code
@@ -21,12 +21,15 @@ func (w *responseWriter) WriteHeader(status int) {
 
 // LoggerHandler is a middleware that logs requests.
 type LoggerHandler struct {
-	logger xrf197ilz35aq0.Logger
+	logger xrf.Logger
 }
 
 func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+
+		logPrefix := fmt.Sprintf("requestId='%s'", xrf.GenerateRequestId())
+		lh.logger.SetPrefix(logPrefix)
 
 		lh.logger.Info(fmt.Sprintf("event=request :: method=%s :: url=%s :: remoteAddr=%s :: userAgent=%s",
 			r.Method,
@@ -59,7 +62,7 @@ func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 	})
 }
 
-func NewLoggerHandler(logger xrf197ilz35aq0.Logger) *LoggerHandler {
+func NewLoggerHandler(logger xrf.Logger) *LoggerHandler {
 	return &LoggerHandler{
 		logger: logger,
 	}

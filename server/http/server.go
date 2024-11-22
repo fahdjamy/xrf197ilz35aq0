@@ -40,7 +40,7 @@ func (r *ApiServer) Start() {
 	// handlers
 	r.router.Use(loggerMiddleware.Handler)
 	handlers.NewHealthRoutes(r.logger, r.router).RegisterAndListen()
-	handlers.NewUser(r.logger, r.userManager, r.router)
+	handlers.NewUser(r.logger, r.userManager, r.router).RegisterAndListen()
 
 	// start the server
 	appConfig := r.config.Application

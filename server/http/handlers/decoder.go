@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"xrf197ilz35aq0/internal/constants"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 type httpErr struct {
@@ -43,6 +44,7 @@ func decodeJSONBody[T any](r *http.Request, dst *T) *httpErr {
 
 func parseBodyError(err error) *httpErr {
 	var syntaxError *json.SyntaxError
+	var internalError *xrfErr.Internal
 	var maxBytesError *http.MaxBytesError
 	var unmarshalTypeError *json.UnmarshalTypeError
 	var invalidUnmarshalError *json.InvalidUnmarshalError
@@ -86,6 +88,9 @@ func parseBodyError(err error) *httpErr {
 	case errors.As(err, &invalidUnmarshalError):
 		msg := "Request body must contain a valid JSON pointer"
 		return &httpErr{status: http.StatusBadRequest, msg: msg}
+
+	case errors.Is(err, internalError):
+		return &httpErr{status: http.StatusBadRequest, msg: err.Error()}
 
 	default:
 		return &httpErr{
