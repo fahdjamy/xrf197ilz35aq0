@@ -2,8 +2,6 @@ package mongo
 
 import (
 	"context"
-	"fmt"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -30,6 +28,5 @@ func NewClient(ctx context.Context, dbUri, dbName string) (*mongo.Client, error)
 	if err := client.Database(dbName).RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
 		return nil, err
 	}
-	fmt.Println("Successfully connected to MongoDB")
 	return client, nil
 }

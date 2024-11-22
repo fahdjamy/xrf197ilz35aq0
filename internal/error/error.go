@@ -2,14 +2,12 @@ package error
 
 import (
 	"fmt"
-	"time"
 )
 
 type External struct {
 	Err     error
 	Source  string
 	Message string
-	Time    time.Time
 }
 
 func (e *External) WithErr(msg string, err error) *External {
@@ -24,7 +22,15 @@ func (e *External) NoErr(msg string) *External {
 }
 
 func (e *External) Error() string {
-	return fmt.Sprintf("message=%s :: time=%s :: source%s :: \n\terr=%s", e.Message, e.Time, e.Source, e.Err)
+	return fmt.Sprintf("%s", e.Message)
+}
+
+func (e *External) String() string {
+	str := fmt.Sprintf("message=%s :: source%s", e.Message, e.Source)
+	if e.Err != nil {
+		str += fmt.Sprintf(" :: \n\t%s", e.Err)
+	}
+	return str
 }
 
 type Internal struct {
@@ -45,5 +51,13 @@ func (ie *Internal) WithErr(msg string, err error) *Internal {
 }
 
 func (ie *Internal) Error() string {
-	return fmt.Sprintf("message=%s :: source%s :: \n\terr=%s", ie.Message, ie.Source, ie.Err)
+	return fmt.Sprintf("%s", ie.Message)
+}
+
+func (e *Internal) String() string {
+	str := fmt.Sprintf("message=%s :: source%s", e.Message, e.Source)
+	if e.Err != nil {
+		str += fmt.Sprintf(" :: \n\t%s", e.Err)
+	}
+	return str
 }
