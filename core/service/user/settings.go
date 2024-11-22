@@ -32,13 +32,13 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel
 	if len(request.EncryptionKey) == 0 {
 		request.EncryptionKey = s.generateEncryptionKey()
 	} else {
-		err := s.validateEncryptionKey(request, now)
+		err := s.validateEncryptionKey(request)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err := s.validateSettings(request, now)
+	err := s.validateSettings(request)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel
 	return toSettingsResponse(settings), nil
 }
 
-func (s *settingService) validateEncryptionKey(request *exchange.SettingRequest, now time.Time) error {
+func (s *settingService) validateEncryptionKey(request *exchange.SettingRequest) error {
 	if len(request.EncryptionKey) != 0 && len(request.EncryptionKey) < 31 {
-		return &xrfErr.External{Message: "Encryption key must be at least 31 characters long", Time: now}
+		return &xrfErr.External{Message: "Encryption key must be at least 31 characters long"}
 	}
 	return nil
 }
@@ -79,13 +79,13 @@ func (s *settingService) generateEncryptionKey() string {
 	return string(key)
 }
 
-func (s *settingService) validateSettings(request *exchange.SettingRequest, now time.Time) error {
+func (s *settingService) validateSettings(request *exchange.SettingRequest) error {
 	if request.RotateKey {
 		switch encryptAfter := request.RotateAfter; {
 		case encryptAfter < 3:
-			return &xrfErr.External{Message: "Rotation should at least be between 3 and 12 months", Time: now}
+			return &xrfErr.External{Message: "Rotation should at least be between 3 and 12 months"}
 		case encryptAfter > 12:
-			return &xrfErr.External{Message: "Key rotation should at least happen every year", Time: now}
+			return &xrfErr.External{Message: "Key rotation should at least happen every year"}
 		}
 	}
 	return nil

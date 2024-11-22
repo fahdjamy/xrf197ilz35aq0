@@ -18,27 +18,57 @@ type UserRequest struct {
 	Settings  *SettingRequest       `json:"settings"`
 }
 
+var externalClientErr *xrfErr.External
+
 func (u *UserRequest) UnmarshalJSON(bytes []byte) error {
+	externalClientErr = &xrfErr.External{}
+	externalClientErr.Source = "core/exchange/UserRequest#UnmarshalJSON"
 	type Alias UserRequest
 	aux := &struct {
-		*Alias
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		*Alias
 	}{
 		Alias: (*Alias)(u),
 	}
 	if err := json.Unmarshal(bytes, &aux); err != nil {
-		return &xrfErr.External{
-			Err:     err,
-			Time:    time.Now(),
-			Message: "Failed to unmarshal JSON",
-			Source:  "core/exchange/UserRequest#UnmarshalJSON",
-		}
+		externalClientErr.Message = "Failed to unmarshal JSON"
+		return externalClientErr
+	}
+
+	if aux.Email == "" {
+		externalClientErr.Message = "Invalid or missing email address"
+		return externalClientErr
+	}
+	if aux.Password == "" {
+		externalClientErr.Message = "Invalid or missing password"
+		return externalClientErr
 	}
 
 	u.Email = *custom.NewSecret(aux.Email)
 	u.Password = *custom.NewSecret(aux.Password)
 	return nil
+}
+
+func (u *UserRequest) MarshalJSON() ([]byte, error) {
+	if u == nil {
+		externalClientErr.Message = "UserRequest is nil"
+		return nil, externalClientErr
+	}
+	userObj := *u
+	if userObj.Email.Data() == "" {
+		externalClientErr.Message = "invalid user email"
+		return nil, externalClientErr
+	}
+	if userObj.Password.Data() == "" {
+		externalClientErr.Message = "invalid user password"
+		return nil, externalClientErr
+	}
+
+	type Alias UserRequest
+
+	auxUser := (Alias)(userObj)
+	return json.Marshal(auxUser)
 }
 
 func (u *UserRequest) String() string {

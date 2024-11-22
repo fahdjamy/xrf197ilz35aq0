@@ -8,7 +8,6 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	xrf "xrf197ilz35aq0"
-	"xrf197ilz35aq0/cmd"
 	"xrf197ilz35aq0/core/service/user"
 	"xrf197ilz35aq0/dependency"
 	xrfErr "xrf197ilz35aq0/internal/error"
@@ -18,7 +17,7 @@ import (
 
 func main() {
 	// get the globally set environment variables
-	environment := cmd.GetEnvironment()
+	environment := xrf.GetEnvironment()
 
 	// get the configuration for the application
 	config, err := xrf.NewConfig(environment.Name)
@@ -39,7 +38,7 @@ func main() {
 	initialFields := []zap.Field{
 		zap.String("os", health.Runtime.OS),
 	}
-	logPrefix := fmt.Sprintf("requestId='%s'", cmd.GenerateRequestId())
+	logPrefix := fmt.Sprintf("requestId='%s'", xrf.GenerateRequestId())
 	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, logPrefix, initialFields)
 	logger.Info(fmt.Sprintf("appVersion='%s' :: os='%s' :: message='application starting...'", health.Version(), health.Runtime.OS))
 
@@ -57,6 +56,7 @@ func main() {
 		logger.Panic(fmt.Sprintf("appStarted=false :: %s", internalError.Error()))
 	}
 	mongoDB := mongo.NewStore(logger, mongoClient, databaseName, backgroundCtx)
+	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create services
 	settingsManager := user.NewSettingManager(logger)

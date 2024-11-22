@@ -59,7 +59,7 @@ func (u *User) UnmarshalJSON(bytes []byte) error {
 }
 
 func (u *User) MarshalJSON() ([]byte, error) {
-	// dereference u to get the User value, convert it to an UserAlias, and store the result in the auxAlias variable.
+	// dereference u to get the User value, convert it to a UserAlias, and store the result in the auxAlias variable.
 	auxAlias := (Alias)(*u) // Store the converted UserAlias in a variable
 
 	return json.Marshal(&struct {
