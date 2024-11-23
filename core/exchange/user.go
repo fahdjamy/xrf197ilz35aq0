@@ -25,8 +25,8 @@ func (u *UserRequest) UnmarshalJSON(bytes []byte) error {
 	externalClientErr.Source = "core/exchange/UserRequest#UnmarshalJSON"
 	type Alias UserRequest
 	aux := &struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required,password,min=18,max=55"`
 		*Alias
 	}{
 		Alias: (*Alias)(u),
@@ -77,13 +77,13 @@ func (u *UserRequest) String() string {
 
 type UserResponse struct {
 	UserId    int64                 `json:"userId"`
-	FirstName string                `json:"firstName"`
-	LastName  string                `json:"lastName"`
+	FirstName string                `json:"firstName,omitempty"`
+	LastName  string                `json:"lastName,omitempty"`
 	Email     custom.Secret[string] `json:"email"`
 	Anonymous bool                  `json:"anonymous"`
 	CreatedAt model.Time            `json:"createdAt"`
 	UpdatedAt model.Time            `json:"updatedAt"`
-	Settings  SettingResponse       `json:"settings"`
+	Settings  SettingResponse       `json:"settings,omitempty"`
 }
 
 type SettingRequest struct {
