@@ -31,8 +31,8 @@ func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response := Response{Data: userReq, Code: http.StatusCreated}
-	writeResponse(response, w, user.logger)
+	resp := dataResponse{Data: userReq, Code: http.StatusCreated}
+	writeResponse(resp, w, user.logger)
 }
 
 func (user *User) RegisterAndListen() {

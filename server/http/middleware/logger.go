@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,12 +12,23 @@ import (
 type responseWriter struct {
 	http.ResponseWriter
 	status int
+	body   bytes.Buffer // // A buffer for the response body
 }
 
 // WriteHeader writes the status code to the response.
 func (w *responseWriter) WriteHeader(status int) {
 	w.status = status
 	w.ResponseWriter.WriteHeader(status)
+}
+
+// Header returns the headers of the underlying response writer.
+func (w *responseWriter) Header() http.Header {
+	return w.ResponseWriter.Header()
+}
+
+func (w *responseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b) // Write to the buffer
+	return w.ResponseWriter.Write(b)
 }
 
 // LoggerHandler is a middleware that logs requests.
@@ -26,9 +38,10 @@ type LoggerHandler struct {
 
 func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestId := xrf.GenerateRequestId()
 		start := time.Now()
 
-		logPrefix := fmt.Sprintf("requestId='%s'", xrf.GenerateRequestId())
+		logPrefix := fmt.Sprintf("requestId='%s'", requestId)
 		lh.logger.SetPrefix(logPrefix)
 
 		lh.logger.Info(fmt.Sprintf("event=request :: method=%s :: url=%s :: remoteAddr=%s :: userAgent=%s",
@@ -42,6 +55,7 @@ func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 			ResponseWriter: w,
 			status:         http.StatusOK,
 		}
+		wrappedWriter.Header().Set("Request-Trace-Id", requestId)
 
 		// Call the next handler.
 		next.ServeHTTP(wrappedWriter, r)
