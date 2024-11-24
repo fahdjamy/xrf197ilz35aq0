@@ -25,13 +25,20 @@ func NewUser(logger xrf.Logger, userManager user.Manager, router *mux.Router) *U
 func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 	var userReq exchange.UserRequest
 
-	jsonErr := decodeJSONBody(req, &userReq)
-	if jsonErr != nil {
-		writeErrorResponse(*jsonErr, w, user.logger)
+	err := decodeJSONBody(req, &userReq)
+	if err != nil {
+		writeErrorResponse(err, w, user.logger)
 		return
 	}
 
-	resp := dataResponse{Data: userReq, Code: http.StatusCreated}
+	// create a user
+	userResp, err := user.userManager.NewUser(&userReq)
+	if err != nil {
+		writeErrorResponse(err, w, user.logger)
+		return
+	}
+
+	resp := dataResponse{Data: userResp, Code: http.StatusCreated}
 	writeResponse(resp, w, user.logger)
 }
 

@@ -11,23 +11,23 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-type httpErr struct {
+type decoderErr struct {
 	status int
 	msg    string
 	err    error
 }
 
-func (e *httpErr) Error() string {
+func (e *decoderErr) Error() string {
 	return fmt.Sprintf("message=%s :: \n\terr=%s", e.msg, e.err)
 }
 
-func decodeJSONBody[T any](r *http.Request, dst *T) *httpErr {
+func decodeJSONBody[T any](r *http.Request, dst *T) error {
 	ct := r.Header.Get(constants.ContentType)
 	if ct != constants.EMPTY {
 		mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
 		if mediaType != constants.ContentTypeJson {
 			msg := fmt.Sprintf("Content-Type header is not %s", constants.ContentTypeJson)
-			return &httpErr{status: http.StatusUnsupportedMediaType, msg: msg}
+			return &decoderErr{status: http.StatusUnsupportedMediaType, msg: msg}
 		}
 	}
 
@@ -42,7 +42,7 @@ func decodeJSONBody[T any](r *http.Request, dst *T) *httpErr {
 	return nil
 }
 
-func parseBodyError(err error) *httpErr {
+func parseBodyError(err error) *decoderErr {
 	var syntaxError *json.SyntaxError
 	var externalError *xrfErr.External
 	var maxBytesError *http.MaxBytesError
@@ -53,47 +53,47 @@ func parseBodyError(err error) *httpErr {
 	// Syntax errors in the JSON
 	case errors.As(err, &syntaxError):
 		msg := fmt.Sprintf("Request contains badly-formed JSON (at position %d)", syntaxError.Offset)
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// In some circumstances Decode() may return an
 	// io.ErrUnexpectedEOF error for syntax errors in the JSON. https://github.com/golang/go/issues/25956.
 	case errors.Is(err, io.ErrUnexpectedEOF):
 		msg := fmt.Sprintf("Request contains badly-formed JSON")
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// Catching error types like trying to assign a string in the
 	// JSON request body to a int field.
 	// interpolate the relevant field name and position into the error message
 	case errors.Is(err, unmarshalTypeError):
 		msg := fmt.Sprintf("Request contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// Catch the error caused by extra unexpected fields in the request
 	// body. https://github.com/golang/go/issues/29035 regarding turning this into a sentinel error.
 	case strings.HasPrefix(err.Error(), "json: unknown field "):
 		fieldName := strings.TrimPrefix(err.Error(), "json: unknown field ")
 		msg := fmt.Sprintf("Request body contains unknown field %s", fieldName)
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// An io.EOF error is returned by Decode() if the request body is empty.
 	case errors.Is(err, io.EOF):
 		msg := "Request body must not be empty"
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// Catch any error caused by the request body being too large.
 	case errors.Is(err, maxBytesError):
 		msg := "Request body must not be larger than 1MB"
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	case errors.As(err, &invalidUnmarshalError):
 		msg := "Request body must contain a valid JSON pointer"
-		return &httpErr{status: http.StatusBadRequest, msg: msg}
+		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	case errors.As(err, &externalError):
-		return &httpErr{status: http.StatusBadRequest, msg: err.Error()}
+		return &decoderErr{status: http.StatusBadRequest, msg: err.Error()}
 
 	default:
-		return &httpErr{
+		return &decoderErr{
 			status: http.StatusBadRequest,
 			msg:    fmt.Sprintf("Internal :: err=%s", err.Error()),
 		}
