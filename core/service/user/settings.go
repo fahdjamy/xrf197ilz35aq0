@@ -72,9 +72,8 @@ func toSettingsResponse(settings *user.Settings) *exchange.SettingResponse {
 
 func (s *settingService) generateEncryptionKey() string {
 	key, err := encryption.GenerateKey(32)
-	errMsgTemplate := "event=%v :: error=%v"
 	if err != nil {
-		s.log.Debug(fmt.Sprintf(errMsgTemplate, "generateEncryptionKeyFailure", err))
+		s.log.Debug(fmt.Sprintf("event=%v :: error=%v", "generateEncryptionKeyFailure", err))
 		return strconv.FormatInt(random.PositiveInt64(), 10)
 	}
 	return string(key)

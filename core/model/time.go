@@ -3,7 +3,7 @@ package model
 import (
 	"encoding/json"
 	"time"
-	error2 "xrf197ilz35aq0/internal/error"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 type Time struct {
@@ -16,7 +16,7 @@ func (t *Time) String() string {
 
 func (t *Time) MarshalJSON() ([]byte, error) {
 	if t.Time.IsZero() {
-		return []byte("null"), &error2.Internal{
+		return []byte("null"), &xrfErr.Internal{
 			Message: "failed to marshal null",
 			Source:  "core/model/time#MarshalJSON",
 		}

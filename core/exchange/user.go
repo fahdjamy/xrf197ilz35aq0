@@ -90,14 +90,6 @@ func (u *UserResponse) String() string {
 	return fmt.Sprintf("{UserId: %d, CreatedAt: %s, UpdatedAt: %s}", u.UserId, u.CreatedAt, u.UpdatedAt)
 }
 
-func (u *UserResponse) MarshalJSON() ([]byte, error) {
-	type Alias UserResponse
-	userObj := *u
-
-	auxUser := (Alias)(userObj)
-	return json.Marshal(auxUser)
-}
-
 type SettingRequest struct {
 	RotateKey     bool   `json:"rotateKey"`
 	RotateAfter   int    `json:"rotateAfter"`

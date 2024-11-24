@@ -42,7 +42,7 @@ jobs:
         run: go get .
 
       - name: Build
-        run: go build -o bin/cli -v ./cmd/cli/main.go
+        run: go build -o bin/cli -v ./cmd/http/main.go
 
       - name: Test with go CLI
         run: go test ./... -json > testResults-go-${{ matrix.go-version }}.json
