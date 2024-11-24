@@ -53,8 +53,9 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel
 }
 
 func (s *settingService) validateEncryptionKey(request *exchange.SettingRequest) error {
-	if len(request.EncryptionKey) != 0 && len(request.EncryptionKey) < 31 {
-		return &xrfErr.External{Message: "Encryption key must be at least 31 characters long"}
+	key := request.EncryptionKey
+	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
+		return &xrfErr.External{Message: "Encryption must be 16, 24, or 32 bytes"}
 	}
 	return nil
 }
@@ -70,7 +71,7 @@ func toSettingsResponse(settings *user.Settings) *exchange.SettingResponse {
 }
 
 func (s *settingService) generateEncryptionKey() string {
-	key, err := encryption.GenerateKey(35)
+	key, err := encryption.GenerateKey(32)
 	errMsgTemplate := "event=%v :: error=%v"
 	if err != nil {
 		s.log.Debug(fmt.Sprintf(errMsgTemplate, "generateEncryptionKeyFailure", err))

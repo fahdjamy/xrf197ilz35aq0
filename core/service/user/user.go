@@ -28,17 +28,28 @@ func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserRespons
 		return nil, err
 	}
 
-	userName := request.FirstName + " " + request.LastName
-	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: user=%s", userName))
+	userName := "Unknown name"
+	if request.FirstName != "" && request.LastName != "" {
+		userName = request.FirstName + " " + request.LastName
+	}
+	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: username=%s", userName))
 
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), request.Password.Data())
-	settings, err := uc.settingsService.NewSettings(request.Settings, *newUser)
+	settingRequest := request.Settings
+	if settingRequest == nil {
+		settingRequest = &exchange.SettingRequest{
+			RotateKey:   false,
+			RotateAfter: 13,
+		}
+	}
+	settings, err := uc.settingsService.NewSettings(settingRequest, *newUser)
 	if err != nil {
 		return nil, err
 	}
 
 	passCode, err := encryption.Encrypt([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
 	if err != nil {
+		uc.log.Error(fmt.Sprintf("event=creatUser :: action=encryptPasswordFailure :: %s", err))
 		return nil, &xrfErr.Internal{
 			Message: "Encrypt user password failed",
 			Source:  "createUser",

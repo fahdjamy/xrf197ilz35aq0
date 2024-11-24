@@ -86,15 +86,35 @@ type UserResponse struct {
 	Settings  SettingResponse       `json:"settings,omitempty"`
 }
 
+func (u *UserResponse) String() string {
+	return fmt.Sprintf("{UserId: %d, CreatedAt: %s, UpdatedAt: %s}", u.UserId, u.CreatedAt, u.UpdatedAt)
+}
+
+func (u *UserResponse) MarshalJSON() ([]byte, error) {
+	type Alias UserResponse
+	userObj := *u
+
+	auxUser := (Alias)(userObj)
+	return json.Marshal(auxUser)
+}
+
 type SettingRequest struct {
 	RotateKey     bool   `json:"rotateEncryptionKey"`
 	RotateAfter   int    `json:"rotateAfter"`
 	EncryptionKey string `json:"encryptionKey"`
 }
 
+func (s *SettingRequest) String() string {
+	return fmt.Sprintf("{rotateKey: %t, rotateAfter: %d}", s.RotateKey, s.RotateAfter)
+}
+
 type SettingResponse struct {
 	CreatedAt     time.Time             `json:"createdAt"`
 	UpdatedAt     time.Time             `json:"updatedAt"`
-	EncryptionKey custom.Secret[string] `json:"encryptionKey"`
+	EncryptionKey custom.Secret[string] `json:"-"`
 	RotateKey     bool                  `json:"rotateEncryptionKey"`
+}
+
+func (s *SettingResponse) String() string {
+	return fmt.Sprintf("{rotateKey: %t: createdAt: %s, updatedAt: %s}", s.RotateKey, s.CreatedAt, s.UpdatedAt)
 }
