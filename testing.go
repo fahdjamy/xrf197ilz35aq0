@@ -36,6 +36,7 @@ func RandomBytes(size int) []byte {
 }
 
 type TestLogger struct {
+	prefix  string
 	message string
 	called  int
 }
@@ -68,6 +69,10 @@ func (t *TestLogger) Fatal(message string) {
 func (t *TestLogger) Panic(message string) {
 	t.message = message
 	t.called++
+}
+
+func (t *TestLogger) SetPrefix(prefix string) {
+	t.prefix = prefix
 }
 
 func (t *TestLogger) Message() string {
