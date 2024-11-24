@@ -22,11 +22,16 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-#          - windows-latest
           - macos-latest
         go-version:
           - 1.22.x
           - 1.23.0
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
 
     steps:
       - name: Checkout source code onto a VM
@@ -42,9 +47,13 @@ jobs:
         run: go get .
 
       - name: Build
+        env:
+          LOCAL_MONGO_URI: mongodb://localhost:27017
         run: go build -o bin/cli -v ./cmd/http/main.go
 
       - name: Test with go CLI
+        env:
+          LOCAL_MONGO_URI: mongodb://localhost:27017
         run: go test ./... -json > testResults-go-${{ matrix.go-version }}.json
 
       - name: Upload build artifacts ${{ matrix.os }}

@@ -72,9 +72,12 @@ func mongoUri(config xrf.Config) (string, error) {
 	mongoConfig := config.Database.Mongo
 	baseUri := os.Getenv(mongoConfig.Uri)
 	if baseUri == "" {
+		baseUri = os.Getenv(mongoConfig.CloudUri)
+	}
+	if baseUri == "" {
 		return "", &xrfErr.Internal{
 			Source:  "cmd/cli/main#mongoUri",
-			Message: "missing environment variable $" + mongoConfig.Uri,
+			Message: "missing mongo uri environment variable $(uri/cloudUri)",
 		}
 	}
 	return fmt.Sprintf("%s?directConnection=%t&retryWrites=%t&w=%s&appName=%s",

@@ -29,6 +29,7 @@ type MongoConfig struct {
 	RetryWrites      bool   `yaml:"retryWrites"`
 	Uri              string `yaml:"uri"`
 	Acknowledgment   string `yaml:"w"`
+	CloudUri         string `yaml:"cloudUri"`
 	DatabaseName     string `yaml:"databaseName"`
 	DirectConnection bool   `yaml:"directConnection"`
 }
