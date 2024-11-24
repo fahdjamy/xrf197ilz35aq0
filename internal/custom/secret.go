@@ -21,7 +21,7 @@ func (s Secret[T]) Data() T {
 }
 
 func (s Secret[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.Data)
+	return json.Marshal(s.Data())
 }
 
 func (s Secret[T]) UnmarshalJSON(data []byte) error {

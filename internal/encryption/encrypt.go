@@ -25,9 +25,9 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 			message: "plaintext should at least be of length 3",
 		}
 	}
-	if len(key) < minKeySize {
+	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
 		return nil, &Error{
-			message: "for security, encryption key should at least be 32 bytes",
+			message: "Invalid key size. Key must be 16, 24, or 32 bytes",
 		}
 	}
 	// Create the AES cipher block using the provided key
