@@ -99,7 +99,7 @@ func (u *UserResponse) MarshalJSON() ([]byte, error) {
 }
 
 type SettingRequest struct {
-	RotateKey     bool   `json:"rotateEncryptionKey"`
+	RotateKey     bool   `json:"rotateKey"`
 	RotateAfter   int    `json:"rotateAfter"`
 	EncryptionKey string `json:"encryptionKey"`
 }
@@ -111,8 +111,20 @@ func (s *SettingRequest) String() string {
 type SettingResponse struct {
 	CreatedAt     time.Time             `json:"createdAt"`
 	UpdatedAt     time.Time             `json:"updatedAt"`
-	EncryptionKey custom.Secret[string] `json:"-"`
-	RotateKey     bool                  `json:"rotateEncryptionKey"`
+	EncryptionKey custom.Secret[string] `json:"encryptionKey"`
+	RotateKey     bool                  `json:"rotateKey"`
+}
+
+func (s *SettingResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		CreatedAt time.Time `json:"createdAt"`
+		UpdatedAt time.Time `json:"updatedAt"`
+		RotateKey bool      `json:"rotateKey"`
+	}{
+		CreatedAt: s.CreatedAt,
+		UpdatedAt: s.UpdatedAt,
+		RotateKey: s.RotateKey,
+	})
 }
 
 func (s *SettingResponse) String() string {
