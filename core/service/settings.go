@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"xrf197ilz35aq0/storage"
 )
 
-type SettingsManager interface {
+type SettingsService interface {
 	NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error)
 }
 
@@ -27,9 +27,8 @@ type settingService struct {
 }
 
 func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error) {
-	s.log.Info(
-		fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userId=%s",
-			strconv.FormatInt(userModel.Id, 10)))
+	userId := strconv.FormatInt(userModel.Id, 10)
+	s.log.Info(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userId=%s", userId))
 
 	now := time.Now()
 	rotateAfter := internal.AddMonths(now, request.RotateAfter)
@@ -95,7 +94,7 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingManager(logger xrf.Logger, store storage.Store, ctx context.Context) SettingsManager {
+func NewSettingService(logger xrf.Logger, store storage.Store, ctx context.Context) SettingsService {
 	return &settingService{
 		ctx: ctx,
 		db:  store,

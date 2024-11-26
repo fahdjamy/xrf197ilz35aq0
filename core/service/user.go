@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"context"
@@ -16,19 +16,21 @@ const Collection = "user"
 
 var internalError *xrfErr.Internal
 
-// Manager is a port (Driven side)
-type Manager interface {
-	NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
+// UserService is a port (Driven side)
+type UserService interface {
+	CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
 }
 
 type service struct {
 	log             xrf.Logger
-	settingsService SettingsManager
+	settingsService SettingsService
 	store           storage.Store
 	ctx             context.Context
 }
 
-func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
+func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
+	internalError = &xrfErr.Internal{}
+	internalError.Source = "core/service/user/user#createUser"
 	err := uc.validateUser(request)
 	if err != nil {
 		return nil, err
@@ -66,12 +68,9 @@ func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserRespons
 
 	passCode, err := encryption.Encrypt([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
 	if err != nil {
-		uc.log.Error(fmt.Sprintf("event=creatUser :: action=encryptPasswordFailure :: %s", err))
-		return nil, &xrfErr.Internal{
-			Message: "Encrypt user password failed",
-			Source:  "createUser",
-			Err:     err,
-		}
+		internalError.Err = err
+		internalError.Message = "Encrypting password failed"
+		return nil, internalError
 	}
 	newUser.UpdatePassword(string(passCode))
 
@@ -110,7 +109,7 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserManager(logger xrf.Logger, settingsService SettingsManager, store storage.Store, ctx context.Context) Manager {
+func NewUserService(logger xrf.Logger, settingsService SettingsService, store storage.Store, ctx context.Context) UserService {
 	return &service{
 		ctx:             ctx,
 		store:           store,

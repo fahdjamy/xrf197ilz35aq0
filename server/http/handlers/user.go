@@ -5,16 +5,16 @@ import (
 	"net/http"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
-	"xrf197ilz35aq0/core/service/user"
+	"xrf197ilz35aq0/core/service"
 )
 
 type User struct {
 	router      *mux.Router
 	logger      xrf.Logger
-	userManager user.Manager
+	userManager service.UserService
 }
 
-func NewUser(logger xrf.Logger, userManager user.Manager, router *mux.Router) *User {
+func NewUser(logger xrf.Logger, userManager service.UserService, router *mux.Router) *User {
 	return &User{
 		router:      router,
 		logger:      logger,
@@ -32,7 +32,7 @@ func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// create a user
-	userResp, err := user.userManager.NewUser(&userReq)
+	userResp, err := user.userManager.CreateUser(&userReq)
 	if err != nil {
 		writeErrorResponse(err, w, user.logger)
 		return

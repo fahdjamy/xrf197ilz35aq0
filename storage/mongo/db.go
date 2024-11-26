@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0"
@@ -23,6 +24,7 @@ func (d *Database) Save(collection string, obj xrf197ilz35aq0.Serializable) (any
 	if err != nil {
 		return nil, err
 	}
+	d.log.Debug(fmt.Sprintf("saved new object :: objectID=%v", document.InsertedID))
 	return document, nil
 }
 

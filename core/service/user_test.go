@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"context"
@@ -46,8 +46,8 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := NewUserManager(logger, settingServiceMock, storeMock, context.TODO())
-			got, err := uc.NewUser(tt.request)
+			uc := NewUserService(logger, settingServiceMock, storeMock, context.TODO())
+			got, err := uc.CreateUser(tt.request)
 			if tt.wantErr {
 				xrf.AssertError(t, err)
 			} else {
