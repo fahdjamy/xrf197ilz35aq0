@@ -14,6 +14,5 @@ type Logger interface {
 	Debug(message string)
 	Error(message string)
 	Fatal(message string)
-	Panic(message string)
 	SetPrefix(prefix string)
 }

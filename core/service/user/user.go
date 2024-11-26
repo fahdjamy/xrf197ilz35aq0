@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"net/mail"
 	xrf "xrf197ilz35aq0"
@@ -11,6 +12,10 @@ import (
 	"xrf197ilz35aq0/storage"
 )
 
+const Collection = "user"
+
+var internalError *xrfErr.Internal
+
 // Manager is a port (Driven side)
 type Manager interface {
 	NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
@@ -20,6 +25,7 @@ type service struct {
 	log             xrf.Logger
 	settingsService SettingsManager
 	store           storage.Store
+	ctx             context.Context
 }
 
 func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
@@ -35,6 +41,17 @@ func (uc *service) NewUser(request *exchange.UserRequest) (*exchange.UserRespons
 	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: username=%s", userName))
 
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), request.Password.Data())
+
+	// save user to DB
+	createdUser, err := uc.store.Save(Collection, newUser)
+	if err != nil {
+		internalError.Err = err
+		internalError.Message = "Saving new user failed"
+		return nil, internalError
+	}
+
+	uc.log.Debug(fmt.Sprintf("message=saved user successfully :: userId=%s", createdUser))
+
 	settingRequest := request.Settings
 	if settingRequest == nil {
 		settingRequest = &exchange.SettingRequest{
@@ -93,9 +110,9 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserManager(logger xrf.Logger, settingsService SettingsManager, store storage.Store) Manager {
-
+func NewUserManager(logger xrf.Logger, settingsService SettingsManager, store storage.Store, ctx context.Context) Manager {
 	return &service{
+		ctx:             ctx,
 		store:           store,
 		log:             logger,
 		settingsService: settingsService,

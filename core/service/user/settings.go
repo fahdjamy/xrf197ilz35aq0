@@ -1,10 +1,11 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
@@ -12,6 +13,7 @@ import (
 	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
+	"xrf197ilz35aq0/storage"
 )
 
 type SettingsManager interface {
@@ -19,7 +21,9 @@ type SettingsManager interface {
 }
 
 type settingService struct {
-	log xrf197ilz35aq0.Logger
+	log xrf.Logger
+	ctx context.Context
+	db  storage.Store
 }
 
 func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error) {
@@ -91,6 +95,10 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingManager(logger xrf197ilz35aq0.Logger) SettingsManager {
-	return &settingService{log: logger}
+func NewSettingManager(logger xrf.Logger, store storage.Store, ctx context.Context) SettingsManager {
+	return &settingService{
+		ctx: ctx,
+		db:  store,
+		log: logger,
+	}
 }

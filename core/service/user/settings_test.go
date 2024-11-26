@@ -1,18 +1,20 @@
 package user
 
 import (
+	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 )
 
-var encryptionTestKey = xrf197ilz35aq0.RandomBytes(32)
+var encryptionTestKey = xrf.RandomBytes(32)
 
 func TestNewSettings(t *testing.T) {
-	logger := &xrf197ilz35aq0.TestLogger{}
+	logger := xrf.NewTestLogger()
+	storeMock := xrf.NewStoreMock()
 	type args struct {
 		request   *exchange.SettingRequest
 		userModel user.User
@@ -61,7 +63,7 @@ func TestNewSettings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manager := NewSettingManager(logger)
+			manager := NewSettingManager(logger, storeMock, context.TODO())
 			got, err := manager.NewSettings(tt.args.request, tt.args.userModel)
 			if !tt.wantErr(t, err, fmt.Sprintf("NewSettings(%v, %v)", tt.args.request, tt.args.userModel)) {
 				return

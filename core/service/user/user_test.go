@@ -1,10 +1,11 @@
 package user
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	"xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal/custom"
@@ -30,7 +31,8 @@ func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ user.User
 
 func TestUserService_CreateUser(t *testing.T) {
 	settingServiceMock := &settingServiceMock{}
-	storeMock := &xrf197ilz35aq0.StoreMock{}
+	storeMock := xrf.NewStoreMock()
+	logger := xrf.NewTestLogger()
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -44,13 +46,12 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := &xrf197ilz35aq0.TestLogger{}
-			uc := NewUserManager(logger, settingServiceMock, storeMock)
+			uc := NewUserManager(logger, settingServiceMock, storeMock, context.TODO())
 			got, err := uc.NewUser(tt.request)
 			if tt.wantErr {
-				xrf197ilz35aq0.AssertError(t, err)
+				xrf.AssertError(t, err)
 			} else {
-				xrf197ilz35aq0.AssertNoError(t, err)
+				xrf.AssertNoError(t, err)
 				assertUserResponse(t, got)
 			}
 		})

@@ -83,6 +83,14 @@ func (t *TestLogger) Called() int {
 	return t.called
 }
 
+func NewTestLogger() *TestLogger {
+	return &TestLogger{
+		prefix:  "",
+		message: "",
+		called:  0,
+	}
+}
+
 type StoreMock struct {
 	Called     int
 	Document   any
@@ -123,4 +131,14 @@ func (s *StoreMock) Save(collection string, obj Serializable) (any, error) {
 	}
 	s.calledFunc[methodName] += val
 	return nil, nil
+}
+
+func NewStoreMock() *StoreMock {
+	return &StoreMock{
+		Called:     0,
+		Collection: "",
+		Document:   nil,
+		context:    context.TODO(),
+		calledFunc: make(map[string]int),
+	}
 }

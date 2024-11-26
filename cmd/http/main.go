@@ -46,21 +46,23 @@ func main() {
 	dbConnStr, err := mongoUri(config)
 	backgroundCtx := context.Background()
 	if err != nil {
-		logger.Panic(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
 		return
 	}
 	databaseName := config.Database.Mongo.DatabaseName
 	mongoClient, err := mongo.NewClient(backgroundCtx, dbConnStr, databaseName)
 	if err != nil {
 		internalError := xrfErr.Internal{Err: err, Message: "failed to connect to mongo"}
-		logger.Panic(fmt.Sprintf("appStarted=false :: %s", internalError.Error()))
+		logger.Error(fmt.Sprintf("appStarted=failure :: %s", internalError.Error()))
+		return
 	}
+	// connect to MongoDB
 	mongoDB := mongo.NewStore(logger, mongoClient, databaseName, backgroundCtx)
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create services
-	settingsManager := user.NewSettingManager(logger)
-	userManager := user.NewUserManager(logger, settingsManager, mongoDB)
+	settingsManager := user.NewSettingManager(logger, mongoDB, backgroundCtx)
+	userManager := user.NewUserManager(logger, settingsManager, mongoDB, backgroundCtx)
 
 	// create the router and start the server
 	router := mux.NewRouter().StrictSlash(true)
