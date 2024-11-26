@@ -9,7 +9,8 @@ import (
 	"os"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/service"
-	"xrf197ilz35aq0/dependency"
+	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/dependency"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http"
 	"xrf197ilz35aq0/storage/mongo"
@@ -17,7 +18,7 @@ import (
 
 func main() {
 	// get the globally set environment variables
-	environment := xrf.GetEnvironment()
+	environment := internal.GetEnvironment()
 
 	// get the configuration for the application
 	config, err := xrf.NewConfig(environment.Name)
@@ -38,7 +39,7 @@ func main() {
 	initialFields := []zap.Field{
 		zap.String("os", health.Runtime.OS),
 	}
-	logPrefix := fmt.Sprintf("requestId='%s'", xrf.GenerateRequestId())
+	logPrefix := fmt.Sprintf("requestId='%s'", internal.GenerateRequestId())
 	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, logPrefix, initialFields)
 	logger.Info(fmt.Sprintf("appVersion='%s' :: os='%s' :: message='application starting...'", health.Version(), health.Runtime.OS))
 

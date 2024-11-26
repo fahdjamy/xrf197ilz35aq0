@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/internal"
 )
 
 func TestTimeMarshalJSON(t *testing.T) {
@@ -32,10 +32,10 @@ func TestTimeMarshalJSON(t *testing.T) {
 		t.Run(tt.name, func(t1 *testing.T) {
 			got, err := tt.inputTime.MarshalJSON()
 			if tt.wantErr {
-				xrf197ilz35aq0.AssertError(t, err)
+				internal.AssertError(t, err)
 				assert.Equal(t, tt.want, got)
 			} else {
-				xrf197ilz35aq0.AssertNoError(t, err)
+				internal.AssertNoError(t, err)
 				if !reflect.DeepEqual(got, tt.want) {
 					t1.Errorf("MarshalJSON() got = %v, want %v", got, tt.want)
 				}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"xrf197ilz35aq0/internal"
 )
 
 const (
@@ -84,7 +85,7 @@ func readFromFile(filePath string) (io.ReadCloser, error) {
 
 func readConfiguration(file io.ReadCloser) (*Config, error) {
 	defer func() {
-		if err := CloseFileWithRetry(file, maxRetries, retryAfter); err != nil {
+		if err := internal.CloseFileWithRetry(file, maxRetries, retryAfter); err != nil {
 			fmt.Println(err)
 		}
 	}()

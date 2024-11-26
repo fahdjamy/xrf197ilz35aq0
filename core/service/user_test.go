@@ -5,9 +5,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
+	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 )
 

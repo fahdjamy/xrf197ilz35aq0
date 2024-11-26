@@ -3,9 +3,9 @@ package handlers
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
+	xrf "xrf197ilz35aq0/internal"
 )
 
 type User struct {

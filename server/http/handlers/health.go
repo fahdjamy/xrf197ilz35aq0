@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	xrf "xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0/internal"
 )
 
 type HealthRoutes struct {

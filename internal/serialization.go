@@ -1,4 +1,4 @@
-package xrf197ilz35aq0
+package internal
 
 type Serializable interface {
 	// MarshalJSON Takes a Go data structure (like a struct, map, or slice)

@@ -2,12 +2,12 @@ package storage
 
 import (
 	"context"
-	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/internal"
 )
 
 // Store is a port
 type Store interface {
 	SetContext(ctx context.Context)
-	Save(collection string, obj xrf197ilz35aq0.Serializable) (any, error)
-	FindById(collection string, id int64) (*xrf197ilz35aq0.Serializable, error)
+	Save(collection string, obj internal.Serializable) (any, error)
+	FindById(collection string, id int64) (*internal.Serializable, error)
 }

@@ -3,12 +3,12 @@ package encryption
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/internal"
 )
 
 var (
 	plaintext     = []byte("Some sensitive data")
-	encryptionKey = xrf197ilz35aq0.RandomBytes(32)
+	encryptionKey = internal.RandomBytes(32)
 )
 
 func TestEncrypt(t *testing.T) {
@@ -20,7 +20,7 @@ func TestEncrypt(t *testing.T) {
 	}{
 		{
 			name:      "Should err if key is less than 32",
-			key:       xrf197ilz35aq0.RandomBytes(31),
+			key:       internal.RandomBytes(31),
 			shouldErr: true,
 			plaintext: plaintext,
 		},
@@ -48,10 +48,10 @@ func TestEncrypt(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			encryptedData, err := Encrypt(test.plaintext, test.key)
 			if test.shouldErr {
-				xrf197ilz35aq0.AssertError(t, err)
+				internal.AssertError(t, err)
 				assert.Nil(t, encryptedData)
 			} else {
-				xrf197ilz35aq0.AssertNoError(t, err)
+				internal.AssertNoError(t, err)
 				assert.NotNil(t, encryptedData)
 			}
 		})
@@ -60,7 +60,7 @@ func TestEncrypt(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	encryptedData, err := Encrypt(plaintext, encryptionKey)
-	xrf197ilz35aq0.AssertNoError(t, err)
+	internal.AssertNoError(t, err)
 
 	tests := []struct {
 		shouldErr bool
@@ -69,7 +69,7 @@ func TestDecrypt(t *testing.T) {
 	}{
 		{
 			name:      "Should err if key is less than 32",
-			key:       xrf197ilz35aq0.RandomBytes(31),
+			key:       internal.RandomBytes(31),
 			shouldErr: true,
 		},
 		{
@@ -88,10 +88,10 @@ func TestDecrypt(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			decryptedData, err := Decrypt(encryptedData, test.key)
 			if test.shouldErr {
-				xrf197ilz35aq0.AssertError(t, err)
+				internal.AssertError(t, err)
 				assert.Nil(t, decryptedData)
 			} else {
-				xrf197ilz35aq0.AssertNoError(t, err)
+				internal.AssertNoError(t, err)
 				assert.NotNil(t, decryptedData)
 				assert.Equal(t, plaintext, decryptedData)
 			}

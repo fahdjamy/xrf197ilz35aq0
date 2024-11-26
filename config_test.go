@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/tests"
 )
 
 var validYAML = []byte(`
@@ -17,7 +19,7 @@ field:
 func TestNewConfig(t *testing.T) {
 	t.Run("should return a valid config", func(t *testing.T) {
 		config, err := NewConfig("dev")
-		AssertNoError(t, err)
+		internal.AssertNoError(t, err)
 		assertConfigIsNotNil(t, config)
 	})
 
@@ -36,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 				defer wg.Done()
 
 				config, err := NewConfig("dev")
-				AssertNoError(t, err)
+				internal.AssertNoError(t, err)
 
 				// configSetCount.CompareAndSwap(0, 1): This is an atomic operation:
 				// checks if the current value of configSetCount is 0.
@@ -64,20 +66,20 @@ func TestNewConfig(t *testing.T) {
 
 func TestReadConfiguration(t *testing.T) {
 	t.Run("should read configurations from file", func(t *testing.T) {
-		mock := &mockFileDataCopier{content: validYAML}
+		mock := &tests.MockFileDataCopier{Content: validYAML}
 		config, err := readConfiguration(mock)
 
-		AssertNoError(t, err)
-		assert.True(t, mock.closed)
+		internal.AssertNoError(t, err)
+		assert.True(t, mock.Closed)
 		assertNonNilConfigPtr(t, config)
 	})
 
 	t.Run("should fail if file yaml content is invalid", func(t *testing.T) {
 		invalidYAML := []byte(`invalid yaml`)
-		mock := &mockFileDataCopier{content: invalidYAML}
+		mock := &tests.MockFileDataCopier{Content: invalidYAML}
 		config, err := readConfiguration(mock)
-		AssertError(t, err)
-		assert.True(t, mock.closed)
+		internal.AssertError(t, err)
+		assert.True(t, mock.Closed)
 		assertNilConfigPtr(t, config)
 	})
 }
@@ -86,13 +88,6 @@ func assertConfigIsNotNil(t testing.TB, config Config) {
 	t.Helper()
 	if reflect.DeepEqual(config, Config{}) {
 		t.Error("Configuration should not be nil")
-	}
-}
-
-func assertConfigIsNil(t testing.TB, config Config) {
-	t.Helper()
-	if !reflect.DeepEqual(config, Config{}) {
-		t.Error("Configuration should be nil")
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	xrf "xrf197ilz35aq0"
+	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )

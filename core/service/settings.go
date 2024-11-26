@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
@@ -21,7 +20,7 @@ type SettingsService interface {
 }
 
 type settingService struct {
-	log xrf.Logger
+	log internal.Logger
 	ctx context.Context
 	db  storage.Store
 }
@@ -94,7 +93,7 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingService(logger xrf.Logger, store storage.Store, ctx context.Context) SettingsService {
+func NewSettingService(logger internal.Logger, store storage.Store, ctx context.Context) SettingsService {
 	return &settingService{
 		ctx: ctx,
 		db:  store,

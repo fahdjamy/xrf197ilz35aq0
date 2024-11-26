@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"io"
 	"os"
-	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/internal"
 )
 
 // https://github.com/uber-go/zap
@@ -136,15 +136,15 @@ func createEncoderConfig(dev bool) zapcore.EncoderConfig {
 
 func loggerLevel(level string) zapcore.Level {
 	switch level {
-	case xrf197ilz35aq0.DEBUG:
+	case internal.DEBUG:
 		return zapcore.DebugLevel
-	case xrf197ilz35aq0.INFO:
+	case internal.INFO:
 		return zapcore.InfoLevel
-	case xrf197ilz35aq0.WARN:
+	case internal.WARN:
 		return zapcore.WarnLevel
-	case xrf197ilz35aq0.ERROR:
+	case internal.ERROR:
 		return zapcore.ErrorLevel
-	case xrf197ilz35aq0.FATAL:
+	case internal.FATAL:
 		return zapcore.FatalLevel
 	default:
 		return zapcore.InfoLevel

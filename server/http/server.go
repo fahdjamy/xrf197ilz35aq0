@@ -9,8 +9,9 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	xrf "xrf197ilz35aq0"
+	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/service"
+	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http/handlers"
 	"xrf197ilz35aq0/server/http/middleware"
@@ -19,8 +20,8 @@ import (
 type ApiServer struct {
 	started     bool
 	router      *mux.Router
-	logger      xrf.Logger
-	config      xrf.Config
+	logger      internal.Logger
+	config      xrf197ilz35aq0.Config
 	userManager service.UserService
 	ctx         context.Context
 }
@@ -110,7 +111,7 @@ func (r *ApiServer) Stop() {
 	r.started = false
 }
 
-func NewHttpServer(logger xrf.Logger, router *mux.Router, config xrf.Config, userManager service.UserService, ctx context.Context) *ApiServer {
+func NewHttpServer(logger internal.Logger, router *mux.Router, config xrf197ilz35aq0.Config, userManager service.UserService, ctx context.Context) *ApiServer {
 	return &ApiServer{
 		ctx:         ctx,
 		logger:      logger,

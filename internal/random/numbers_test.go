@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"sync"
 	"testing"
-	"xrf197ilz35aq0"
+	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/random"
 )
 
@@ -15,7 +15,7 @@ func TestInt64FromUUID(t *testing.T) {
 		seenValues := make(map[int64]bool)
 		for i := 0; i < numValues; i++ {
 			value, err := random.Int64FromUUID()
-			xrf197ilz35aq0.AssertNoError(t, err)
+			internal.AssertNoError(t, err)
 			assertValueNotSeen(t, value, &seenValues)
 		}
 	})
@@ -36,7 +36,7 @@ func TestInt64FromUUID(t *testing.T) {
 				defer wg.Done()
 				for j := 0; j < valuesPerGoroutine; j++ {
 					value, err := random.Int64FromUUID()
-					xrf197ilz35aq0.AssertNoError(t, err)
+					internal.AssertNoError(t, err)
 
 					mutex.Lock()
 					if seenValues[value] {
@@ -60,7 +60,7 @@ func TestInt64FromUUID(t *testing.T) {
 		defer func() { rand.Reader = originalReader }()
 
 		_, err := random.Int64FromUUID()
-		xrf197ilz35aq0.AssertError(t, err)
+		internal.AssertError(t, err)
 	})
 }
 
