@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 	"xrf197ilz35aq0/core/exchange"
-	"xrf197ilz35aq0/core/model/user"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 )
@@ -24,7 +23,7 @@ var settingResponseMock = &exchange.SettingResponse{
 	EncryptionKey: *custom.NewSecret[string](string(encryptionTestKey)),
 }
 
-func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ user.User) (*exchange.SettingResponse, error) {
+func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (*exchange.SettingResponse, error) {
 	s.Called++
 	return settingResponseMock, nil
 }

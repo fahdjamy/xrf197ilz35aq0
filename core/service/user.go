@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
+	"xrf197ilz35aq0/core/repository"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
@@ -26,6 +27,7 @@ type service struct {
 	settingsService SettingsService
 	store           storage.Store
 	ctx             context.Context
+	userRepo        repository.UserRepository
 }
 
 func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
@@ -61,7 +63,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 			RotateAfter: 13,
 		}
 	}
-	settings, err := uc.settingsService.NewSettings(settingRequest, *newUser)
+	settings, err := uc.settingsService.NewSettings(settingRequest, newUser.FingerPrint)
 	if err != nil {
 		return nil, err
 	}

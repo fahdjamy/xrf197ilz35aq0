@@ -3,7 +3,6 @@ package user
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 	"xrf197ilz35aq0/core/model"
@@ -17,7 +16,7 @@ const fingerPrintLength = 55
 type Alias User // Create an alias to avoid infinite recursion when marshalling/unMarshalling
 
 type User struct {
-	fingerPrint string
+	FingerPrint string     `json:"-"`
 	Masked      bool       `json:"masked"`
 	Id          int64      `json:"id"`
 	FirstName   string     `json:"firstName"`
@@ -31,11 +30,6 @@ type User struct {
 
 func (u *User) IsAnonymous() bool {
 	return u.Masked
-}
-
-func (u *User) FingerPrint() string {
-	// send last part of the fingerprint
-	return strings.Split(u.fingerPrint, strconv.Itoa(int(u.Id)))[0]
 }
 
 func (u *User) UpdatePassword(password string) {
@@ -110,7 +104,7 @@ func (u *User) createFingerPrint() {
 	lastPart := splitParts[1]
 	firstPart := splitParts[0][2:] // remove the first 2 letters of the first part
 
-	u.fingerPrint = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
+	u.FingerPrint = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
 }
 
 func splitAtIndex(str string, stringPart int) []string {

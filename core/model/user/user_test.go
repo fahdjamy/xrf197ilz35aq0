@@ -22,7 +22,7 @@ func TestUser(t *testing.T) {
 			t.Error("Last name does not match")
 		}
 
-		if len(user.FingerPrint()) < 1 {
+		if len(user.FingerPrint) < 1 {
 			t.Error("FingerPrint's size is less than 1")
 		}
 

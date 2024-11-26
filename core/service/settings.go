@@ -16,7 +16,7 @@ import (
 )
 
 type SettingsService interface {
-	NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error)
+	NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error)
 }
 
 type settingService struct {
@@ -25,9 +25,8 @@ type settingService struct {
 	db  storage.Store
 }
 
-func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel user.User) (*exchange.SettingResponse, error) {
-	userId := strconv.FormatInt(userModel.Id, 10)
-	s.log.Info(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userId=%s", userId))
+func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error) {
+	s.log.Debug(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userId=%s", userFPrint))
 
 	now := time.Now()
 	rotateAfter := internal.AddMonths(now, request.RotateAfter)
@@ -48,7 +47,7 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userModel
 	settings := user.NewSettings(
 		request.RotateKey,
 		time.Since(rotateAfter),
-		userModel.FingerPrint(),
+		userFPrint,
 		request.EncryptionKey,
 	)
 	return toSettingsResponse(settings), nil
