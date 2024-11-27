@@ -43,7 +43,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), "")
 
-	// CREAT-USER/DB: ACTION 1 - save user and settings to database
+	// SAVE-USER/DB: ACTION 1 - save user and settings to database
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
 	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
 	if err != nil {
@@ -60,23 +60,22 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		}
 	}
 
-	// CREAT-USER/DB: ACTION 2 - create user settings
+	// SAVE-USER/DB: ACTION 2 - create user settings
 	settings, err := uc.settingsService.NewSettings(settingRequest, newUser.FingerPrint)
 	if err != nil {
 		return nil, err
 	}
 
-	passCode, err := encryption.Encrypt([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
+	hashedPassword, err := encryption.EncryptAndEncode([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
 	if err != nil {
 		internalError.Err = err
 		internalError.Message = "Encrypting password failed"
 		return nil, internalError
 	}
 
-	// CREAT-USER/DB: ACTION 3 - Update user password
+	// SAVE-USER/DB: ACTION 3 - Update user password
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
-	newUser.UpdatePassword(string(passCode))
-	passwordSet, err := uc.userRepo.UpdatePassword(newUser.FingerPrint, newUser.Password, uc.ctx)
+	passwordSet, err := uc.userRepo.UpdatePassword(newUser.FingerPrint, hashedPassword, uc.ctx)
 	if err != nil {
 		internalError.Err = err
 		internalError.Message = "Update password failed"

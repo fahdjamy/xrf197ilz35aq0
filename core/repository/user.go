@@ -41,7 +41,7 @@ func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error
 func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error) {
 	internalError = &xrfErr.Internal{}
 	internalError.Source = "core/repository/user#updateUser"
-	filter := bson.D{{"fingerPrint", userFPrint}}
+	filter := bson.D{{"fingerprint", userFPrint}}
 	update := bson.D{{"$set", bson.D{{"password", newPassword}}}}
 
 	resp, err := up.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
