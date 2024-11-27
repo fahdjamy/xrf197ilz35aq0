@@ -7,6 +7,7 @@ import (
 	"time"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
+	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 	"xrf197ilz35aq0/internal/encryption"
@@ -20,16 +21,16 @@ type SettingsService interface {
 }
 
 type settingService struct {
-	log internal.Logger
-	ctx context.Context
-	db  storage.Store
+	log          internal.Logger
+	ctx          context.Context
+	db           storage.Store
+	settingsRepo repository.SettingsRepository
 }
 
 func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error) {
-	s.log.Debug(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userId=%s", userFPrint))
+	s.log.Debug(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userFP=%s", userFPrint[:5]))
 
-	now := time.Now()
-	rotateAfter := internal.AddMonths(now, request.RotateAfter)
+	rotateAfter := internal.AddMonths(time.Now(), request.RotateAfter)
 	if len(request.EncryptionKey) == 0 {
 		request.EncryptionKey = s.generateEncryptionKey()
 	} else {
@@ -92,10 +93,12 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingService(logger internal.Logger, store storage.Store, ctx context.Context) SettingsService {
+func NewSettingService(logger internal.Logger, store storage.Store,
+	settingsRepo repository.SettingsRepository, ctx context.Context) SettingsService {
 	return &settingService{
-		ctx: ctx,
-		db:  store,
-		log: logger,
+		ctx:          ctx,
+		db:           store,
+		log:          logger,
+		settingsRepo: settingsRepo,
 	}
 }

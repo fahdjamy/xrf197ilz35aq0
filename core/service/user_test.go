@@ -8,6 +8,7 @@ import (
 	"xrf197ilz35aq0/core/exchange"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
+	xrfTest "xrf197ilz35aq0/internal/tests"
 )
 
 const (
@@ -29,9 +30,10 @@ func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (
 }
 
 func TestUserService_CreateUser(t *testing.T) {
-	settingServiceMock := &settingServiceMock{}
-	storeMock := xrf.NewStoreMock()
 	logger := xrf.NewTestLogger()
+	storeMock := xrf.NewStoreMock()
+	userRepo := xrfTest.NewUserRepositoryMock()
+	settingServiceMock := &settingServiceMock{}
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -45,7 +47,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := NewUserService(logger, settingServiceMock, storeMock, context.TODO())
+			uc := NewUserService(logger, settingServiceMock, storeMock, userRepo, context.TODO())
 			got, err := uc.CreateUser(tt.request)
 			if tt.wantErr {
 				xrf.AssertError(t, err)

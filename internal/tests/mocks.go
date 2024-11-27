@@ -1,6 +1,11 @@
 package tests
 
-import "io"
+import (
+	"context"
+	"io"
+	"xrf197ilz35aq0/core/model/user"
+	"xrf197ilz35aq0/core/repository"
+)
 
 // MockFileDataCopier for os.Open
 type MockFileDataCopier struct {
@@ -33,4 +38,47 @@ func (m *MockFileDataCopier) Read(p []byte) (n int, err error) {
 
 	m.readPos += n
 	return n, m.err
+}
+
+type userRepositoryMock struct {
+	Called map[string]int
+}
+
+func (u *userRepositoryMock) CreateUser(_ *user.User, _ context.Context) (any, error) {
+	method := "CreateUser"
+	count, ok := u.Called[method]
+	if !ok {
+		u.Called[method] = 1
+	} else {
+		u.Called[method] = count + 1
+	}
+	return u, nil
+}
+
+func NewUserRepositoryMock() repository.UserRepository {
+	return &userRepositoryMock{
+		Called: make(map[string]int),
+	}
+}
+
+type settingsRepositoryMock struct {
+	Called map[string]int
+}
+
+func (s *settingsRepositoryMock) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
+	method := "CreateSettings"
+	count, ok := s.Called[method]
+	if !ok {
+		s.Called[method] = 1
+	} else {
+		s.Called[method] = count + 1
+	}
+
+	return settings, nil
+}
+
+func NewSettingsRepositoryMock() repository.SettingsRepository {
+	return &settingsRepositoryMock{
+		Called: make(map[string]int),
+	}
 }

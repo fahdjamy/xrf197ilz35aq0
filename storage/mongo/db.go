@@ -18,7 +18,7 @@ type Database struct {
 	decodeTo     *internal.Serializable
 }
 
-func (d *Database) Save(collection string, obj internal.Serializable) (any, error) {
+func (d *Database) Save(collection string, obj internal.Serializable, ctx context.Context) (any, error) {
 	d.log.Debug("saving new object")
 	document, err := d.db.Collection(collection).InsertOne(d.context, obj)
 	if err != nil {
@@ -28,11 +28,7 @@ func (d *Database) Save(collection string, obj internal.Serializable) (any, erro
 	return document, nil
 }
 
-func (d *Database) SetContext(ctx context.Context) {
-	d.context = ctx
-}
-
-func (d *Database) FindById(collection string, id int64) (*internal.Serializable, error) {
+func (d *Database) FindById(collection string, id int64, ctx context.Context) (*internal.Serializable, error) {
 	filter := bson.M{"Id": id}
 	coll := d.db.Collection(collection)
 	err := coll.FindOne(d.context, filter).Decode(d.decodeTo)

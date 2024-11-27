@@ -8,6 +8,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	xrf "xrf197ilz35aq0"
+	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/core/service"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/dependency"
@@ -61,14 +62,18 @@ func main() {
 	mongoDB := mongo.NewStore(logger, mongoClient, databaseName, backgroundCtx)
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
+	// create repositories
+	userRepo := repository.NewUserRepository(mongoDB)
+	settingRepo := repository.NewSettingsRepository(mongoDB)
+
 	// create services
-	settingsManager := service.NewSettingService(logger, mongoDB, backgroundCtx)
-	userManager := service.NewUserService(logger, settingsManager, mongoDB, backgroundCtx)
+	settingsService := service.NewSettingService(logger, mongoDB, settingRepo, backgroundCtx)
+	userService := service.NewUserService(logger, settingsService, mongoDB, userRepo, backgroundCtx)
 
 	// create the router and start the server
 	router := mux.NewRouter().StrictSlash(true)
-	apiServer := http.NewHttpServer(logger, router, config, userManager, backgroundCtx)
-	apiServer.Start()
+	server := http.NewHttpServer(logger, router, config, userService, backgroundCtx)
+	server.Start()
 }
 
 func mongoUri(config xrf.Config) (string, error) {

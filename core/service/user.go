@@ -13,8 +13,6 @@ import (
 	"xrf197ilz35aq0/storage"
 )
 
-const Collection = "user"
-
 var internalError *xrfErr.Internal
 
 // UserService is a port (Driven side)
@@ -33,29 +31,20 @@ type service struct {
 func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
 	internalError = &xrfErr.Internal{}
 	internalError.Source = "core/service/user/user#createUser"
+	userName := "Unknown name"
+	if request.FirstName != "" && request.LastName != "" {
+		userName = request.FirstName + " " + request.LastName
+	}
+
+	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: username=%s", userName))
 	err := uc.validateUser(request)
 	if err != nil {
 		return nil, err
 	}
 
-	userName := "Unknown name"
-	if request.FirstName != "" && request.LastName != "" {
-		userName = request.FirstName + " " + request.LastName
-	}
-	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: username=%s", userName))
-
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), request.Password.Data())
 
-	// save user to DB
-	createdUser, err := uc.store.Save(Collection, newUser)
-	if err != nil {
-		internalError.Err = err
-		internalError.Message = "Saving new user failed"
-		return nil, internalError
-	}
-
-	uc.log.Debug(fmt.Sprintf("message=saved user successfully :: userId=%s", createdUser))
-
+	// create user settings object
 	settingRequest := request.Settings
 	if settingRequest == nil {
 		settingRequest = &exchange.SettingRequest{
@@ -75,6 +64,14 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		return nil, internalError
 	}
 	newUser.UpdatePassword(string(passCode))
+
+	// save user and settings to database
+	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	if err != nil {
+		internalError.Err = err
+		internalError.Message = "User creation failed"
+		return nil, internalError
+	}
 
 	userResponse := toUserResponse(newUser, request)
 	userResponse.Settings = *settings
@@ -111,11 +108,14 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserService(logger xrf.Logger, settingsService SettingsService, store storage.Store, ctx context.Context) UserService {
+func NewUserService(log xrf.Logger, userSettings SettingsService, store storage.Store,
+	userRepo repository.UserRepository, ctx context.Context) UserService {
+
 	return &service{
 		ctx:             ctx,
+		log:             log,
 		store:           store,
-		log:             logger,
-		settingsService: settingsService,
+		userRepo:        userRepo,
+		settingsService: userSettings,
 	}
 }

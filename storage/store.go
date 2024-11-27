@@ -7,7 +7,6 @@ import (
 
 // Store is a port
 type Store interface {
-	SetContext(ctx context.Context)
-	Save(collection string, obj internal.Serializable) (any, error)
-	FindById(collection string, id int64) (*internal.Serializable, error)
+	Save(collection string, obj internal.Serializable, ctx context.Context) (any, error)
+	FindById(collection string, id int64, ctx context.Context) (*internal.Serializable, error)
 }

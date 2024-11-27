@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -16,6 +17,14 @@ type Settings struct {
 	LastModified    time.Time
 	encryptionKey   string
 	UserKey         bool
+}
+
+func (s *Settings) UnmarshalJSON(bytes []byte) error {
+	return json.Unmarshal(bytes, s)
+}
+
+func (s *Settings) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s *Settings) Key() string {

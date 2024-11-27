@@ -99,17 +99,7 @@ type StoreMock struct {
 	calledFunc map[string]int
 }
 
-func (s *StoreMock) SetContext(ctx context.Context) {
-	methodName := "StoreMock.SetContext"
-	s.context = ctx
-	val, ok := s.calledFunc[methodName]
-	if !ok {
-		s.calledFunc[methodName] = 0
-	}
-	s.calledFunc[methodName] += val
-}
-
-func (s *StoreMock) FindById(collection string, _ int64) (*Serializable, error) {
+func (s *StoreMock) FindById(collection string, _ int64, ctx context.Context) (*Serializable, error) {
 	methodName := "StoreMock.FindById"
 	s.Collection = collection
 	val, ok := s.calledFunc[methodName]
@@ -120,7 +110,7 @@ func (s *StoreMock) FindById(collection string, _ int64) (*Serializable, error) 
 	return nil, nil
 }
 
-func (s *StoreMock) Save(collection string, obj Serializable) (any, error) {
+func (s *StoreMock) Save(collection string, obj Serializable, ctx context.Context) (any, error) {
 	s.Document = obj
 	s.Collection = collection
 
