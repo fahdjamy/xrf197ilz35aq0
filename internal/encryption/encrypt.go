@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -59,6 +60,18 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 	return append(gcmNonce, append(aadNonce, ciphertext...)...), nil
 }
 
+// EncryptAndEncode fixes issue where trying to store encrypted data, which is essentially random bytes, directly
+//
+//	into a Database field that expects valid UTF-8 encoded strings fails. Encrypted data is not UTF-8 encoded text;
+//	it's binary data that may contain byte sequences that are invalid in UTF-8.
+func EncryptAndEncode(plaintext []byte, key []byte) (string, error) {
+	ciphertext, err := Encrypt(plaintext, key)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
 func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 	if len(key) < minKeySize {
 		return nil, &Error{
@@ -90,6 +103,14 @@ func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
 		return nil, err
 	}
 	return plaintext, nil
+}
+
+func DecodeAndDecrypt(encodedCiphertext string, key []byte) ([]byte, error) {
+	ciphertext, err := base64.StdEncoding.DecodeString(encodedCiphertext) // Or hex.DecodeString()
+	if err != nil {
+		return nil, err
+	}
+	return Decrypt(ciphertext, key)
 }
 
 func GenerateKey(keySize int) ([]byte, error) {
