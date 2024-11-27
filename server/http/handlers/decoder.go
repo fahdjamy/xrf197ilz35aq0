@@ -45,6 +45,7 @@ func decodeJSONBody[T any](r *http.Request, dst *T) error {
 func parseBodyError(err error) *decoderErr {
 	var syntaxError *json.SyntaxError
 	var externalError *xrfErr.External
+	var internalError *xrfErr.Internal
 	var maxBytesError *http.MaxBytesError
 	var unmarshalTypeError *json.UnmarshalTypeError
 	var invalidUnmarshalError *json.InvalidUnmarshalError
@@ -62,7 +63,7 @@ func parseBodyError(err error) *decoderErr {
 		return &decoderErr{status: http.StatusBadRequest, msg: msg}
 
 	// Catching error types like trying to assign a string in the
-	// JSON request body to a int field.
+	// JSON request body to an int field.
 	// interpolate the relevant field name and position into the error message
 	case errors.Is(err, unmarshalTypeError):
 		msg := fmt.Sprintf("Request contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
@@ -91,6 +92,11 @@ func parseBodyError(err error) *decoderErr {
 
 	case errors.As(err, &externalError):
 		return &decoderErr{status: http.StatusBadRequest, msg: err.Error()}
+
+	case errors.As(err, &internalError):
+		var internalErr *xrfErr.Internal
+		errors.As(err, &internalErr)
+		return &decoderErr{status: http.StatusInternalServerError, msg: internalErr.String()}
 
 	default:
 		return &decoderErr{

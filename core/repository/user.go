@@ -25,9 +25,10 @@ type userRepo struct {
 var internalError *xrfErr.Internal
 
 func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error) {
-	up.log.Debug("saving new object")
+	internalError = &xrfErr.Internal{}
 	document, err := up.db.Collection(UserCollection).InsertOne(ctx, user)
 	if err != nil {
+		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
 		internalError.Err = err
 		internalError.Message = "Saving new user failed"
 		return nil, err

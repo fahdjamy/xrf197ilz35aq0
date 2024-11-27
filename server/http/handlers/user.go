@@ -9,16 +9,16 @@ import (
 )
 
 type User struct {
-	router      *mux.Router
 	logger      xrf.Logger
-	userManager service.UserService
+	router      *mux.Router
+	userService service.UserService
 }
 
 func NewUser(logger xrf.Logger, userManager service.UserService, router *mux.Router) *User {
 	return &User{
 		router:      router,
 		logger:      logger,
-		userManager: userManager,
+		userService: userManager,
 	}
 }
 
@@ -32,7 +32,7 @@ func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// create a user
-	userResp, err := user.userManager.CreateUser(&userReq)
+	userResp, err := user.userService.CreateUser(&userReq)
 	if err != nil {
 		writeErrorResponse(err, w, user.logger)
 		return
