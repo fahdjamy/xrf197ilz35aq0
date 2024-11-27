@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
+	mongo2 "go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
@@ -54,6 +55,13 @@ func main() {
 	}
 	databaseName := config.Database.Mongo.DatabaseName
 	mongoClient, err := mongo.NewClient(backgroundCtx, dbConnStr, databaseName)
+
+	defer func(mongoClient *mongo2.Client, ctx context.Context) {
+		err := mongoClient.Disconnect(ctx)
+		if err != nil {
+			logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		}
+	}(mongoClient, backgroundCtx)
 	if err != nil {
 		internalError := xrfErr.Internal{Err: err, Message: "failed to connect to mongo"}
 		logger.Error(fmt.Sprintf("appStarted=failure :: %s", internalError.Error()))
@@ -64,8 +72,8 @@ func main() {
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create repositories
-	settingRepo := repository.NewSettingsRepository(mongoDB)
 	userRepo := repository.NewUserRepository(mongoDB, logger)
+	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 
 	// create services
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx)

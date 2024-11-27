@@ -18,12 +18,6 @@ func NewClient(ctx context.Context, dbUri, dbName string) (*mongo.Client, error)
 		panic(err)
 	}
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
 	// Send a ping to confirm a successful connection
 	if err := client.Database(dbName).RunCommand(ctx, bson.D{{"ping", 1}}).Err(); err != nil {
 		return nil, err

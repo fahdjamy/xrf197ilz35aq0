@@ -54,10 +54,10 @@ func (ie *Internal) Error() string {
 	return fmt.Sprintf("%s", ie.Message)
 }
 
-func (e *Internal) String() string {
-	str := fmt.Sprintf("message=%s :: source%s", e.Message, e.Source)
-	if e.Err != nil {
-		str += fmt.Sprintf(" :: \n\t%s", e.Err)
+func (ie *Internal) String() string {
+	str := fmt.Sprintf("message=%s :: source%s", ie.Message, ie.Source)
+	if ie.Err != nil {
+		str += fmt.Sprintf(" :: \n\t%s", ie.Err)
 	}
 	return str
 }
