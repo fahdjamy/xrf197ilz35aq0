@@ -31,7 +31,6 @@ func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (
 
 func TestUserService_CreateUser(t *testing.T) {
 	logger := xrf.NewTestLogger()
-	storeMock := xrf.NewStoreMock()
 	userRepo := xrfTest.NewUserRepositoryMock()
 	settingServiceMock := &settingServiceMock{}
 	tests := []struct {
@@ -47,7 +46,7 @@ func TestUserService_CreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := NewUserService(logger, settingServiceMock, storeMock, userRepo, context.TODO())
+			uc := NewUserService(logger, settingServiceMock, userRepo, context.TODO())
 			got, err := uc.CreateUser(tt.request)
 			if tt.wantErr {
 				xrf.AssertError(t, err)

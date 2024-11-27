@@ -16,9 +16,9 @@ const fingerPrintLength = 55
 type Alias User // Create an alias to avoid infinite recursion when marshalling/unMarshalling
 
 type User struct {
-	FingerPrint string     `json:"-"`
+	FingerPrint string     `json:"fingerPrint"`
 	Masked      bool       `json:"masked"`
-	Id          int64      `json:"id"`
+	Id          int64      `json:"_id"`
 	FirstName   string     `json:"firstName"`
 	Email       string     `json:"email"`
 	LastName    string     `json:"lastName"`

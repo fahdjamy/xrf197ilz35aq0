@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/core/service"
@@ -58,17 +59,17 @@ func main() {
 		logger.Error(fmt.Sprintf("appStarted=failure :: %s", internalError.Error()))
 		return
 	}
-	// connect to MongoDB
-	mongoDB := mongo.NewStore(logger, mongoClient, databaseName, backgroundCtx)
+	// connect to mongoDB
+	mongoDB := mongoClient.Database(databaseName)
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create repositories
-	userRepo := repository.NewUserRepository(mongoDB)
 	settingRepo := repository.NewSettingsRepository(mongoDB)
+	userRepo := repository.NewUserRepository(mongoDB, logger)
 
 	// create services
-	settingsService := service.NewSettingService(logger, mongoDB, settingRepo, backgroundCtx)
-	userService := service.NewUserService(logger, settingsService, mongoDB, userRepo, backgroundCtx)
+	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx)
+	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx)
 
 	// create the router and start the server
 	router := mux.NewRouter().StrictSlash(true)

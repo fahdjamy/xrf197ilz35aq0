@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"context"
 	"crypto/rand"
 	"fmt"
 	"testing"
@@ -88,47 +87,5 @@ func NewTestLogger() *TestLogger {
 		prefix:  "",
 		message: "",
 		called:  0,
-	}
-}
-
-type StoreMock struct {
-	Called     int
-	Document   any
-	Collection string
-	context    context.Context
-	calledFunc map[string]int
-}
-
-func (s *StoreMock) FindById(collection string, _ int64, ctx context.Context) (*Serializable, error) {
-	methodName := "StoreMock.FindById"
-	s.Collection = collection
-	val, ok := s.calledFunc[methodName]
-	if !ok {
-		s.calledFunc[methodName] = 0
-	}
-	s.calledFunc[methodName] += val
-	return nil, nil
-}
-
-func (s *StoreMock) Save(collection string, obj Serializable, ctx context.Context) (any, error) {
-	s.Document = obj
-	s.Collection = collection
-
-	methodName := "StoreMock.Save"
-	val, ok := s.calledFunc[methodName]
-	if !ok {
-		s.calledFunc[methodName] = 0
-	}
-	s.calledFunc[methodName] += val
-	return nil, nil
-}
-
-func NewStoreMock() *StoreMock {
-	return &StoreMock{
-		Called:     0,
-		Collection: "",
-		Document:   nil,
-		context:    context.TODO(),
-		calledFunc: make(map[string]int),
 	}
 }

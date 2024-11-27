@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0/core/model/user"
+	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
-	"xrf197ilz35aq0/storage"
 )
 
 const SettingsCollection = "settings"
@@ -14,24 +16,28 @@ type SettingsRepository interface {
 }
 
 type settingsRepo struct {
-	store storage.Store
+	db  *mongo.Database
+	log internal.Logger
 }
 
 func (sr *settingsRepo) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
 	internalError = &xrfErr.Internal{} // defined in the repository/user file
 	internalError.Source = "core/repository/user#createSettings"
-	// save user to DB
-	objectId, err := sr.store.Save(SettingsCollection, settings, ctx)
+
+	sr.log.Debug(fmt.Sprintf("event=createUserSettings :: message=saving new user response"))
+	document, err := sr.db.Collection(SettingsCollection).InsertOne(ctx, settings)
 	if err != nil {
 		internalError.Err = err
-		internalError.Message = "Saving user settings failed"
-		return nil, internalError
+		internalError.Message = "Saving new user-settings failed"
+		return nil, err
 	}
-	return objectId, nil
+	sr.log.Debug(fmt.Sprintf("event=createUserSettings :: success=true :: objectID=%v", document.InsertedID))
+
+	return document.InsertedID, nil
 }
 
-func NewSettingsRepository(store storage.Store) SettingsRepository {
+func NewSettingsRepository(db *mongo.Database) SettingsRepository {
 	return &settingsRepo{
-		store: store,
+		db: db,
 	}
 }

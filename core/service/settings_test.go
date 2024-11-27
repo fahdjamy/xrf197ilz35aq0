@@ -15,7 +15,6 @@ var encryptionTestKey = xrf.RandomBytes(32)
 
 func TestNewSettings(t *testing.T) {
 	logger := xrf.NewTestLogger()
-	storeMock := xrf.NewStoreMock()
 	settingsRepoMock := xrfTest.NewSettingsRepositoryMock()
 	type args struct {
 		request   *exchange.SettingRequest
@@ -65,7 +64,7 @@ func TestNewSettings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manager := NewSettingService(logger, storeMock, settingsRepoMock, context.TODO())
+			manager := NewSettingService(logger, settingsRepoMock, context.TODO())
 			got, err := manager.NewSettings(tt.args.request, "userTestVVFingerXXPrintLL")
 			if !tt.wantErr(t, err, fmt.Sprintf("NewSettings(%v, %v)", tt.args.request, tt.args.userModel)) {
 				return

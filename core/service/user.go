@@ -10,7 +10,6 @@ import (
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
-	"xrf197ilz35aq0/storage"
 )
 
 var internalError *xrfErr.Internal
@@ -23,7 +22,6 @@ type UserService interface {
 type service struct {
 	log             xrf.Logger
 	settingsService SettingsService
-	store           storage.Store
 	ctx             context.Context
 	userRepo        repository.UserRepository
 }
@@ -108,13 +106,11 @@ func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange
 	}
 }
 
-func NewUserService(log xrf.Logger, userSettings SettingsService, store storage.Store,
-	userRepo repository.UserRepository, ctx context.Context) UserService {
+func NewUserService(log xrf.Logger, userSettings SettingsService, userRepo repository.UserRepository, ctx context.Context) UserService {
 
 	return &service{
 		ctx:             ctx,
 		log:             log,
-		store:           store,
 		userRepo:        userRepo,
 		settingsService: userSettings,
 	}

@@ -13,7 +13,6 @@ import (
 	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
-	"xrf197ilz35aq0/storage"
 )
 
 type SettingsService interface {
@@ -23,7 +22,6 @@ type SettingsService interface {
 type settingService struct {
 	log          internal.Logger
 	ctx          context.Context
-	db           storage.Store
 	settingsRepo repository.SettingsRepository
 }
 
@@ -93,11 +91,9 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingService(logger internal.Logger, store storage.Store,
-	settingsRepo repository.SettingsRepository, ctx context.Context) SettingsService {
+func NewSettingService(logger internal.Logger, settingsRepo repository.SettingsRepository, ctx context.Context) SettingsService {
 	return &settingService{
 		ctx:          ctx,
-		db:           store,
 		log:          logger,
 		settingsRepo: settingsRepo,
 	}

@@ -44,6 +44,18 @@ type userRepositoryMock struct {
 	Called map[string]int
 }
 
+func (u *userRepositoryMock) UpdatePassword(_ string, _ string, _ context.Context) (bool, error) {
+	method := "UpdatePassword"
+	count, ok := u.Called[method]
+	if !ok {
+		u.Called[method] = 1
+	} else {
+		u.Called[method] = count + 1
+	}
+
+	return true, nil
+}
+
 func (u *userRepositoryMock) CreateUser(_ *user.User, _ context.Context) (any, error) {
 	method := "CreateUser"
 	count, ok := u.Called[method]
