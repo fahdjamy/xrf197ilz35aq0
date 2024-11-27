@@ -29,6 +29,7 @@ type service struct {
 func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
 	internalError = &xrfErr.Internal{}
 	internalError.Source = "core/service/user/user#createUser"
+
 	userName := "Unknown name"
 	if request.FirstName != "" && request.LastName != "" {
 		userName = request.FirstName + " " + request.LastName
@@ -40,9 +41,17 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		return nil, err
 	}
 
-	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), request.Password.Data())
+	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), "")
 
-	// create user settings object
+	// CREAT-USER/DB: ACTION 1 - save user and settings to database
+	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
+	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	if err != nil {
+		internalError.Err = err
+		internalError.Message = "User creation failed"
+		return nil, internalError
+	}
+
 	settingRequest := request.Settings
 	if settingRequest == nil {
 		settingRequest = &exchange.SettingRequest{
@@ -50,6 +59,8 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 			RotateAfter: 13,
 		}
 	}
+
+	// CREAT-USER/DB: ACTION 2 - create user settings
 	settings, err := uc.settingsService.NewSettings(settingRequest, newUser.FingerPrint)
 	if err != nil {
 		return nil, err
@@ -61,19 +72,21 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		internalError.Message = "Encrypting password failed"
 		return nil, internalError
 	}
-	newUser.UpdatePassword(string(passCode))
 
-	// save user and settings to database
-	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	// CREAT-USER/DB: ACTION 3 - Update user password
+	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
+	newUser.UpdatePassword(string(passCode))
+	passwordSet, err := uc.userRepo.UpdatePassword(newUser.FingerPrint, newUser.Password, uc.ctx)
 	if err != nil {
 		internalError.Err = err
-		internalError.Message = "User creation failed"
+		internalError.Message = "Update password failed"
 		return nil, internalError
 	}
+	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d passwordSet=%t", newUser.FingerPrint[:7], newUser.Id, passwordSet))
 
+	// Return userResponse
 	userResponse := toUserResponse(newUser, request)
 	userResponse.Settings = *settings
-
 	return userResponse, nil
 }
 

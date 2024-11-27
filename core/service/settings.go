@@ -49,6 +49,13 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrin
 		userFPrint,
 		request.EncryptionKey,
 	)
+
+	insertId, err := s.settingsRepo.CreateSettings(settings, s.ctx)
+	if err != nil {
+		return nil, err
+	}
+	s.log.Debug(fmt.Sprintf("event=createUserSettings :: success=true :: objectID=%v", insertId))
+
 	return toSettingsResponse(settings), nil
 }
 
