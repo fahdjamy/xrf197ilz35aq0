@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -57,18 +58,27 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 }
 
 func (up *userRepo) GetUserById(id int64, ctx context.Context) (*user.User, error) {
-	externalError = &xrfErr.External{}
 	internalError = &xrfErr.Internal{}
+	externalError = &xrfErr.External{}
 	internalError.Source = "core/repository/user#getUserById"
 
-	filter := bson.D{{"_id", id}}
+	filter := bson.D{{"id", id}}
 
 	var userResponse user.User
 	resp := up.db.Collection(UserCollection).FindOne(ctx, filter)
 
+	if resp.Err() != nil {
+		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
+			externalError.Message = "User not found"
+			return nil, externalError
+		}
+		return nil, resp.Err()
+	}
+
 	if err := resp.Decode(&userResponse); err != nil {
 		internalError.Err = err
 		internalError.Message = "Failed to decode userResponse object"
+		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=getUserById :: err=%s", err))
 		return nil, internalError
 	}
 	return &userResponse, nil

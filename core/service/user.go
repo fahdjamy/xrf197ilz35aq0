@@ -93,10 +93,12 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 
 func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
 	userResponse, err := uc.userRepo.GetUserById(userId, uc.ctx)
+	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=getUserByIdFromDB :: userId=%d", userId))
 	if err != nil {
 		return nil, err
 	}
 
+	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDB :: userId=%d", userResponse.Id))
 	return toUserResponse(userResponse), nil
 }
 
