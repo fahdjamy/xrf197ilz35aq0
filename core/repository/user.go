@@ -13,6 +13,7 @@ import (
 const UserCollection = "user"
 
 type UserRepository interface {
+	GetUserById(id int64, ctx context.Context) (*user.User, error)
 	CreateUser(user *user.User, ctx context.Context) (any, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
 }
@@ -23,6 +24,7 @@ type userRepo struct {
 }
 
 var internalError *xrfErr.Internal
+var externalError *xrfErr.External
 
 func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error) {
 	internalError = &xrfErr.Internal{}
@@ -52,6 +54,24 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 	}
 
 	return resp.ModifiedCount == 1, nil
+}
+
+func (up *userRepo) GetUserById(id int64, ctx context.Context) (*user.User, error) {
+	externalError = &xrfErr.External{}
+	internalError = &xrfErr.Internal{}
+	internalError.Source = "core/repository/user#getUserById"
+
+	filter := bson.D{{"_id", id}}
+
+	var userResponse user.User
+	resp := up.db.Collection(UserCollection).FindOne(ctx, filter)
+
+	if err := resp.Decode(&userResponse); err != nil {
+		internalError.Err = err
+		internalError.Message = "Failed to decode userResponse object"
+		return nil, internalError
+	}
+	return &userResponse, nil
 }
 
 func NewUserRepository(db *mongo.Database, log internal.Logger) UserRepository {
