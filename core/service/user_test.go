@@ -29,7 +29,7 @@ func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (
 	return settingResponseMock, nil
 }
 
-func TestUserService_CreateUser(t *testing.T) {
+func TestUserServiceCreateUser(t *testing.T) {
 	logger := xrf.NewTestLogger()
 	userRepo := xrfTest.NewUserRepositoryMock()
 	settingServiceMock := &settingServiceMock{}
@@ -48,6 +48,41 @@ func TestUserService_CreateUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			uc := NewUserService(logger, settingServiceMock, userRepo, context.TODO())
 			got, err := uc.CreateUser(tt.request)
+			if tt.wantErr {
+				xrf.AssertError(t, err)
+			} else {
+				xrf.AssertNoError(t, err)
+				assertUserResponse(t, got)
+			}
+		})
+	}
+}
+
+func TestGetUserById(t *testing.T) {
+	logger := xrf.NewTestLogger()
+	userRepo := xrfTest.NewUserRepositoryMock()
+	settingServiceMock := &settingServiceMock{}
+
+	type args struct {
+		userId int64
+	}
+	tests := []struct {
+		name    string
+		userId  int64
+		want    *exchange.UserResponse
+		wantErr bool
+	}{
+		{name: "get user by id", wantErr: false, userId: 1234567, want: &exchange.UserResponse{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			uc := &service{
+				log:             logger,
+				settingsService: settingServiceMock,
+				ctx:             context.TODO(),
+				userRepo:        userRepo,
+			}
+			got, err := uc.GetUserById(tt.userId)
 			if tt.wantErr {
 				xrf.AssertError(t, err)
 			} else {

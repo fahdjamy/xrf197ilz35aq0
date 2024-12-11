@@ -8,6 +8,7 @@ import (
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	xrf "xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/custom"
 	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
@@ -16,6 +17,7 @@ var internalError *xrfErr.Internal
 
 // UserService is a port (Driven side)
 type UserService interface {
+	GetUserById(userId int64) (*exchange.UserResponse, error)
 	CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
 }
 
@@ -84,9 +86,18 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d passwordSet=%t", newUser.FingerPrint[:7], newUser.Id, passwordSet))
 
 	// Return userResponse
-	userResponse := toUserResponse(newUser, request)
+	userResponse := toUserResponse(newUser)
 	userResponse.Settings = *settings
 	return userResponse, nil
+}
+
+func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
+	userResponse, err := uc.userRepo.GetUserById(userId, uc.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return toUserResponse(userResponse), nil
 }
 
 func (uc *service) validateUser(request *exchange.UserRequest) error {
@@ -106,20 +117,19 @@ func (uc *service) validateUser(request *exchange.UserRequest) error {
 	return nil
 }
 
-func toUserResponse(newUser *user.User, request *exchange.UserRequest) *exchange.UserResponse {
+func toUserResponse(newUser *user.User) *exchange.UserResponse {
 	return &exchange.UserResponse{
 		UserId:    newUser.Id,
 		CreatedAt: newUser.Joined,
-		Email:     request.Email,
 		LastName:  newUser.LastName,
 		FirstName: newUser.FirstName,
 		UpdatedAt: newUser.UpdatedAt,
 		Anonymous: newUser.IsAnonymous(),
+		Email:     *custom.NewSecret(newUser.Email),
 	}
 }
 
 func NewUserService(log xrf.Logger, userSettings SettingsService, userRepo repository.UserRepository, ctx context.Context) UserService {
-
 	return &service{
 		ctx:             ctx,
 		log:             log,
