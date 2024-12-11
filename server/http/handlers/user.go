@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 const (
@@ -52,15 +52,22 @@ func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 func (user *User) getUserById(w http.ResponseWriter, req *http.Request) {
 	userId, isValid := getAndValidateId(req)
 	if !isValid {
-		writeErrorResponse(errors.New("invalid id"), w, user.logger)
+		externalError := &xrfErr.External{
+			Message: "invalid user id",
+		}
+		writeErrorResponse(externalError, w, user.logger)
+		return
+	}
+	user.logger.Debug(fmt.Sprintf("event=getUserBy id :: userId=%d", userId))
+
+	userResp, err := user.userService.GetUserById(userId)
+
+	if err != nil {
+		writeErrorResponse(err, w, user.logger)
 		return
 	}
 
-	data := map[string]int64{
-		UserIdKey: userId,
-	}
-
-	resp := dataResponse{Data: data, Code: http.StatusOK}
+	resp := dataResponse{Data: userResp, Code: http.StatusOK}
 	writeResponse(resp, w, user.logger)
 
 }
@@ -82,5 +89,5 @@ func getAndValidateId(req *http.Request) (int64, bool) {
 
 func (user *User) RegisterAndListen() {
 	user.router.HandleFunc("/user", user.createUser).Methods("POST")
-	user.router.HandleFunc(fmt.Sprintf("/user/%s", UserIdKey), user.getUserById).Methods("GET")
+	user.router.HandleFunc(fmt.Sprintf("/user/{%s}", UserIdKey), user.getUserById).Methods("GET")
 }
