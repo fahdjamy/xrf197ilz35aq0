@@ -16,6 +16,7 @@ import (
 )
 
 type SettingsService interface {
+	GetUserSettings(userFPrint string) (*exchange.SettingResponse, error)
 	NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error)
 }
 
@@ -57,6 +58,14 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrin
 	s.log.Debug(fmt.Sprintf("event=createUserSettings :: success=true :: objectID=%v", insertId))
 
 	return toSettingsResponse(settings), nil
+}
+
+func (s *settingService) GetUserSettings(userFPrint string) (*exchange.SettingResponse, error) {
+	userSettings, err := s.settingsRepo.FetchUserSettings(s.ctx, userFPrint)
+	if err != nil {
+		return nil, err
+	}
+	return toSettingsResponse(userSettings), nil
 }
 
 func (s *settingService) validateEncryptionKey(request *exchange.SettingRequest) error {

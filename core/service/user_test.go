@@ -17,7 +17,24 @@ const (
 )
 
 type settingServiceMock struct {
-	Called int
+	Called map[string]int
+}
+
+func newSettingServiceMock() *settingServiceMock {
+	return &settingServiceMock{
+		Called: make(map[string]int),
+	}
+}
+
+func (s *settingServiceMock) GetUserSettings(_ string) (*exchange.SettingResponse, error) {
+	method := "getSettingsForUser"
+	count, ok := s.Called[method]
+	if !ok {
+		s.Called[method] = 1
+	} else {
+		s.Called[method] = count + 1
+	}
+	return &exchange.SettingResponse{}, nil
 }
 
 var settingResponseMock = &exchange.SettingResponse{
@@ -25,14 +42,20 @@ var settingResponseMock = &exchange.SettingResponse{
 }
 
 func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (*exchange.SettingResponse, error) {
-	s.Called++
+	method := "newSettings"
+	count, ok := s.Called[method]
+	if !ok {
+		s.Called[method] = 1
+	} else {
+		s.Called[method] = count + 1
+	}
 	return settingResponseMock, nil
 }
 
 func TestUserServiceCreateUser(t *testing.T) {
 	logger := xrf.NewTestLogger()
 	userRepo := xrfTest.NewUserRepositoryMock()
-	settingServiceMock := &settingServiceMock{}
+	settingServiceMock := newSettingServiceMock()
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -61,11 +84,8 @@ func TestUserServiceCreateUser(t *testing.T) {
 func TestGetUserById(t *testing.T) {
 	logger := xrf.NewTestLogger()
 	userRepo := xrfTest.NewUserRepositoryMock()
-	settingServiceMock := &settingServiceMock{}
+	settingServiceMock := newSettingServiceMock()
 
-	type args struct {
-		userId int64
-	}
 	tests := []struct {
 		name    string
 		userId  int64

@@ -99,7 +99,15 @@ func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
 	}
 
 	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDB :: userId=%d", userResponse.Id))
-	return toUserResponse(userResponse), nil
+	userSettings, err := uc.settingsService.GetUserSettings(userResponse.FingerPrint)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response := toUserResponse(userResponse)
+	response.Settings = *userSettings
+	return response, nil
 }
 
 func (uc *service) validateUser(request *exchange.UserRequest) error {
