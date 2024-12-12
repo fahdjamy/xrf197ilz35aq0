@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"time"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 // Settings defines the fields that indicate how a user wants their data to be handled/stored or
@@ -12,10 +13,10 @@ type Settings struct {
 	RotateEncryptionKey bool
 	// should be specified in months and should only be set to run during less peak hours
 	CreatedAt       time.Time
-	encryptAfter    time.Duration
-	userFingerprint string
+	EncryptAfter    time.Duration
+	UserFingerprint string
 	LastModified    time.Time
-	encryptionKey   string
+	EncryptionKey   string
 	UserKey         bool
 }
 
@@ -24,11 +25,35 @@ func (s *Settings) UnmarshalJSON(bytes []byte) error {
 }
 
 func (s *Settings) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s)
+	internErr := &xrfErr.Internal{
+		Message: "internal error",
+		Source:  "model/user/settings#MarshalJSON",
+	}
+
+	if s == nil {
+		internErr.Message = "settings is nil"
+		return nil, internErr
+	}
+
+	return json.Marshal(struct {
+		RotateEncryptionKey bool          `json:"rotateKey"`
+		CreatedAt           time.Time     `json:"createdAt"`
+		EncryptAfter        time.Duration `json:"encryptAfter"`
+		LastModified        time.Time     `json:"lastModified"`
+		EncryptionKey       string        `json:"encryptionKey"`
+		UserKey             bool          `json:"userKey"`
+	}{
+		RotateEncryptionKey: s.RotateEncryptionKey,
+		CreatedAt:           s.CreatedAt,
+		EncryptAfter:        s.EncryptAfter,
+		LastModified:        s.LastModified,
+		EncryptionKey:       s.EncryptionKey,
+		UserKey:             s.UserKey,
+	})
 }
 
 func (s *Settings) Key() string {
-	return s.encryptionKey
+	return s.EncryptionKey
 }
 
 func NewSettings(rotateEncKey bool, encryptAfter time.Duration, userFP, encryptionKey string) *Settings {
@@ -37,9 +62,9 @@ func NewSettings(rotateEncKey bool, encryptAfter time.Duration, userFP, encrypti
 	return &Settings{
 		CreatedAt:           now,
 		LastModified:        now,
-		userFingerprint:     userFP,
-		encryptAfter:        encryptAfter,
+		UserFingerprint:     userFP,
+		EncryptAfter:        encryptAfter,
 		RotateEncryptionKey: rotateEncKey,
-		encryptionKey:       encryptionKey,
+		EncryptionKey:       encryptionKey,
 	}
 }
