@@ -89,7 +89,18 @@ type settingsRepositoryMock struct {
 	Called map[string]int
 }
 
-func (s *settingsRepositoryMock) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
+func (s *settingsRepositoryMock) FetchUserSettings(_ context.Context, _ string) (settings *user.Settings, err error) {
+	method := "FetchUserSettings"
+	count, ok := s.Called[method]
+	if !ok {
+		s.Called[method] = 1
+	} else {
+		s.Called[method] = count + 1
+	}
+	return &user.Settings{}, nil
+}
+
+func (s *settingsRepositoryMock) CreateSettings(settings *user.Settings, _ context.Context) (any, error) {
 	method := "CreateSettings"
 	count, ok := s.Called[method]
 	if !ok {
