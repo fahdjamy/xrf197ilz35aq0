@@ -2,8 +2,14 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
 	"fmt"
+	"golang.org/x/crypto/argon2"
 	"net/mail"
+	"runtime"
+	"strings"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
@@ -47,12 +53,12 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 
 	// SAVE-USER/DB: ACTION 1 - save user and settings to database
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
-	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
-	if err != nil {
-		internalError.Err = err
-		internalError.Message = "User creation failed"
-		return nil, internalError
-	}
+	//_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	//if err != nil {
+	//	internalError.Err = err
+	//	internalError.Message = "User creation failed"
+	//	return nil, internalError
+	//}
 
 	settingRequest := request.Settings
 	if settingRequest == nil {
@@ -72,6 +78,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	if err != nil {
 		internalError.Err = err
 		internalError.Message = "Encrypting password failed"
+		uc.log.Error(fmt.Sprintf("event=createUser :: action=encryptUserPassword :: userId=%d :: err=%v", newUser.Id, err))
 		return nil, internalError
 	}
 
@@ -137,6 +144,57 @@ func toUserResponse(newUser *user.User) *exchange.UserResponse {
 		Anonymous: newUser.IsAnonymous(),
 		Email:     *custom.NewSecret(newUser.Email),
 	}
+}
+
+func hashPassword(password string) (string, error) {
+	internalError := &xrfErr.Internal{
+		Source: "core/service/settings#hashPassword",
+	}
+	// Generate a random salt. It's crucial to use a unique salt for each password.
+	salt := make([]byte, 16)
+
+	if _, err := rand.Read(salt); err != nil {
+		internalError.Err = err
+		internalError.Message = "Error generating password salt"
+		return "", internalError
+	}
+
+	// Use argon2.IDKey to generate the hash. Adjust parameters as needed:
+	//   - time:  Number of iterations (higher is slower but more secure).
+	//   - memory:  Memory usage in KiB (higher is more resistant to GPU cracking).
+	//   - threads: Number of parallel threads (can improve performance).
+	//   - keyLen: Length of the generated hash in bytes.
+	hash := argon2.IDKey([]byte(password), salt, 3, 65536, uint8(runtime.NumCPU()), 32)
+
+	// Encode the salt and hash as a single Base64 string for storage.
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+
+	return b64Salt + "$" + b64Hash, nil
+}
+
+func verifyPassword(password, hashedPassword string) (bool, error) {
+	parts := strings.Split(hashedPassword, "$")
+	if len(parts) != 2 {
+		return false, &xrfErr.Internal{Message: "Invalid password format"}
+	}
+
+	// Decode from Base64: decode the salt and hash from Base64 back to byte arrays.
+	salt, err := base64.RawStdEncoding.DecodeString(parts[0])
+	if err != nil {
+		return false, &xrfErr.Internal{Message: "failed to decode salt", Err: err}
+	}
+
+	passHash, err := base64.RawStdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return false, &xrfErr.Internal{Message: "failed to decode password", Err: err}
+	}
+
+	// Use the same parameters used for hashing:
+	testHash := argon2.IDKey([]byte(password), salt, 3, 65536, uint8(runtime.NumCPU()), 32)
+
+	// Use a constant-time comparison to prevent timing attacks
+	return subtle.ConstantTimeCompare(testHash, []byte(passHash)) == 1, nil
 }
 
 func NewUserService(log xrf.Logger, userSettings SettingsService, userRepo repository.UserRepository, ctx context.Context) UserService {
