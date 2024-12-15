@@ -3,6 +3,8 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strconv"
 	"strings"
 	"time"
 	"xrf197ilz35aq0/core/model"
@@ -16,15 +18,16 @@ const fingerPrintLength = 55
 type Alias User // Create an alias to avoid infinite recursion when marshalling/unMarshalling
 
 type User struct {
-	FingerPrint string     `json:"fingerPrint"`
-	Masked      bool       `json:"masked"`
-	Id          int64      `json:"_id"`
-	FirstName   string     `json:"firstName"`
-	Email       string     `json:"email"`
-	LastName    string     `json:"lastName"`
-	Password    string     `json:"password"`
-	Joined      model.Time `json:"joined"`
-	UpdatedAt   model.Time `json:"updatedAt"`
+	FingerPrint string             `json:"fingerPrint"`
+	Masked      bool               `json:"masked"`
+	Id          string             `json:"_id"`
+	FirstName   string             `json:"firstName"`
+	Email       string             `json:"email"`
+	LastName    string             `json:"lastName"`
+	Password    string             `json:"password"`
+	Joined      model.Time         `json:"joined"`
+	UpdatedAt   model.Time         `json:"updatedAt"`
+	MongoID     primitive.ObjectID `bson:"_id,omitempty"` // MongoDB's ObjectID (internal)
 	// json:"-" signifies that the JSON encoder should ignore this field even though field is exported
 }
 
@@ -57,15 +60,26 @@ func (u *User) MarshalJSON() ([]byte, error) {
 	auxAlias := (Alias)(*u) // Store the converted UserAlias in a variable
 
 	return json.Marshal(&struct {
-		*Alias
+		Id        string     `json:"id"`
+		Email     string     `json:"email"`
+		Masked    bool       `json:"masked"`
+		Joined    model.Time `json:"joined"`
+		LastName  string     `json:"lastName"`
+		UpdatedAt model.Time `json:"updatedAt"`
+		FirstName string     `json:"firstName"`
 	}{
-		// take the address of the auxAlias variable, which is a valid *UserAlias, and assign it to the UserAlias field in the anonymous struct
-		Alias: &auxAlias,
+		Id:        auxAlias.Id,
+		Email:     auxAlias.Email,
+		Joined:    auxAlias.Joined,
+		Masked:    auxAlias.Masked,
+		LastName:  auxAlias.LastName,
+		FirstName: auxAlias.FirstName,
+		UpdatedAt: auxAlias.UpdatedAt,
 	})
 }
 
 func (u *User) String() string {
-	format := "Id: %d, FirstName: %s, LastName: %s, Anonymous, %t"
+	format := "Id: %s, FirstName: %s, LastName: %s, Anonymous, %t"
 	return fmt.Sprintf(format, u.Id, u.FirstName, u.LastName, u.Masked)
 }
 
@@ -80,8 +94,8 @@ func NewUser(firstName string, lastName string, email string, password string) *
 		FirstName: firstName,
 		Joined:    model.NewTime(now),
 		UpdatedAt: model.NewTime(now),
-		Id:        random.PositiveInt64(),
 	}
+	newUser.generateUserId()
 	newUser.createFingerPrint()
 
 	return newUser
@@ -105,6 +119,10 @@ func (u *User) createFingerPrint() {
 	firstPart := splitParts[0][2:] // remove the first 2 letters of the first part
 
 	u.FingerPrint = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
+}
+
+func (u *User) generateUserId() {
+	u.Id = strconv.FormatInt(random.PositiveInt64(), 10)
 }
 
 func splitAtIndex(str string, stringPart int) []string {
