@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"time"
@@ -92,7 +93,7 @@ func (s *settingService) generateEncryptionKey() string {
 		s.log.Debug(fmt.Sprintf("event=%v :: error=%v", "generateEncryptionKeyFailure", err))
 		return strconv.FormatInt(random.PositiveInt64(), 10)
 	}
-	return string(key)
+	return base64.StdEncoding.EncodeToString(key)
 }
 
 func (s *settingService) validateSettings(request *exchange.SettingRequest) error {
