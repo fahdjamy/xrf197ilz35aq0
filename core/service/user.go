@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/argon2"
 	"net/mail"
+	"regexp"
 	"runtime"
 	"strings"
 	"xrf197ilz35aq0/core/exchange"
@@ -15,7 +16,6 @@ import (
 	"xrf197ilz35aq0/core/repository"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
-	"xrf197ilz35aq0/internal/encryption"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
@@ -49,16 +49,23 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		return nil, err
 	}
 
-	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), "")
+	hashedPassword, err := hashPassword(request.Password.Data())
+	if err != nil {
+		internalError.Err = err
+		internalError.Message = "Something went wrong"
+		uc.log.Error(fmt.Sprintf("event=createUser :: action=hashPassword :: err=%v", err))
+		return nil, internalError
+	}
+	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), hashedPassword)
 
 	// SAVE-USER/DB: ACTION 1 - save user and settings to database
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
-	//_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
-	//if err != nil {
-	//	internalError.Err = err
-	//	internalError.Message = "User creation failed"
-	//	return nil, internalError
-	//}
+	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	if err != nil {
+		internalError.Err = err
+		internalError.Message = "User creation failed"
+		return nil, internalError
+	}
 
 	settingRequest := request.Settings
 	if settingRequest == nil {
@@ -73,24 +80,6 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	if err != nil {
 		return nil, err
 	}
-
-	hashedPassword, err := encryption.EncryptAndEncode([]byte(request.Password.Data()), []byte(settings.EncryptionKey.Data()))
-	if err != nil {
-		internalError.Err = err
-		internalError.Message = "Encrypting password failed"
-		uc.log.Error(fmt.Sprintf("event=createUser :: action=encryptUserPassword :: userId=%d :: err=%v", newUser.Id, err))
-		return nil, internalError
-	}
-
-	// SAVE-USER/DB: ACTION 3 - Update user password
-	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
-	passwordSet, err := uc.userRepo.UpdatePassword(newUser.FingerPrint, hashedPassword, uc.ctx)
-	if err != nil {
-		internalError.Err = err
-		internalError.Message = "Update password failed"
-		return nil, internalError
-	}
-	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=setUserPassword :: userFP=%s :: userId=%d passwordSet=%t", newUser.FingerPrint[:7], newUser.Id, passwordSet))
 
 	// Return userResponse
 	userResponse := toUserResponse(newUser)
@@ -131,6 +120,38 @@ func (uc *service) validateUser(request *exchange.UserRequest) error {
 	if firstNameLen != 0 && firstNameLen < 3 {
 		return &xrfErr.External{Message: "If first name is specified, it should be at least 3 characters long"}
 	}
+
+	if err := uc.validatePassword(request.Password.Data()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (uc *service) validatePassword(password string) error {
+	// Minimum length of 8 characters
+	// At least 1 uppercase letter and 1 lowercase letter
+	// At least one digit
+	externalErr := &xrfErr.External{
+		Message: "Password should at least be 8 characters long and must contain a special character",
+	}
+
+	if len(password) < 8 {
+		return externalErr
+	}
+
+	if !regexp.MustCompile(`[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]`).MatchString(password) {
+		return fmt.Errorf("password must contain at least one special character")
+	}
+
+	if !regexp.MustCompile(`[A-Z]`).MatchString(password) || !regexp.MustCompile(`[a-z]`).MatchString(password) {
+		externalErr.Message = "password must contain at least one lowercase and an uppercase letter"
+		return externalErr
+	}
+
+	if !regexp.MustCompile(`[0-9]`).MatchString(password) {
+		return fmt.Errorf("password must contain at least one digit")
+	}
+
 	return nil
 }
 
