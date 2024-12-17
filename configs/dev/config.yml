@@ -25,3 +25,9 @@ database:
     databaseName: xrf0user
     directConnection: true
     cloudUri: CLOUD_MONGO_URI
+
+security:
+  passwordHash:
+    time: 4
+    thread: 3
+    memory: 800

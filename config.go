@@ -25,6 +25,16 @@ type Log struct {
 	Filename string `yaml:"filename"`
 }
 
+type PasswordHash struct {
+	time   uint8  `yaml:"time"`
+	thread uint8  `yaml:"thread"`
+	memory uint16 `yaml:"memory"`
+}
+
+type Security struct {
+	passwordHash PasswordHash `yaml:"passwordHash"`
+}
+
 type MongoConfig struct {
 	AppName          string `yaml:"appName"`
 	RetryWrites      bool   `yaml:"retryWrites"`
@@ -53,6 +63,7 @@ type Config struct {
 	Log         Log               `yaml:"log"`
 	Database    Database          `yaml:"database"`
 	Application ApplicationConfig `yaml:"application"`
+	Security    Security          `yaml:"security"`
 }
 
 func NewConfig(env string) (Config, error) {
