@@ -76,7 +76,7 @@ func (u *UserRequest) String() string {
 }
 
 type UserResponse struct {
-	UserId    int64                 `json:"userId"`
+	UserId    string                `json:"userId"`
 	FirstName string                `json:"firstName,omitempty"`
 	LastName  string                `json:"lastName,omitempty"`
 	Email     custom.Secret[string] `json:"email"`
@@ -87,7 +87,7 @@ type UserResponse struct {
 }
 
 func (u *UserResponse) String() string {
-	return fmt.Sprintf("{UserId: %d, CreatedAt: %s, UpdatedAt: %s}", u.UserId, u.CreatedAt, u.UpdatedAt)
+	return fmt.Sprintf("{UserId: %s, CreatedAt: %s, UpdatedAt: %s}", u.UserId, u.CreatedAt, u.UpdatedAt)
 }
 
 type SettingRequest struct {

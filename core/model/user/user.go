@@ -118,7 +118,7 @@ func (u *User) createFingerPrint() {
 	lastPart := splitParts[1]
 	firstPart := splitParts[0][2:] // remove the first 2 letters of the first part
 
-	u.FingerPrint = fmt.Sprintf("%s%d%s", firstPart, u.Id, lastPart)
+	u.FingerPrint = fmt.Sprintf("%s%s%s", firstPart, u.Id, lastPart)
 }
 
 func (u *User) generateUserId() {

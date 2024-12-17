@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	strongPassword    = "strongPassword"
 	validEmailAddress = "test@xrfaq.com"
+	strongPassword    = "strong32#Password"
 )
 
 type settingServiceMock struct {
@@ -65,6 +65,10 @@ func TestUserServiceCreateUser(t *testing.T) {
 		{name: "valid user request creates user", wantErr: false, request: createUserRequest(validEmailAddress, strongPassword)},
 		{name: "saves user if lastName length is 0", wantErr: false, request: createUserRequest(validEmailAddress, strongPassword)},
 		{name: "saves user if firstName length is 0", wantErr: false, request: createUserRequest(validEmailAddress, strongPassword)},
+		{name: "invalid password strength, less chars", wantErr: true, request: createUserRequest(validEmailAddress, "less")},
+		{name: "invalid password strength, no numeric value", wantErr: true, request: createUserRequest(validEmailAddress, "lesser#$%P")},
+		{name: "invalid password strength, no lowercase char", wantErr: true, request: createUserRequest(validEmailAddress, "XRF#$%PA")},
+		{name: "invalid password strength, no uppercase char", wantErr: true, request: createUserRequest(validEmailAddress, "advt_#$%xf")},
 	}
 
 	for _, tt := range tests {

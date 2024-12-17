@@ -59,7 +59,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), hashedPassword)
 
 	// SAVE-USER/DB: ACTION 1 - save user and settings to database
-	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%d", newUser.FingerPrint[:7], newUser.Id))
+	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%s", newUser.FingerPrint[:7], newUser.Id))
 	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
 	if err != nil {
 		internalError.Err = err
@@ -94,7 +94,7 @@ func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
 		return nil, err
 	}
 
-	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDB :: userId=%d", userResponse.Id))
+	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDB :: userId=%s", userResponse.Id))
 	userSettings, err := uc.settingsService.GetUserSettings(userResponse.FingerPrint)
 
 	if err != nil {

@@ -18,6 +18,11 @@ type Settings struct {
 	LastModified    time.Time
 	EncryptionKey   string
 	UserKey         bool
+
+	// Argon2 parameters
+	Time    uint32 `bson:"argon2Time"`
+	Memory  uint32 `bson:"argon2Memory"`
+	Threads uint8  `bson:"argon2Threads"`
 }
 
 func (s *Settings) UnmarshalJSON(bytes []byte) error {

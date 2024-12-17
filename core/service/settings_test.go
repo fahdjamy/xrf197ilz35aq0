@@ -20,7 +20,7 @@ func TestNewSettings(t *testing.T) {
 		request   *exchange.SettingRequest
 		userModel user.User
 	}
-	userObj := user.User{Id: 123456789}
+	userObj := user.User{Id: fmt.Sprintf("%v", 123433)}
 	tests := []struct {
 		name           string
 		args           args
