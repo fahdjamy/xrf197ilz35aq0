@@ -28,7 +28,7 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 	externalError = &xrfErr.External{}
 	internalError.Source = "core/repository/settings#fetchUserSettings"
 
-	filter := bson.D{{"id", userFP}}
+	filter := bson.D{{"fingerPrint", userFP}}
 	var userSettings user.Settings
 	resp := sr.db.Collection(SettingsCollection).FindOne(ctx, filter)
 

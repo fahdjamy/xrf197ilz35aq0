@@ -11,10 +11,11 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
-	xrf "xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
@@ -28,7 +29,8 @@ type UserService interface {
 }
 
 type service struct {
-	log             xrf.Logger
+	log             internal.Logger
+	config          xrf.Security
 	settingsService SettingsService
 	ctx             context.Context
 	userRepo        repository.UserRepository
@@ -49,7 +51,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 		return nil, err
 	}
 
-	hashedPassword, err := hashPassword(request.Password.Data())
+	hashedPassword, err := uc.hashPassword(request.Password.Data())
 	if err != nil {
 		internalError.Err = err
 		internalError.Message = "Something went wrong"
@@ -155,19 +157,7 @@ func (uc *service) validatePassword(password string) error {
 	return nil
 }
 
-func toUserResponse(newUser *user.User) *exchange.UserResponse {
-	return &exchange.UserResponse{
-		UserId:    newUser.Id,
-		CreatedAt: newUser.Joined,
-		LastName:  newUser.LastName,
-		FirstName: newUser.FirstName,
-		UpdatedAt: newUser.UpdatedAt,
-		Anonymous: newUser.IsAnonymous(),
-		Email:     *custom.NewSecret(newUser.Email),
-	}
-}
-
-func hashPassword(password string) (string, error) {
+func (uc *service) hashPassword(password string) (string, error) {
 	internalError := &xrfErr.Internal{
 		Source: "core/service/settings#hashPassword",
 	}
@@ -185,7 +175,11 @@ func hashPassword(password string) (string, error) {
 	//   - memory:  Memory usage in KiB (higher is more resistant to GPU cracking).
 	//   - threads: Number of parallel threads (can improve performance).
 	//   - keyLen: Length of the generated hash in bytes.
-	hash := argon2.IDKey([]byte(password), salt, 3, 65536, uint8(runtime.NumCPU()), 32)
+	var argonThreads = uint8(runtime.NumCPU())
+	var argonMemory = uc.config.PasswordConfig.Memory
+	var argonTime = uint32(uc.config.PasswordConfig.Time)
+
+	hash := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, 32)
 
 	// Encode the salt and hash as a single Base64 string for storage.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
@@ -194,7 +188,19 @@ func hashPassword(password string) (string, error) {
 	return b64Salt + "$" + b64Hash, nil
 }
 
-func verifyPassword(password, hashedPassword string) (bool, error) {
+func toUserResponse(newUser *user.User) *exchange.UserResponse {
+	return &exchange.UserResponse{
+		UserId:    newUser.Id,
+		CreatedAt: newUser.Joined,
+		LastName:  newUser.LastName,
+		FirstName: newUser.FirstName,
+		UpdatedAt: newUser.UpdatedAt,
+		Anonymous: newUser.IsAnonymous(),
+		Email:     *custom.NewSecret(newUser.Email),
+	}
+}
+
+func verifyPassword(threads uint8, memory uint32, time uint32, password, hashedPassword string) (bool, error) {
 	parts := strings.Split(hashedPassword, "$")
 	if len(parts) != 2 {
 		return false, &xrfErr.Internal{Message: "Invalid password format"}
@@ -212,16 +218,22 @@ func verifyPassword(password, hashedPassword string) (bool, error) {
 	}
 
 	// Use the same parameters used for hashing:
-	testHash := argon2.IDKey([]byte(password), salt, 3, 65536, uint8(runtime.NumCPU()), 32)
+	testHash := argon2.IDKey([]byte(password), salt, time, memory, threads, 32)
 
 	// Use a constant-time comparison to prevent timing attacks
-	return subtle.ConstantTimeCompare(testHash, []byte(passHash)) == 1, nil
+	return subtle.ConstantTimeCompare(testHash, passHash) == 1, nil
 }
 
-func NewUserService(log xrf.Logger, userSettings SettingsService, userRepo repository.UserRepository, ctx context.Context) UserService {
+func NewUserService(
+	log internal.Logger,
+	userSettings SettingsService,
+	userRepo repository.UserRepository,
+	ctx context.Context, config xrf.Security) UserService {
+
 	return &service{
 		ctx:             ctx,
 		log:             log,
+		config:          config,
 		userRepo:        userRepo,
 		settingsService: userSettings,
 	}

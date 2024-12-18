@@ -25,14 +25,14 @@ type Log struct {
 	Filename string `yaml:"filename"`
 }
 
-type PasswordHash struct {
-	time   uint8  `yaml:"time"`
-	thread uint8  `yaml:"thread"`
-	memory uint16 `yaml:"memory"`
+type PasswordConfig struct {
+	Time   uint8  `yaml:"time"`
+	Thread uint8  `yaml:"thread"`
+	Memory uint32 `yaml:"memory"`
 }
 
 type Security struct {
-	passwordHash PasswordHash `yaml:"passwordHash"`
+	PasswordConfig PasswordConfig `yaml:"passwordHash"`
 }
 
 type MongoConfig struct {

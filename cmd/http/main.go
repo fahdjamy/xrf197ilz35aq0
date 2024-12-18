@@ -76,8 +76,8 @@ func main() {
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 
 	// create services
-	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx)
-	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx)
+	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
+	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 
 	// create the router and start the server
 	router := mux.NewRouter().StrictSlash(true)

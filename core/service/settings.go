@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
@@ -22,6 +23,7 @@ type SettingsService interface {
 }
 
 type settingService struct {
+	config       xrf.Security
 	log          internal.Logger
 	ctx          context.Context
 	settingsRepo repository.SettingsRepository
@@ -51,6 +53,9 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrin
 		userFPrint,
 		request.EncryptionKey,
 	)
+	settings.Time = s.config.PasswordConfig.Time
+	settings.Memory = s.config.PasswordConfig.Memory
+	settings.Threads = s.config.PasswordConfig.Thread
 
 	insertId, err := s.settingsRepo.CreateSettings(settings, s.ctx)
 	if err != nil {
@@ -108,10 +113,15 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingService(logger internal.Logger, settingsRepo repository.SettingsRepository, ctx context.Context) SettingsService {
+func NewSettingService(
+	logger internal.Logger,
+	settingsRepo repository.SettingsRepository,
+	ctx context.Context,
+	config xrf.Security) SettingsService {
 	return &settingService{
 		ctx:          ctx,
 		log:          logger,
+		config:       config,
 		settingsRepo: settingsRepo,
 	}
 }

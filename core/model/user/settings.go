@@ -2,8 +2,15 @@ package user
 
 import (
 	"encoding/json"
+	"runtime"
 	"time"
 	xrfErr "xrf197ilz35aq0/internal/error"
+)
+
+const (
+	defaultArgonTime    = 2
+	defaultArgonThreads = 5
+	defaultArgonMemory  = 64 * 1024 // 65536
 )
 
 // Settings defines the fields that indicate how a user wants their data to be handled/stored or
@@ -14,13 +21,13 @@ type Settings struct {
 	// should be specified in months and should only be set to run during less peak hours
 	CreatedAt       time.Time
 	EncryptAfter    time.Duration
-	UserFingerprint string
+	UserFingerprint string `bson:"fingerPrint"`
 	LastModified    time.Time
 	EncryptionKey   string
 	UserKey         bool
 
 	// Argon2 parameters
-	Time    uint32 `bson:"argon2Time"`
+	Time    uint8  `bson:"argon2Time"`
 	Memory  uint32 `bson:"argon2Memory"`
 	Threads uint8  `bson:"argon2Threads"`
 }
@@ -64,6 +71,10 @@ func (s *Settings) Key() string {
 func NewSettings(rotateEncKey bool, encryptAfter time.Duration, userFP, encryptionKey string) *Settings {
 	now := time.Now()
 
+	threadsCount := uint8(runtime.NumCPU())
+	if threadsCount == 0 {
+		threadsCount = defaultArgonThreads
+	}
 	return &Settings{
 		CreatedAt:           now,
 		LastModified:        now,
@@ -71,5 +82,8 @@ func NewSettings(rotateEncKey bool, encryptAfter time.Duration, userFP, encrypti
 		EncryptAfter:        encryptAfter,
 		RotateEncryptionKey: rotateEncKey,
 		EncryptionKey:       encryptionKey,
+		Threads:             threadsCount,
+		Time:                defaultArgonTime,
+		Memory:              defaultArgonMemory,
 	}
 }
