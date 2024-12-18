@@ -13,6 +13,7 @@ import (
 	"strings"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
+	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
@@ -24,7 +25,7 @@ var internalError *xrfErr.Internal
 
 // UserService is a port (Driven side)
 type UserService interface {
-	GetUserById(userId int64) (*exchange.UserResponse, error)
+	GetUserById(userId string) (*exchange.UserResponse, error)
 	CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
 }
 
@@ -48,6 +49,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	uc.log.Info(fmt.Sprintf("event=creatUser :: action=creatingUser :: username=%s", userName))
 	err := uc.validateUser(request)
 	if err != nil {
+		uc.log.Error(fmt.Sprintf("event=creatUser :: username=%s :: err=%v", userName, err))
 		return nil, err
 	}
 
@@ -89,10 +91,11 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	return userResponse, nil
 }
 
-func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
+func (uc *service) GetUserById(userId string) (*exchange.UserResponse, error) {
 	userResponse, err := uc.userRepo.GetUserById(userId, uc.ctx)
-	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=getUserByIdFromDB :: userId=%d", userId))
+	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=getUserByIdFromDB :: userId=%s", userId))
 	if err != nil {
+		uc.log.Error(fmt.Sprintf("event=getUserById :: action=getUserByIdFailure :: err=%v", err))
 		return nil, err
 	}
 
@@ -100,6 +103,7 @@ func (uc *service) GetUserById(userId int64) (*exchange.UserResponse, error) {
 	userSettings, err := uc.settingsService.GetUserSettings(userResponse.FingerPrint)
 
 	if err != nil {
+		uc.log.Error(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDBFailure :: err=%v", err))
 		return nil, err
 	}
 
@@ -191,11 +195,11 @@ func (uc *service) hashPassword(password string) (string, error) {
 func toUserResponse(newUser *user.User) *exchange.UserResponse {
 	return &exchange.UserResponse{
 		UserId:    newUser.Id,
-		CreatedAt: newUser.Joined,
 		LastName:  newUser.LastName,
 		FirstName: newUser.FirstName,
-		UpdatedAt: newUser.UpdatedAt,
 		Anonymous: newUser.IsAnonymous(),
+		CreatedAt: model.NewTime(newUser.Joined),
+		UpdatedAt: model.NewTime(newUser.UpdatedAt),
 		Email:     *custom.NewSecret(newUser.Email),
 	}
 }

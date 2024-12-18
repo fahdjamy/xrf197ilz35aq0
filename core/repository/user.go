@@ -14,7 +14,7 @@ import (
 const UserCollection = "user"
 
 type UserRepository interface {
-	GetUserById(id int64, ctx context.Context) (*user.User, error)
+	GetUserById(userId string, ctx context.Context) (*user.User, error)
 	CreateUser(user *user.User, ctx context.Context) (any, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
 }
@@ -57,12 +57,12 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 	return resp.ModifiedCount == 1, nil
 }
 
-func (up *userRepo) GetUserById(id int64, ctx context.Context) (*user.User, error) {
+func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User, error) {
 	internalError = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
 	internalError.Source = "core/repository/user#getUserById"
 
-	filter := bson.D{{"id", id}}
+	filter := bson.D{{"userId", userId}}
 
 	var userResponse user.User
 	resp := up.db.Collection(UserCollection).FindOne(ctx, filter)

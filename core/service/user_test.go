@@ -73,7 +73,7 @@ func TestUserServiceCreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uc := NewUserService(logger, settingServiceMock, userRepo, context.TODO())
+			uc := NewUserService(logger, settingServiceMock, userRepo, context.TODO(), securityConfig)
 			got, err := uc.CreateUser(tt.request)
 			if tt.wantErr {
 				xrf.AssertError(t, err)
@@ -92,11 +92,11 @@ func TestGetUserById(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		userId  int64
+		userId  string
 		want    *exchange.UserResponse
 		wantErr bool
 	}{
-		{name: "get user by id", wantErr: false, userId: 1234567, want: &exchange.UserResponse{}},
+		{name: "get user by id", wantErr: false, userId: "1234567", want: &exchange.UserResponse{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

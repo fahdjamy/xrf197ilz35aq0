@@ -44,7 +44,7 @@ type userRepositoryMock struct {
 	Called map[string]int
 }
 
-func (u *userRepositoryMock) GetUserById(id int64, ctx context.Context) (*user.User, error) {
+func (u *userRepositoryMock) GetUserById(_ string, _ context.Context) (*user.User, error) {
 	method := "GetUserById"
 	count, ok := u.Called[method]
 	if !ok {

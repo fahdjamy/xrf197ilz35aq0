@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
@@ -58,7 +57,7 @@ func (user *User) getUserById(w http.ResponseWriter, req *http.Request) {
 		writeErrorResponse(externalError, w, user.logger)
 		return
 	}
-	user.logger.Debug(fmt.Sprintf("event=getUserBy id :: userId=%d", userId))
+	user.logger.Debug(fmt.Sprintf("event=getUserBy id :: userId=%s", userId))
 
 	userResp, err := user.userService.GetUserById(userId)
 
@@ -72,19 +71,14 @@ func (user *User) getUserById(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func getAndValidateId(req *http.Request) (int64, bool) {
+func getAndValidateId(req *http.Request) (string, bool) {
 	vars := mux.Vars(req)
 	userId, ok := vars[UserIdKey]
-	if !ok {
-		return 0, false
-	}
-	id, err := strconv.ParseInt(userId, 10, 64)
-
-	if err != nil || id <= 0 {
-		return 0, false
+	if !ok || userId == "" {
+		return "", false
 	}
 
-	return id, true
+	return userId, true
 }
 
 func (user *User) RegisterAndListen() {
