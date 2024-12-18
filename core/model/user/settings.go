@@ -17,14 +17,14 @@ const (
 // presented to the outside world
 type Settings struct {
 	// if turned on, user encryption key should be rotated
-	RotateEncryptionKey bool
+	RotateEncryptionKey bool `bson:"rotateKey"`
 	// should be specified in months and should only be set to run during less peak hours
-	CreatedAt       time.Time
-	EncryptAfter    time.Duration
-	UserFingerprint string `bson:"fingerPrint"`
-	LastModified    time.Time
-	EncryptionKey   string
-	UserKey         bool
+	CreatedAt       time.Time     `bson:"createdAt"`
+	EncryptAfter    time.Duration `bson:"encryptAfter"`
+	UserFingerprint string        `bson:"fingerPrint"`
+	LastModified    time.Time     `bson:"lastModified"`
+	EncryptionKey   string        `bson:"encryptionKey"`
+	UserKey         bool          `bson:"isUserKey"`
 
 	// Argon2 parameters
 	Time    uint8  `bson:"argon2Time"`

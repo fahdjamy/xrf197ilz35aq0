@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
@@ -18,16 +17,16 @@ const fingerPrintLength = 55
 type Alias User // Create an alias to avoid infinite recursion when marshalling/unMarshalling
 
 type User struct {
-	FingerPrint string             `json:"fingerPrint"`
-	Masked      bool               `json:"masked"`
-	Id          string             `json:"_id"`
-	FirstName   string             `json:"firstName"`
-	Email       string             `json:"email"`
-	LastName    string             `json:"lastName"`
-	Password    string             `json:"password"`
-	Joined      model.Time         `json:"joined"`
-	UpdatedAt   model.Time         `json:"updatedAt"`
-	MongoID     primitive.ObjectID `bson:"_id,omitempty"` // MongoDB's ObjectID (internal)
+	FingerPrint string             `json:"fingerPrint" bson:"fingerPrint"`
+	Masked      bool               `json:"masked" bson:"masked"`
+	Id          string             `json:"userId" bson:"userId"`
+	FirstName   string             `json:"firstName" bson:"firstName"`
+	Email       string             `json:"email" bson:"email"`
+	LastName    string             `json:"lastName" bson:"lastName"`
+	Password    string             `json:"password" bson:"password"`
+	Joined      time.Time          `json:"joined" bson:"joined"`
+	UpdatedAt   time.Time          `json:"updatedAt" bson:"updatedAt"`
+	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 	// json:"-" signifies that the JSON encoder should ignore this field even though field is exported
 }
 
@@ -60,13 +59,13 @@ func (u *User) MarshalJSON() ([]byte, error) {
 	auxAlias := (Alias)(*u) // Store the converted UserAlias in a variable
 
 	return json.Marshal(&struct {
-		Id        string     `json:"id"`
-		Email     string     `json:"email"`
-		Masked    bool       `json:"masked"`
-		Joined    model.Time `json:"joined"`
-		LastName  string     `json:"lastName"`
-		UpdatedAt model.Time `json:"updatedAt"`
-		FirstName string     `json:"firstName"`
+		Id        string    `json:"id"`
+		Email     string    `json:"email"`
+		Masked    bool      `json:"masked"`
+		Joined    time.Time `json:"joined"`
+		LastName  string    `json:"lastName"`
+		UpdatedAt time.Time `json:"updatedAt"`
+		FirstName string    `json:"firstName"`
 	}{
 		Id:        auxAlias.Id,
 		Email:     auxAlias.Email,
@@ -92,8 +91,8 @@ func NewUser(firstName string, lastName string, email string, password string) *
 		Password:  password,
 		LastName:  lastName,
 		FirstName: firstName,
-		Joined:    model.NewTime(now),
-		UpdatedAt: model.NewTime(now),
+		Joined:    now,
+		UpdatedAt: now,
 	}
 	newUser.generateUserId()
 	newUser.createFingerPrint()
