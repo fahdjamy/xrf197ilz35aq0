@@ -5,6 +5,8 @@ const (
 	EMPTY      = ""
 	EQUALS     = "="
 	UNDERSCORE = "_"
+	USERID     = "userId"
+	PASSWORD   = "password"
 )
 
 const ContentType = "Content-Type"

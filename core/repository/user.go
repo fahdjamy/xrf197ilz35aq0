@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
@@ -45,7 +46,7 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 	internalError = &xrfErr.Internal{}
 	internalError.Source = "core/repository/user#updateUser"
 	filter := bson.D{{"fingerprint", userFPrint}}
-	update := bson.D{{"$set", bson.D{{"password", newPassword}}}}
+	update := bson.D{{"$set", bson.D{{constants.PASSWORD, newPassword}}}}
 
 	resp, err := up.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -62,7 +63,7 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 	externalError = &xrfErr.External{}
 	internalError.Source = "core/repository/user#getUserById"
 
-	filter := bson.D{{"userId", userId}}
+	filter := bson.D{{constants.USERID, userId}}
 
 	var userResponse user.User
 	resp := up.db.Collection(UserCollection).FindOne(ctx, filter)
