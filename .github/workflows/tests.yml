@@ -34,11 +34,6 @@ jobs:
           - 27017:27017
 
     steps:
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
       - name: Checkout source code onto a VM
         uses: actions/checkout@v4
 
