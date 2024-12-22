@@ -29,7 +29,7 @@ jobs:
 
     services:
       mongodb:
-        image: mongo:latest
+        image: mongo:4.4
         ports:
           - 27017:27017
 
@@ -44,7 +44,7 @@ jobs:
           cache-dependency-path: "go.sum"
 
       - name: Install dependencies
-        run: go get .
+        run: go mod download
 
       - name: Build
         env:
@@ -54,20 +54,21 @@ jobs:
       - name: Test with go CLI
         env:
           LOCAL_MONGO_URI: mongodb://localhost:27017
-        run: go test ./... -json > testResults-go-${{ matrix.go-version }}.json
+        run: go test ./... -race -json > testResults-go-${{ matrix.go-version }}.json
 
       - name: Upload build artifacts ${{ matrix.os }}
         uses: actions/upload-artifact@v4
         with:
-          name: xrf0-cli-build-artifact-${{ strategy.job-index }}-os-${{ matrix.os }}
+          name: cli-build-artifact-${{ strategy.job-index }}-os-${{ matrix.os }}
           path: bin/cli
           retention-days: 10
 
       - name: Upload Go test results for ${{ matrix.go-version }}
+        if: always() # Always run even if previous steps fail
         uses: actions/upload-artifact@v4
         # https://github.com/actions/upload-artifact
         with:
-          name: go-test-results-${{ strategy.job-index }}-go-${{ matrix.go-version }}
+          name: test-results-${{ strategy.job-index }}-go-${{ matrix.go-version }}
           path: testResults-go-${{ matrix.go-version }}.json
           # Duration after which artifact will expire in days. 0 means using default retention.
           # Minimum 1 day.
