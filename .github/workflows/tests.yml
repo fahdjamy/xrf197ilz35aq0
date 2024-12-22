@@ -22,7 +22,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-        #          - macos-latest
+        #          - macos-latest ### This os matrix will fail throwing a docker issue in GitHub
         go-version:
           - 1.22.x
           - 1.23.0
@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-          check-latest: true
+          #          check-latest: true
           cache-dependency-path: "go.sum"
 
       - name: Install dependencies
