@@ -5,6 +5,7 @@ const (
 	EMPTY      = ""
 	EQUALS     = "="
 	UNDERSCORE = "_"
+	OrgId      = "orgId"
 	USERID     = "userId"
 	PASSWORD   = "password"
 )
