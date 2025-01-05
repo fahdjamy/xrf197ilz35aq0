@@ -14,21 +14,21 @@ const (
 	UserIdKey = "userId"
 )
 
-type User struct {
+type UserHandler struct {
 	logger      xrf.Logger
 	router      *mux.Router
 	userService service.UserService
 }
 
-func NewUser(logger xrf.Logger, userManager service.UserService, router *mux.Router) *User {
-	return &User{
+func NewUserHandler(logger xrf.Logger, userManager service.UserService, router *mux.Router) *UserHandler {
+	return &UserHandler{
 		router:      router,
 		logger:      logger,
 		userService: userManager,
 	}
 }
 
-func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
+func (user *UserHandler) createUser(w http.ResponseWriter, req *http.Request) {
 	var userReq exchange.UserRequest
 
 	err := decodeJSONBody(req, &userReq)
@@ -48,7 +48,7 @@ func (user *User) createUser(w http.ResponseWriter, req *http.Request) {
 	writeResponse(resp, w, user.logger)
 }
 
-func (user *User) getUserById(w http.ResponseWriter, req *http.Request) {
+func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	userId, isValid := getAndValidateId(req)
 	if !isValid {
 		externalError := &xrfErr.External{
@@ -68,7 +68,6 @@ func (user *User) getUserById(w http.ResponseWriter, req *http.Request) {
 
 	resp := dataResponse{Data: userResp, Code: http.StatusOK}
 	writeResponse(resp, w, user.logger)
-
 }
 
 func getAndValidateId(req *http.Request) (string, bool) {
@@ -81,7 +80,7 @@ func getAndValidateId(req *http.Request) (string, bool) {
 	return userId, true
 }
 
-func (user *User) RegisterAndListen() {
+func (user *UserHandler) RegisterAndListen() {
 	user.router.HandleFunc("/user", user.createUser).Methods("POST")
 	user.router.HandleFunc(fmt.Sprintf("/user/{%s}", UserIdKey), user.getUserById).Methods("GET")
 }

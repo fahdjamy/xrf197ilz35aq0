@@ -74,14 +74,21 @@ func main() {
 	// create repositories
 	userRepo := repository.NewUserRepository(mongoDB, logger)
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
+	orgRepo := repository.NewOrganizationRepository(mongoDB, logger)
 
 	// create services
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
+	orgService := service.NewOrganizationService(config.Security, logger, orgRepo)
+
+	services := http.Services{
+		OrgService:  orgService,
+		UserService: userService,
+	}
 
 	// create the router and start the server
 	router := mux.NewRouter().StrictSlash(true)
-	server := http.NewHttpServer(logger, router, config, userService, backgroundCtx)
+	server := http.NewHttpServer(logger, router, config, services, backgroundCtx)
 	server.Start()
 }
 
