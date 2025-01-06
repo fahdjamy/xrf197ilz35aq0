@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"unicode"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/org"
@@ -26,14 +28,16 @@ func (svc *roleService) CreateRole(req *exchange.RoleRequest, ctx context.Contex
 	}
 
 	newRole := org.CreateRole(req.Name, req.Name)
-	roleMongoId, err := svc.roleRepo.SaveRole(newRole, ctx)
+	_, err = svc.roleRepo.SaveRole(newRole, ctx)
 	if err != nil {
+		svc.log.Error(fmt.Sprintf("event=CreateRole :: action=saveRoleToDB :: err=%v", err))
 		return "", err
 	}
 
-	savedRole, err := svc.roleRepo.FindRoleByMongoId(roleMongoId, ctx)
+	savedRole, err := svc.roleRepo.FindRoleByName(strings.ToUpper(req.Name), ctx)
 	if err != nil {
 		internalErr := &xrfErr.Internal{Err: err, Message: "internal error", Source: "core/service/role#createRole"}
+		svc.log.Error(fmt.Sprintf("event=CreateRole :: action=saveRoleToDB :: err=%v", err))
 		return "", internalErr
 	}
 

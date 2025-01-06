@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
@@ -46,7 +47,7 @@ func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, err
 	}
 	repo.log.Debug(fmt.Sprintf("event=saveRole :: success=true :: objectID=%v", document.InsertedID))
 
-	return document.InsertedID.(string), nil
+	return document.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
 func (repo *roleRepo) UpdateRole(role *org.Role, ctx context.Context) error {
@@ -180,7 +181,7 @@ func createRoleDocIndex(db *mongo.Database, log internal.Logger) error {
 			return &xrfErr.Internal{
 				Err:     err,
 				Message: "Failed to create index",
-				Source:  "core/repository/role#NewRoleRepo",
+				Source:  "core/repository/role#createRoleDocIndex",
 			}
 		}
 	}
