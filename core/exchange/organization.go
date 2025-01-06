@@ -10,7 +10,14 @@ type OrgResponse struct {
 }
 
 type OrgRequest struct {
-	Name        string `json:"name"`
-	Category    string `json:"category"`
-	Description string `json:"description"`
+	Name        string             `json:"name"`
+	Category    string             `json:"category"`
+	Description string             `json:"description"`
+	Members     []OrgMemberRequest `json:"members"`
+}
+
+type OrgMemberRequest struct {
+	Owner  bool   `json:"owner"`
+	UserId string `json:"userId"`
+	RoleId string `json:"roleId"`
 }

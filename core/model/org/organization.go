@@ -2,14 +2,17 @@ package org
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strconv"
 	"time"
 	xrfErr "xrf197ilz35aq0/internal/error"
+	"xrf197ilz35aq0/internal/random"
 )
 
 var externalError *xrfErr.External
 
 type Member struct {
 	Fingerprint string   `json:"-" bson:"fingerPrint"`
+	Owner       bool     `json:"isOwner" bson:"owner"` // org can have multiple owners
 	RoleIds     []string `json:"roleIds" bson:"roleIds"`
 }
 
@@ -35,8 +38,10 @@ func CreateOrganization(name string, category string, desc string, members []Mem
 		return nil, externalError
 	}
 	now := time.Now()
+	orgId := createOrgId()
 
 	return &Organization{
+		Id:          orgId,
 		Name:        name,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -44,4 +49,8 @@ func CreateOrganization(name string, category string, desc string, members []Mem
 		Members:     members,
 		Category:    category,
 	}, nil
+}
+
+func createOrgId() string {
+	return strconv.FormatInt(random.PositiveInt64(), 10)
 }
