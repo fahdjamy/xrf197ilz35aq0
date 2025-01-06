@@ -8,6 +8,7 @@ import (
 )
 
 type Role struct {
+	Name        string             `json:"name" bson:"name"`
 	RoleId      string             `json:"roleId" bson:"roleId"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
@@ -15,10 +16,11 @@ type Role struct {
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 }
 
-func CreateRole(description string) *Role {
+func CreateRole(name, description string) *Role {
 	now := time.Now()
 	roleId := createRoleId()
 	return &Role{
+		Name:        name,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		RoleId:      roleId,

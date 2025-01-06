@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0/core/model/org"
 	"xrf197ilz35aq0/internal"
@@ -16,6 +18,7 @@ type RoleRepo interface {
 	SaveRole(role *org.Role, ctx context.Context) (string, error)
 	FindRoleById(id string, ctx context.Context) (*org.Role, error)
 	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
+	FindRoleByMongoId(mongoId string, ctx context.Context) (*org.Role, error)
 }
 
 type roleRepo struct {
@@ -50,6 +53,30 @@ func (repo *roleRepo) FindRoleById(id string, ctx context.Context) (*org.Role, e
 func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Role, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (repo *roleRepo) FindRoleByMongoId(mongoId string, ctx context.Context) (*org.Role, error) {
+	var result org.Role
+	internalError = &xrfErr.Internal{}
+
+	filter := bson.M{"_id": mongoId}
+	resp := repo.db.Collection(RoleCollection).FindOne(ctx, filter)
+
+	if resp.Err() != nil {
+		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
+			externalError.Message = "Role not found"
+			return nil, externalError
+		}
+		return nil, resp.Err()
+	}
+
+	if err := resp.Decode(&result); err != nil {
+		internalError.Err = err
+		internalError.Message = "Failed to decode role object"
+		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=FindRoleByMongoId :: err=%s", err))
+		return nil, internalError
+	}
+	return &result, nil
 }
 
 func NewRoleRepo(db *mongo.Database, log internal.Logger) RoleRepo {
