@@ -24,9 +24,9 @@ type settingsRepo struct {
 }
 
 func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (settings *user.Settings, err error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
-	internalError.Source = "core/repository/settings#fetchUserSettings"
+	internalErr.Source = "core/repository/settings#fetchUserSettings"
 
 	filter := bson.D{{"fingerPrint", userFP}}
 	var userSettings user.Settings
@@ -41,22 +41,22 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 	}
 
 	if err := resp.Decode(&userSettings); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode user settings"
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode user settings"
 		sr.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=fetchUserSettings :: err=%s", err))
-		return nil, internalError
+		return nil, internalErr
 	}
 
 	return &userSettings, nil
 }
 
 func (sr *settingsRepo) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
-	internalError = &xrfErr.Internal{} // defined in the repository/user file
-	internalError.Source = "core/repository/user#createSettings"
+	internalErr = &xrfErr.Internal{} // defined in the repository/user file
+	internalErr.Source = "core/repository/user#createSettings"
 	document, err := sr.db.Collection(SettingsCollection).InsertOne(ctx, settings)
 	if err != nil {
-		internalError.Err = err
-		internalError.Message = "Saving new user-settings failed"
+		internalErr.Err = err
+		internalErr.Message = "Saving new user-settings failed"
 		return nil, err
 	}
 

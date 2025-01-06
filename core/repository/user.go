@@ -25,16 +25,16 @@ type userRepo struct {
 	log internal.Logger
 }
 
-var internalError *xrfErr.Internal
+var internalErr *xrfErr.Internal
 var externalError *xrfErr.External
 
 func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	document, err := up.db.Collection(UserCollection).InsertOne(ctx, user)
 	if err != nil {
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
-		internalError.Err = err
-		internalError.Message = "Saving new user failed"
+		internalErr.Err = err
+		internalErr.Message = "Saving new user failed"
 		return nil, err
 	}
 	up.log.Debug(fmt.Sprintf("event=createUser :: success=true :: objectID=%v", document.InsertedID))
@@ -43,25 +43,25 @@ func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error
 }
 
 func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error) {
-	internalError = &xrfErr.Internal{}
-	internalError.Source = "core/repository/user#updateUser"
+	internalErr = &xrfErr.Internal{}
+	internalErr.Source = "core/repository/user#updateUser"
 	filter := bson.D{{"fingerprint", userFPrint}}
 	update := bson.D{{"$set", bson.D{{constants.PASSWORD, newPassword}}}}
 
 	resp, err := up.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
 	if err != nil {
-		internalError.Err = err
-		internalError.Message = "Updating user failed"
-		return false, internalError
+		internalErr.Err = err
+		internalErr.Message = "Updating user failed"
+		return false, internalErr
 	}
 
 	return resp.ModifiedCount == 1, nil
 }
 
 func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
-	internalError.Source = "core/repository/user#getUserById"
+	internalErr.Source = "core/repository/user#getUserById"
 
 	filter := bson.D{{constants.USERID, userId}}
 
@@ -77,10 +77,10 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 	}
 
 	if err := resp.Decode(&userResponse); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode userResponse object"
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode userResponse object"
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=getUserById :: err=%s", err))
-		return nil, internalError
+		return nil, internalErr
 	}
 	return &userResponse, nil
 }

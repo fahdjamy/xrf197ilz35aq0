@@ -21,7 +21,7 @@ type RoleRepo interface {
 	SaveRole(role *org.Role, ctx context.Context) (string, error)
 	FindRoleById(id string, ctx context.Context) (*org.Role, error)
 	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
-	FindRoleByMongoId(mongoId string, ctx context.Context) (*org.Role, error)
+	FindRoleByNames(names []string, ctx context.Context) ([]*org.Role, int, error)
 }
 
 type roleRepo struct {
@@ -30,7 +30,7 @@ type roleRepo struct {
 }
 
 func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
 	document, err := repo.db.Collection(RoleCollection).InsertOne(ctx, role)
 	if err != nil {
@@ -41,8 +41,8 @@ func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, err
 			return "", externalError
 		}
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=%s", err))
-		internalError.Message = "Creating new role in mongodb failed"
-		internalError.Err = err
+		internalErr.Message = "Creating new role in mongodb failed"
+		internalErr.Err = err
 		return "", err
 	}
 	repo.log.Debug(fmt.Sprintf("event=saveRole :: success=true :: objectID=%v", document.InsertedID))
@@ -62,7 +62,7 @@ func (repo *roleRepo) FindRoleById(id string, ctx context.Context) (*org.Role, e
 
 func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Role, error) {
 	var result org.Role
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 
 	filter := bson.M{"name": name}
 	resp := repo.db.Collection(RoleCollection).FindOne(ctx, filter)
@@ -76,36 +76,39 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 	}
 
 	if err := resp.Decode(&result); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode role object"
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode role object"
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=FindRoleByName :: err=%s", err))
-		return nil, internalError
+		return nil, internalErr
 	}
 	return &result, nil
 }
 
-func (repo *roleRepo) FindRoleByMongoId(mongoId string, ctx context.Context) (*org.Role, error) {
-	var result org.Role
-	internalError = &xrfErr.Internal{}
+func (repo *roleRepo) FindRoleByNames(names []string, ctx context.Context) ([]*org.Role, int, error) {
+	internalErr = &xrfErr.Internal{}
+	// 1. Build query filter
+	filter := bson.M{"name": bson.M{"$in": names}}
 
-	filter := bson.M{"_id": mongoId}
-	resp := repo.db.Collection(RoleCollection).FindOne(ctx, filter)
-
-	if resp.Err() != nil {
-		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
-			externalError.Message = "Role not found"
-			return nil, externalError
-		}
-		return nil, resp.Err()
+	// 2. Query mongoDB
+	cursor, err := repo.db.Collection(RoleCollection).Find(ctx, filter)
+	if err != nil {
+		internalErr.Message = "Failed to query roles"
+		internalErr.Err = err
+		return nil, 0, internalErr
 	}
 
-	if err := resp.Decode(&result); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode role object"
-		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=FindRoleByMongoId :: err=%s", err))
-		return nil, internalError
+	defer cursor.Close(ctx)
+
+	// 3. Decode the results into a slice of Role structs
+	var orgRoles []*org.Role
+
+	if err := cursor.All(ctx, &orgRoles); err != nil {
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode role objects"
+		return nil, 0, internalErr
 	}
-	return &result, nil
+
+	return orgRoles, len(orgRoles), nil
 }
 
 func NewRoleRepo(db *mongo.Database, log internal.Logger) (RoleRepo, error) {
@@ -120,7 +123,7 @@ func NewRoleRepo(db *mongo.Database, log internal.Logger) (RoleRepo, error) {
 }
 
 func createRoleDocIndex(db *mongo.Database, log internal.Logger) error {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -139,9 +142,9 @@ func createRoleDocIndex(db *mongo.Database, log internal.Logger) error {
 		if err := cursor.Decode(&index); err != nil {
 			log.Error(fmt.Sprintf("Failed to decode index data: %v", err))
 			// Handle the error appropriately
-			internalError.Err = err
-			internalError.Message = "Failed to decode index data"
-			return internalError
+			internalErr.Err = err
+			internalErr.Message = "Failed to decode index data"
+			return internalErr
 		}
 
 		// 2. Check if an index on 'name' exists
