@@ -3,6 +3,7 @@ package org
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
+	"strings"
 	"time"
 	"xrf197ilz35aq0/internal/random"
 )
@@ -20,11 +21,11 @@ func CreateRole(name, description string) *Role {
 	now := time.Now()
 	roleId := createRoleId()
 	return &Role{
-		Name:        name,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		RoleId:      roleId,
 		Description: description,
+		Name:        strings.ToUpper(name),
 	}
 }
 

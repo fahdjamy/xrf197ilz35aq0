@@ -72,18 +72,25 @@ func main() {
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create repositories
+	roleRepo, err := repository.NewRoleRepo(mongoDB, logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		return
+	}
 	userRepo := repository.NewUserRepository(mongoDB, logger)
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 	orgRepo := repository.NewOrganizationRepository(mongoDB, logger)
 
 	// create services
+	roleService := service.NewRoleService(logger, roleRepo)
+	orgService := service.NewOrganizationService(config.Security, logger, orgRepo, userRepo)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
-	orgService := service.NewOrganizationService(config.Security, logger, orgRepo)
 
 	services := http.Services{
 		OrgService:  orgService,
 		UserService: userService,
+		RoleService: roleService,
 	}
 
 	// create the router and start the server
