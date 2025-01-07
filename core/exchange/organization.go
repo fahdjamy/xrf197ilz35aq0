@@ -17,7 +17,7 @@ type OrgRequest struct {
 }
 
 type OrgMemberRequest struct {
-	Owner  bool   `json:"owner"`
-	UserId string `json:"userId"`
-	RoleId string `json:"roleId"`
+	Owner  bool     `json:"owner"`
+	UserId string   `json:"userId"`
+	Roles  []string `json:"roles"`
 }

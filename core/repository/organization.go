@@ -26,12 +26,12 @@ type orgRepo struct {
 }
 
 func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (any, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	document, err := repo.db.Collection(OrgCollection).InsertOne(ctx, organization)
 	if err != nil {
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveOrg :: err=%s", err))
-		internalError.Message = "Creating new org in mongodb failed"
-		internalError.Err = err
+		internalErr.Message = "Creating new org in mongodb failed"
+		internalErr.Err = err
 		return nil, err
 	}
 	repo.log.Debug(fmt.Sprintf("event=saveOrg :: success=true :: objectID=%v", document.InsertedID))
@@ -40,9 +40,9 @@ func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context)
 }
 
 func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organization, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
-	internalError.Source = "core/repository/organization#getOrgById"
+	internalErr.Source = "core/repository/organization#getOrgById"
 
 	filter := bson.M{constants.OrgId: id}
 
@@ -58,16 +58,16 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 	}
 
 	if err := resp.Decode(&result); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode org object"
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode org object"
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=getOrgById :: err=%s", err))
-		return nil, internalError
+		return nil, internalErr
 	}
 	return &result, nil
 }
 
 func (repo *orgRepo) FindByMongoId(id string, ctx context.Context) (*org.Organization, error) {
-	internalError = &xrfErr.Internal{}
+	internalErr = &xrfErr.Internal{}
 
 	filter := bson.M{"_id": id}
 	var result org.Organization
@@ -82,10 +82,10 @@ func (repo *orgRepo) FindByMongoId(id string, ctx context.Context) (*org.Organiz
 	}
 
 	if err := resp.Decode(&result); err != nil {
-		internalError.Err = err
-		internalError.Message = "Failed to decode org object"
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode org object"
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=getOrgById :: err=%s", err))
-		return nil, internalError
+		return nil, internalErr
 	}
 	return &result, nil
 }

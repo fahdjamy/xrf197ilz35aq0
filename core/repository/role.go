@@ -16,12 +16,12 @@ import (
 
 const RoleCollection = "role"
 
-type RoleRepo interface {
+type RoleRepository interface {
 	UpdateRole(role *org.Role, ctx context.Context) error
 	SaveRole(role *org.Role, ctx context.Context) (string, error)
 	FindRoleById(id string, ctx context.Context) (*org.Role, error)
 	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
-	FindRoleByNames(names []string, ctx context.Context) ([]*org.Role, int, error)
+	FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error)
 }
 
 type roleRepo struct {
@@ -84,7 +84,7 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 	return &result, nil
 }
 
-func (repo *roleRepo) FindRoleByNames(names []string, ctx context.Context) ([]*org.Role, int, error) {
+func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error) {
 	internalErr = &xrfErr.Internal{}
 	// 1. Build query filter
 	filter := bson.M{"name": bson.M{"$in": names}}
@@ -94,7 +94,7 @@ func (repo *roleRepo) FindRoleByNames(names []string, ctx context.Context) ([]*o
 	if err != nil {
 		internalErr.Message = "Failed to query roles"
 		internalErr.Err = err
-		return nil, 0, internalErr
+		return nil, internalErr
 	}
 
 	defer cursor.Close(ctx)
@@ -105,13 +105,13 @@ func (repo *roleRepo) FindRoleByNames(names []string, ctx context.Context) ([]*o
 	if err := cursor.All(ctx, &orgRoles); err != nil {
 		internalErr.Err = err
 		internalErr.Message = "Failed to decode role objects"
-		return nil, 0, internalErr
+		return nil, internalErr
 	}
 
-	return orgRoles, len(orgRoles), nil
+	return orgRoles, nil
 }
 
-func NewRoleRepo(db *mongo.Database, log internal.Logger) (RoleRepo, error) {
+func NewRoleRepo(db *mongo.Database, log internal.Logger) (RoleRepository, error) {
 	if err := createRoleDocIndex(db, log); err != nil {
 		return nil, err
 	}
