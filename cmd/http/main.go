@@ -81,9 +81,16 @@ func main() {
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 	orgRepo := repository.NewOrganizationRepository(mongoDB, logger)
 
+	allRepos := &repository.Repositories{
+		RoleRepo:     roleRepo,
+		UserRepo:     userRepo,
+		OrgRepo:      orgRepo,
+		SettingsRepo: settingRepo,
+	}
+
 	// create services
 	roleService := service.NewRoleService(logger, roleRepo)
-	orgService := service.NewOrganizationService(config.Security, logger, orgRepo, userRepo)
+	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 

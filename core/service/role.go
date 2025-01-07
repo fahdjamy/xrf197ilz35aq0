@@ -18,11 +18,11 @@ type RoleService interface {
 
 type roleService struct {
 	log      internal.Logger
-	roleRepo repository.RoleRepo
+	roleRepo repository.RoleRepository
 }
 
 func (svc *roleService) CreateRole(req *exchange.RoleRequest, ctx context.Context) (string, error) {
-	err := validateName(req.Name)
+	err := validateRoleName(req.Name)
 	if err != nil {
 		return "", err
 	}
@@ -44,8 +44,8 @@ func (svc *roleService) CreateRole(req *exchange.RoleRequest, ctx context.Contex
 	return savedRole.RoleId, nil
 }
 
-func validateName(name string) error {
-	externalErr := &xrfErr.External{Source: "core/service/role#validateName"}
+func validateRoleName(name string) error {
+	externalErr := &xrfErr.External{Source: "core/service/role#validateRoleName"}
 	if name == "" || len(name) < 3 || len(name) > 63 {
 		externalErr.Message = "role name should be between 3 and 63 characters"
 		return externalErr
@@ -80,7 +80,7 @@ func validateName(name string) error {
 	return nil
 }
 
-func NewRoleService(log internal.Logger, roleRepo repository.RoleRepo) RoleService {
+func NewRoleService(log internal.Logger, roleRepo repository.RoleRepository) RoleService {
 	return &roleService{
 		log:      log,
 		roleRepo: roleRepo,
