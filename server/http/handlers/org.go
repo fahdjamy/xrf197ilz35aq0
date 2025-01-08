@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 )
 
 type OrgHandler struct {
@@ -49,5 +51,7 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *OrgHandler) RegisterAndListen() {
-	handler.router.HandleFunc("/org", handler.createOrg).Methods("POST")
+	slashAPISlashOrg := fmt.Sprintf("%s/%s/%s", constants.SlashAPI, constants.V1, "org") // "/api/v1/org"
+
+	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods("POST")
 }

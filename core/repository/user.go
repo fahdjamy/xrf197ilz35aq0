@@ -15,8 +15,9 @@ import (
 const UserCollection = "user"
 
 type UserRepository interface {
-	GetUserById(userId string, ctx context.Context) (*user.User, error)
 	CreateUser(user *user.User, ctx context.Context) (any, error)
+	GetUserById(userId string, ctx context.Context) (*user.User, error)
+	FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
 }
 
@@ -82,6 +83,30 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=getUserById :: err=%s", err))
 		return nil, internalErr
 	}
+	return &userResponse, nil
+}
+
+func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error) {
+	internalErr = &xrfErr.Internal{}
+	externalError = &xrfErr.External{}
+	internalErr.Source = "core/repository/user#findUsersByEmails"
+	filter := bson.D{{"email", bson.M{"$in": emails}}}
+
+	var userResponse []user.User
+	cursor, err := up.db.Collection(UserCollection).Find(ctx, filter)
+
+	if err != nil {
+		internalErr.Err = err
+		internalErr.Message = "Failed to find users by their email"
+		return nil, internalErr
+	}
+
+	if err := cursor.All(ctx, &userResponse); err != nil {
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode userResponse object"
+		return nil, internalErr
+	}
+
 	return &userResponse, nil
 }
 
