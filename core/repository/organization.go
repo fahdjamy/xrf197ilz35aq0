@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0/core/model/org"
 	"xrf197ilz35aq0/internal"
@@ -15,7 +16,7 @@ import (
 const OrgCollection = "organization"
 
 type OrganizationRepository interface {
-	Create(organization *org.Organization, ctx context.Context) (any, error)
+	Create(organization *org.Organization, ctx context.Context) (string, error)
 	GetOrgById(id string, ctx context.Context) (*org.Organization, error)
 	FindByMongoId(id string, ctx context.Context) (*org.Organization, error)
 }
@@ -25,18 +26,18 @@ type orgRepo struct {
 	log internal.Logger
 }
 
-func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (any, error) {
+func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (string, error) {
 	internalErr = &xrfErr.Internal{}
 	document, err := repo.db.Collection(OrgCollection).InsertOne(ctx, organization)
 	if err != nil {
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveOrg :: err=%s", err))
 		internalErr.Message = "Creating new org in mongodb failed"
 		internalErr.Err = err
-		return nil, err
+		return "", err
 	}
 	repo.log.Debug(fmt.Sprintf("event=saveOrg :: success=true :: objectID=%v", document.InsertedID))
 
-	return document.InsertedID, nil
+	return document.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
 func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organization, error) {

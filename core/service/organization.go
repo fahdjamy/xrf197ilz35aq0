@@ -41,7 +41,7 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 		return "", err
 	}
 
-	savedOrg, err := os.orgRepo.FindByMongoId(insertedOrgId.(string), ctx)
+	savedOrg, err := os.orgRepo.FindByMongoId(insertedOrgId, ctx)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=createOrg:: name=%s :: err=%v", request.Name, err))
 		return "", err
