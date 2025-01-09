@@ -51,6 +51,14 @@ func CreateOrganization(name string, category string, desc string, members []Mem
 	}, nil
 }
 
+func CreateMember(userFp string, isOwner bool, roleIds []string) *Member {
+	return &Member{
+		Fingerprint: userFp,
+		Owner:       isOwner,
+		RoleIds:     roleIds,
+	}
+}
+
 func createOrgId() string {
 	return strconv.FormatInt(random.PositiveInt64(), 10)
 }
