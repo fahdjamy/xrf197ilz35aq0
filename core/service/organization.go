@@ -6,6 +6,7 @@ import (
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/org"
+	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
@@ -30,7 +31,12 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 		return "", err
 	}
 
-	newOrg, err := org.CreateOrganization(request.Name, request.Category, request.Description, nil)
+	orgMembers, err := os.validateAndCreateMembers(request.Members, ctx)
+	if err != nil {
+		return "", err
+	}
+
+	newOrg, err := org.CreateOrganization(request.Name, request.Category, request.Description, orgMembers)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=creatOrg:: name=%s :: err=%v", request.Name, err))
 		return "", err
@@ -54,50 +60,14 @@ func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (ex
 	panic("implement me")
 }
 
-func (os *organizationService) validateRoles(roles []string, ctx context.Context) error {
-	for _, role := range roles {
-		if err := validateRoleName(role); err != nil {
-			return err
-		}
-	}
-
-	savedRoles, err := os.roleRepo.FindRolesByNames(roles, ctx)
-	if err != nil {
-		os.log.Error(fmt.Sprintf("event=validateRoles:: name=%s :: err=%v", roles, err))
-		return err
-	}
-	rolesLen := len(roles)
-	savedRolesLen := len(savedRoles)
-	if rolesLen != savedRolesLen {
-		missingRoles := make([]string, rolesLen-savedRolesLen)
-		roleMap := make(map[string]bool)
-		for _, role := range savedRoles {
-			roleMap[role.Name] = true
-		}
-
-		for _, role := range roles {
-			exists := roleMap[role]
-			if !exists {
-				missingRoles = append(missingRoles, role)
-			}
-		}
-
-		return &xrfErr.External{
-			Source:  fmt.Sprintf("you have invalid roles '%v'", missingRoles),
-			Message: "service/organization#validateRoles",
-		}
-	}
-	return nil
-}
-
-func (os *organizationService) validateOrgMembers(members *[]exchange.OrgMemberRequest, ctx context.Context) error {
-	externalErr := &xrfErr.External{Source: "service/organization#validateOrgMembers"}
-	if members == nil || len(*members) == 0 {
+func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMemberRequest, ctx context.Context) ([]org.Member, error) {
+	externalErr := &xrfErr.External{Source: "service/organization#validateAndCreateMembers"}
+	if req == nil || len(req) == 0 {
 		externalErr.Message = "an org should have at least one member"
-		return externalErr
+		return nil, externalErr
 	}
 	hasOwner := false
-	for _, member := range *members {
+	for _, member := range req {
 		if member.Owner {
 			hasOwner = true
 		}
@@ -105,15 +75,110 @@ func (os *organizationService) validateOrgMembers(members *[]exchange.OrgMemberR
 
 	if !hasOwner {
 		externalErr.Message = "an org should have at least one owner"
-		return externalErr
+		return nil, externalErr
 	}
 
-	for _, member := range *members {
-		if err := os.validateRoles(member.Roles, ctx); err != nil {
-			return err
+	foundUsers, err := os.userRepo.FindUsersByEmails(nil, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=validateAndCreateMembers :: err=%v", err))
+		return nil, err
+	}
+	// convert users to user map, {userEmail : userObject}
+	dbUserMap := make(map[string]user.User)
+	for _, savedUser := range *foundUsers {
+		dbUserMap[savedUser.Id] = savedUser
+	}
+
+	userMap := make(map[string]struct {
+		isOwner bool
+		userFp  string
+		roleIds []string
+	})
+
+	missingUsers := make([]string, 0)
+
+	for _, member := range req {
+		roleMap, err := os.validateRoles(member.Roles, ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		userObj, ok := dbUserMap[member.Email]
+		if !ok {
+			missingUsers = append(missingUsers, member.Email)
+		} else {
+			userMap[userObj.FingerPrint] = struct {
+				isOwner bool
+				userFp  string
+				roleIds []string
+			}{
+				isOwner: member.Owner,
+				userFp:  userObj.FingerPrint,
+				roleIds: getUserRoles(roleMap, member.Roles),
+			}
 		}
 	}
-	return nil
+
+	if len(missingUsers) > 0 {
+		externalErr.Message = fmt.Sprintf("invalid user emails '%v'", missingUsers)
+		return nil, externalErr
+	}
+
+	orgMembers := make([]org.Member, len(req))
+	for _, value := range userMap {
+		orgMembers = append(orgMembers, org.Member{
+			Fingerprint: value.userFp,
+			Owner:       value.isOwner,
+			RoleIds:     value.roleIds,
+		})
+	}
+	return orgMembers, nil
+}
+
+func (os *organizationService) validateRoles(roles []string, ctx context.Context) (map[string]string, error) {
+	for _, role := range roles {
+		if err := validateRoleName(role); err != nil {
+			return nil, err
+		}
+	}
+
+	savedRoles, err := os.roleRepo.FindRolesByNames(roles, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=validateRoles:: name=%s :: err=%v", roles, err))
+		return nil, err
+	}
+	rolesLen := len(roles)
+	savedRolesLen := len(savedRoles)
+	roleMap := make(map[string]string)
+	// map roles to their ids
+	for _, role := range savedRoles {
+		roleMap[role.Name] = role.RoleId
+	}
+
+	if rolesLen != savedRolesLen {
+		missingRoles := make([]string, rolesLen-savedRolesLen)
+
+		for _, role := range roles {
+			_, ok := roleMap[role]
+			if !ok {
+				missingRoles = append(missingRoles, role)
+			}
+		}
+
+		return nil, &xrfErr.External{
+			Source:  fmt.Sprintf("you have invalid roles '%v'", missingRoles),
+			Message: "service/organization#validateRoles",
+		}
+	}
+	return roleMap, nil
+}
+
+func getUserRoles(roleMap map[string]string, roleIds []string) []string {
+	result := make([]string, 0)
+	for _, role := range roleIds {
+		result = append(result, roleMap[role])
+	}
+	return result
 }
 
 func validateOrgName(name string) error {
