@@ -67,7 +67,9 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 		return nil, externalErr
 	}
 	hasOwner := false
+	userEmails := make([]string, 0)
 	for _, member := range req {
+		userEmails = append(userEmails, member.Email)
 		if member.Owner {
 			hasOwner = true
 		}

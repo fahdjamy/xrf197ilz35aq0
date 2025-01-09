@@ -29,9 +29,13 @@ type userRepo struct {
 var internalErr *xrfErr.Internal
 var externalError *xrfErr.External
 
-func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error) {
+func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (any, error) {
 	internalErr = &xrfErr.Internal{}
-	document, err := up.db.Collection(UserCollection).InsertOne(ctx, user)
+	if newUser == nil {
+		internalErr.Message = "user is nil"
+		return nil, internalErr
+	}
+	document, err := up.db.Collection(UserCollection).InsertOne(ctx, newUser)
 	if err != nil {
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
 		internalErr.Err = err
@@ -44,6 +48,9 @@ func (up *userRepo) CreateUser(user *user.User, ctx context.Context) (any, error
 }
 
 func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error) {
+	if newPassword == "" || userFPrint == "" {
+		return false, nil
+	}
 	internalErr = &xrfErr.Internal{}
 	internalErr.Source = "core/repository/user#updateUser"
 	filter := bson.D{{"fingerprint", userFPrint}}
@@ -87,6 +94,9 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 }
 
 func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error) {
+	if emails == nil || len(emails) == 0 {
+		return &[]user.User{}, nil
+	}
 	internalErr = &xrfErr.Internal{}
 	externalError = &xrfErr.External{}
 	internalErr.Source = "core/repository/user#findUsersByEmails"
@@ -97,7 +107,8 @@ func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) (*[]
 
 	if err != nil {
 		internalErr.Err = err
-		internalErr.Message = "Failed to find users by their email"
+		internalErr.Message = "Error finding users by emails"
+		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=findUsersByEmail :: err=%s", err))
 		return nil, internalErr
 	}
 
