@@ -3,6 +3,7 @@ package org
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
+	"strings"
 	"time"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
@@ -42,12 +43,12 @@ func CreateOrganization(name string, category string, desc string, members []Mem
 
 	return &Organization{
 		Id:          orgId,
-		Name:        name,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		Description: desc,
 		Members:     members,
 		Category:    category,
+		Name:        strings.ToLower(name),
 	}, nil
 }
 

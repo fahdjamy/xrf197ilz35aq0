@@ -44,6 +44,17 @@ type userRepositoryMock struct {
 	Called map[string]int
 }
 
+func (u *userRepositoryMock) FindUsersByEmails(_ []string, _ context.Context) (*[]user.User, error) {
+	method := "FindUsersByEmails"
+	count, ok := u.Called[method]
+	if !ok {
+		u.Called[method] = 1
+	} else {
+		u.Called[method] = count + 1
+	}
+	return &[]user.User{}, nil
+}
+
 func (u *userRepositoryMock) GetUserById(_ string, _ context.Context) (*user.User, error) {
 	method := "GetUserById"
 	count, ok := u.Called[method]
@@ -68,7 +79,7 @@ func (u *userRepositoryMock) UpdatePassword(_ string, _ string, _ context.Contex
 	return true, nil
 }
 
-func (u *userRepositoryMock) CreateUser(_ *user.User, _ context.Context) (any, error) {
+func (u *userRepositoryMock) CreateUser(_ *user.User, _ context.Context) (string, error) {
 	method := "CreateUser"
 	count, ok := u.Called[method]
 	if !ok {
@@ -76,7 +87,7 @@ func (u *userRepositoryMock) CreateUser(_ *user.User, _ context.Context) (any, e
 	} else {
 		u.Called[method] = count + 1
 	}
-	return u, nil
+	return "MockUserId12345", nil
 }
 
 func NewUserRepositoryMock() repository.UserRepository {

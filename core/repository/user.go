@@ -15,7 +15,7 @@ import (
 const UserCollection = "user"
 
 type UserRepository interface {
-	CreateUser(user *user.User, ctx context.Context) (any, error)
+	CreateUser(user *user.User, ctx context.Context) (string, error)
 	GetUserById(userId string, ctx context.Context) (*user.User, error)
 	FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
@@ -29,22 +29,22 @@ type userRepo struct {
 var internalErr *xrfErr.Internal
 var externalError *xrfErr.External
 
-func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (any, error) {
+func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (string, error) {
 	internalErr = &xrfErr.Internal{}
 	if newUser == nil {
 		internalErr.Message = "user is nil"
-		return nil, internalErr
+		return "", internalErr
 	}
 	document, err := up.db.Collection(UserCollection).InsertOne(ctx, newUser)
 	if err != nil {
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
 		internalErr.Err = err
 		internalErr.Message = "Saving new user failed"
-		return nil, err
+		return "", err
 	}
 	up.log.Debug(fmt.Sprintf("event=createUser :: success=true :: objectID=%v", document.InsertedID))
 
-	return document, nil
+	return newUser.Id, nil
 }
 
 func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error) {

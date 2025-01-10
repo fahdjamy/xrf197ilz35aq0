@@ -61,6 +61,7 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 		}
 	}
 
+	// create index if it does not exist
 	if !indexExists {
 		indexModel := mongo.IndexModel{
 			// create an index on the 'providedIndexName' field in ascending order (1)

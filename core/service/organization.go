@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/org"
@@ -30,6 +31,7 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 	if err != nil {
 		return "", err
 	}
+	request.Name = strings.TrimSpace(request.Name)
 
 	orgMembers, err := os.validateAndCreateMembers(request.Members, ctx)
 	if err != nil {
@@ -122,11 +124,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 
 	orgMembers := make([]org.Member, 0)
 	for _, value := range userMap {
-		orgMembers = append(orgMembers, org.Member{
-			Fingerprint: value.userFp,
-			Owner:       value.isOwner,
-			RoleIds:     value.roleIds,
-		})
+		orgMembers = append(orgMembers, *org.CreateMember(value.userFp, value.isOwner, value.roleIds))
 	}
 	return orgMembers, nil
 }
