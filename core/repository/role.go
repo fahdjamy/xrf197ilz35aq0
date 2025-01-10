@@ -85,6 +85,9 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 }
 
 func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error) {
+	if names == nil || len(names) == 0 {
+		return []*org.Role{}, nil
+	}
 	internalErr = &xrfErr.Internal{}
 	// 1. Build query filter
 	filter := bson.M{"name": bson.M{"$in": names}}

@@ -80,7 +80,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 		return nil, externalErr
 	}
 
-	foundUsers, err := os.userRepo.FindUsersByEmails(nil, ctx)
+	foundUsers, err := os.userRepo.FindUsersByEmails(userEmails, ctx)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=validateAndCreateMembers :: err=%v", err))
 		return nil, err
@@ -88,7 +88,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 	// convert users to user map, {userEmail : userObject}
 	dbUserMap := make(map[string]user.User)
 	for _, savedUser := range *foundUsers {
-		dbUserMap[savedUser.Id] = savedUser
+		dbUserMap[savedUser.Email] = savedUser
 	}
 
 	userMap := make(map[string]struct {
@@ -126,7 +126,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 		return nil, externalErr
 	}
 
-	orgMembers := make([]org.Member, len(req))
+	orgMembers := make([]org.Member, 0)
 	for _, value := range userMap {
 		orgMembers = append(orgMembers, org.Member{
 			Fingerprint: value.userFp,
