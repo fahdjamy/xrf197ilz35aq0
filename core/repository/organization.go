@@ -13,7 +13,9 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-const OrgCollection = "organization"
+const (
+	OrgCollection = "organization"
+)
 
 type OrganizationRepository interface {
 	Create(organization *org.Organization, ctx context.Context) (string, error)
@@ -51,7 +53,8 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
-			externalError.Message = "Org not found"
+			externalError.Message = constants.NotFoundOrgErrMsg
+			externalError.Err = errors.New(constants.NotFoundOrgErrMsg)
 			return nil, externalError
 		}
 		return nil, resp.Err()

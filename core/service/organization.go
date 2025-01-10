@@ -15,7 +15,7 @@ import (
 
 type OrgService interface {
 	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
-	GetOrgById(orgId string, ctx context.Context) (exchange.OrgResponse, error)
+	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
 }
 
 type organizationService struct {
@@ -51,9 +51,16 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 	return orgId, nil
 }
 
-func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (exchange.OrgResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error) {
+	if orgId == "" {
+		return nil, &xrfErr.External{Source: "service/organizationService#GetOrgById", Message: "Invalid org id"}
+	}
+	savedOrg, err := os.orgRepo.GetOrgById(orgId, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=getOrgIdFailure :: orgId=%s err=%v", orgId, err))
+		return nil, err
+	}
+	return toOrgResponse(savedOrg), nil
 }
 
 func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMemberRequest, ctx context.Context) ([]org.Member, error) {
@@ -182,6 +189,17 @@ func validateOrgName(name string) error {
 		return externalErr
 	}
 	return nil
+}
+
+func toOrgResponse(domainOrg *org.Organization) *exchange.OrgResponse {
+	return &exchange.OrgResponse{
+		OrgId:        domainOrg.Id,
+		Name:         domainOrg.Name,
+		Category:     domainOrg.Category,
+		CreatedAt:    domainOrg.CreatedAt,
+		Description:  domainOrg.Description,
+		MembersCount: len(domainOrg.Members),
+	}
 }
 
 func NewOrganizationService(config xrf.Security, logger internal.Logger, allRepos *repository.Repositories) OrgService {

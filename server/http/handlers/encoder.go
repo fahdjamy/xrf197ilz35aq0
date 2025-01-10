@@ -71,7 +71,7 @@ func writeErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 	case errors.As(error, &externalError):
 		var externalErr *xrfErr.External
 		errors.As(error, &externalErr)
-		statusCode = http.StatusBadRequest
+		statusCode = externalErrorCode(externalError.Message)
 		msg = externalErr.Message
 	default:
 		statusCode = http.StatusInternalServerError
@@ -86,5 +86,14 @@ func writeErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 	err := json.NewEncoder(w).Encode(errResp)
 	if err != nil {
 		logger.Error(fmt.Sprintf("error writing error response: %s", err))
+	}
+}
+
+func externalErrorCode(errorMessage string) int {
+	switch errorMessage {
+	case constants.NotFoundOrgErrMsg:
+		return http.StatusNotFound
+	default:
+		return http.StatusBadRequest
 	}
 }

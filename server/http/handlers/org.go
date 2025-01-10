@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/constants"
+	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
 type OrgHandler struct {
@@ -50,8 +52,32 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 	writeResponse(dataResp, w, handler.logger)
 }
 
+func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
+	orgId, isValid := getAndValidateId(r, "orgId")
+	if !isValid {
+		externalError := &xrfErr.External{
+			Message: "invalid org id",
+		}
+		writeErrorResponse(externalError, w, handler.logger)
+		return
+	}
+	ctx, close := context.WithTimeout(context.Background(), time.Second*2)
+	defer close()
+	foundOrg, err := handler.orgService.GetOrgById(orgId, ctx)
+	if err != nil {
+		writeErrorResponse(err, w, handler.logger)
+		return
+	}
+	handler.logger.Debug(fmt.Sprintf("event=findOrg :: orgId=%s", orgId))
+
+	resp := dataResponse{Data: foundOrg, Code: http.StatusOK}
+	writeResponse(resp, w, handler.logger)
+}
+
 func (handler *OrgHandler) RegisterAndListen() {
 	slashAPISlashOrg := fmt.Sprintf("%s/%s/%s", constants.SlashAPI, constants.V1, "org") // "/api/v1/org"
+	findByOrgIdUrl := fmt.Sprintf("%s/{%s}", slashAPISlashOrg, constants.OrgId)          // "/api/v1/org/{orgId}"
 
-	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods("POST")
+	handler.router.HandleFunc(findByOrgIdUrl, handler.getOrg).Methods(GET)
+	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods(POST)
 }

@@ -49,7 +49,7 @@ func (user *UserHandler) createUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
-	userId, isValid := getAndValidateId(req)
+	userId, isValid := getAndValidateId(req, UserIdKey)
 	if !isValid {
 		externalError := &xrfErr.External{
 			Message: "invalid user id",
@@ -70,17 +70,7 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	writeResponse(resp, w, user.logger)
 }
 
-func getAndValidateId(req *http.Request) (string, bool) {
-	vars := mux.Vars(req)
-	userId, ok := vars[UserIdKey]
-	if !ok || userId == "" {
-		return "", false
-	}
-
-	return userId, true
-}
-
 func (user *UserHandler) RegisterAndListen() {
-	user.router.HandleFunc("/user", user.createUser).Methods("POST")
-	user.router.HandleFunc(fmt.Sprintf("/user/{%s}", UserIdKey), user.getUserById).Methods("GET")
+	user.router.HandleFunc("/api/v1/user", user.createUser).Methods(POST)
+	user.router.HandleFunc(fmt.Sprintf("/api/v1/user/{%s}", UserIdKey), user.getUserById).Methods(GET)
 }
