@@ -42,17 +42,11 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 		return "", err
 	}
 
-	insertedOrgId, err := os.orgRepo.Create(newOrg, ctx)
+	orgId, err := os.orgRepo.Create(newOrg, ctx)
 	if err != nil {
 		return "", err
 	}
-
-	savedOrg, err := os.orgRepo.FindByMongoId(insertedOrgId, ctx)
-	if err != nil {
-		os.log.Error(fmt.Sprintf("event=createOrg:: name=%s :: err=%v", request.Name, err))
-		return "", err
-	}
-	return savedOrg.Id, nil
+	return orgId, nil
 }
 
 func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (exchange.OrgResponse, error) {

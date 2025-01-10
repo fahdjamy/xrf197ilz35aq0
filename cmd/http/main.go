@@ -77,9 +77,14 @@ func main() {
 		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
 		return
 	}
+	orgRepo, err := repository.NewOrganizationRepository(mongoDB, logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		return
+	}
+
 	userRepo := repository.NewUserRepository(mongoDB, logger)
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
-	orgRepo := repository.NewOrganizationRepository(mongoDB, logger)
 
 	allRepos := &repository.Repositories{
 		RoleRepo:     roleRepo,
