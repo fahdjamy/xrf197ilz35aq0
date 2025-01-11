@@ -74,6 +74,33 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	writeResponse(resp, w, handler.logger)
 }
 
+func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request) {
+	orgId, isValid := getAndValidateId(r, "orgId")
+	if !isValid {
+		externalError := &xrfErr.External{
+			Message: "invalid org id",
+		}
+		writeErrorResponse(externalError, w, handler.logger)
+		return
+	}
+
+	ctx, close := context.WithTimeout(context.Background(), time.Second*2)
+	defer close()
+
+	foundOrgs, err := handler.orgService.FindOrgMembers(orgId, ctx)
+	if err != nil {
+		writeErrorResponse(err, w, handler.logger)
+		return
+	}
+	handler.logger.Debug(fmt.Sprintf("event=findOrgMembers :: orgId=%s", orgId))
+	resp := dataResponse{Data: foundOrgs, Code: http.StatusOK}
+	writeResponse(resp, w, handler.logger)
+}
+
+func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
+	// TODO
+}
+
 func (handler *OrgHandler) RegisterAndListen() {
 	slashAPISlashOrg := fmt.Sprintf("%s/%s/%s", constants.SlashAPI, constants.V1, "org") // "/api/v1/org"
 	findByOrgIdUrl := fmt.Sprintf("%s/{%s}", slashAPISlashOrg, constants.OrgId)          // "/api/v1/org/{orgId}"
