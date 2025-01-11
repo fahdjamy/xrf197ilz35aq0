@@ -16,7 +16,7 @@ const (
 )
 
 func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Context, colName, indexName string) error {
-	internalErr = &xrfErr.Internal{}
+	internalErr := &xrfErr.Internal{}
 
 	collection := db.Collection(colName)
 	// 1. List existing indexes on the collection

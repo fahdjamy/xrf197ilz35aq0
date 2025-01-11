@@ -24,8 +24,8 @@ type settingsRepo struct {
 }
 
 func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (settings *user.Settings, err error) {
-	internalErr = &xrfErr.Internal{}
-	externalError = &xrfErr.External{}
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 	internalErr.Source = "core/repository/settings#fetchUserSettings"
 
 	filter := bson.D{{"fingerPrint", userFP}}
@@ -51,7 +51,7 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 }
 
 func (sr *settingsRepo) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
-	internalErr = &xrfErr.Internal{} // defined in the repository/user file
+	internalErr := &xrfErr.Internal{} // defined in the repository/user file
 	internalErr.Source = "core/repository/user#createSettings"
 	document, err := sr.db.Collection(SettingsCollection).InsertOne(ctx, settings)
 	if err != nil {

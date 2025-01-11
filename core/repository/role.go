@@ -20,6 +20,7 @@ type RoleRepository interface {
 	SaveRole(role *org.Role, ctx context.Context) (string, error)
 	FindRoleById(id string, ctx context.Context) (*org.Role, error)
 	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
+	FindRolesByIds(ids []string, ctx context.Context) ([]*org.Role, error)
 	FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error)
 }
 
@@ -29,8 +30,8 @@ type roleRepo struct {
 }
 
 func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, error) {
-	internalErr = &xrfErr.Internal{}
-	externalError = &xrfErr.External{}
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 	document, err := repo.db.Collection(RoleCollection).InsertOne(ctx, role)
 	if err != nil {
 		// Check for the duplicate key error
@@ -61,7 +62,8 @@ func (repo *roleRepo) FindRoleById(id string, ctx context.Context) (*org.Role, e
 
 func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Role, error) {
 	var result org.Role
-	internalErr = &xrfErr.Internal{}
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 
 	filter := bson.M{"name": name}
 	resp := repo.db.Collection(RoleCollection).FindOne(ctx, filter)
@@ -84,19 +86,27 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 }
 
 func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error) {
-	if names == nil || len(names) == 0 {
+	return repo.findRolesByFilter(names, "name", ctx)
+}
+
+func (repo *roleRepo) FindRolesByIds(ids []string, ctx context.Context) ([]*org.Role, error) {
+	return repo.findRolesByFilter(ids, "roleId", ctx)
+}
+
+func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]*org.Role, error) {
+	if values == nil || len(values) == 0 {
 		return []*org.Role{}, nil
 	}
-	internalErr = &xrfErr.Internal{}
+	internalError := &xrfErr.Internal{}
 	// 1. Build query filter
-	filter := bson.M{"name": bson.M{"$in": names}}
+	filter := bson.M{filterBy: bson.M{"$in": values}}
 
 	// 2. Query mongoDB
 	cursor, err := repo.db.Collection(RoleCollection).Find(ctx, filter)
 	if err != nil {
-		internalErr.Message = "Failed to query roles"
-		internalErr.Err = err
-		return nil, internalErr
+		internalError.Message = fmt.Sprintf("Failed to query roles by filter: %s", filterBy)
+		internalError.Err = err
+		return nil, internalError
 	}
 
 	defer cursor.Close(ctx)
@@ -105,9 +115,9 @@ func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]*
 	var orgRoles []*org.Role
 
 	if err := cursor.All(ctx, &orgRoles); err != nil {
-		internalErr.Err = err
-		internalErr.Message = "Failed to decode role objects"
-		return nil, internalErr
+		internalError.Err = err
+		internalError.Message = "Failed to decode role objects"
+		return nil, internalError
 	}
 
 	return orgRoles, nil

@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetUserById(userId string, ctx context.Context) (*user.User, error)
 	FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
+	FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) (*[]user.User, error)
 }
 
 type userRepo struct {
@@ -26,11 +27,8 @@ type userRepo struct {
 	log internal.Logger
 }
 
-var internalErr *xrfErr.Internal
-var externalError *xrfErr.External
-
 func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (string, error) {
-	internalErr = &xrfErr.Internal{}
+	internalErr := &xrfErr.Internal{}
 	if newUser == nil {
 		internalErr.Message = "user is nil"
 		return "", internalErr
@@ -51,7 +49,7 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 	if newPassword == "" || userFPrint == "" {
 		return false, nil
 	}
-	internalErr = &xrfErr.Internal{}
+	internalErr := &xrfErr.Internal{}
 	internalErr.Source = "core/repository/user#updateUser"
 	filter := bson.D{{"fingerprint", userFPrint}}
 	update := bson.D{{"$set", bson.D{{constants.PASSWORD, newPassword}}}}
@@ -67,8 +65,8 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 }
 
 func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User, error) {
-	internalErr = &xrfErr.Internal{}
-	externalError = &xrfErr.External{}
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 	internalErr.Source = "core/repository/user#getUserById"
 
 	filter := bson.D{{constants.USERID, userId}}
@@ -94,21 +92,30 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 }
 
 func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error) {
-	if emails == nil || len(emails) == 0 {
+	return up.findUsersByFilter(emails, "email", ctx)
+}
+
+func (up *userRepo) FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) (*[]user.User, error) {
+	return up.findUsersByFilter(fingerPrints, "fingerPrint", ctx)
+}
+
+func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx context.Context) (*[]user.User, error) {
+	if values == nil || len(values) == 0 {
 		return &[]user.User{}, nil
 	}
-	internalErr = &xrfErr.Internal{}
-	externalError = &xrfErr.External{}
-	internalErr.Source = "core/repository/user#findUsersByEmails"
-	filter := bson.D{{"email", bson.M{"$in": emails}}}
+
+	internalErr := &xrfErr.Internal{}
+	internalErr.Source = "core/repository/user#findUsersByFilter"
+
+	filter := bson.D{{filterBy, bson.M{"$in": values}}}
 
 	var userResponse []user.User
 	cursor, err := up.db.Collection(UserCollection).Find(ctx, filter)
 
 	if err != nil {
 		internalErr.Err = err
-		internalErr.Message = "Error finding users by emails"
-		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=findUsersByEmail :: err=%s", err))
+		internalErr.Message = fmt.Sprintf("Error finding users by filterBy: ('%s')", filterBy)
+		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=findUsersBy ('%s') :: err=%s", filterBy, err))
 		return nil, internalErr
 	}
 
