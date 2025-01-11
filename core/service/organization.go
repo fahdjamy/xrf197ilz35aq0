@@ -105,7 +105,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		uniqueRoleIds[foundRole.RoleId] = foundRole.Name
 	}
 
-	response := make([]exchange.OrgMemberResponse, len(orgMembers))
+	response := make([]exchange.OrgMemberResponse, 0)
 
 	for _, foundUser := range *foundUsers {
 		userRoles := make([]string, 0)

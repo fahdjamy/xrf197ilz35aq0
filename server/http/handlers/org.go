@@ -104,7 +104,9 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 func (handler *OrgHandler) RegisterAndListen() {
 	slashAPISlashOrg := fmt.Sprintf("%s/%s/%s", constants.SlashAPI, constants.V1, "org") // "/api/v1/org"
 	findByOrgIdUrl := fmt.Sprintf("%s/{%s}", slashAPISlashOrg, constants.OrgId)          // "/api/v1/org/{orgId}"
+	//findByOrgMembers := fmt.Sprintf("/%s/members", findByOrgIdUrl)                       // "/api/v1/org/{orgId}/members"
 
 	handler.router.HandleFunc(findByOrgIdUrl, handler.getOrg).Methods(GET)
 	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods(POST)
+	handler.router.HandleFunc("/api/v1/org/{orgId}/members", handler.findOrgMembers).Methods(GET)
 }
