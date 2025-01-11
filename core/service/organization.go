@@ -14,6 +14,7 @@ import (
 )
 
 type OrgService interface {
+	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
 	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
 	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
 }
@@ -52,15 +53,84 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 }
 
 func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error) {
-	if orgId == "" {
-		return nil, &xrfErr.External{Source: "service/organizationService#GetOrgById", Message: "Invalid org id"}
-	}
-	savedOrg, err := os.orgRepo.GetOrgById(orgId, ctx)
+	savedOrg, err := os.findOrg(orgId, ctx)
 	if err != nil {
-		os.log.Error(fmt.Sprintf("event=getOrgIdFailure :: orgId=%s err=%v", orgId, err))
+		os.log.Error(fmt.Sprintf("event=getOrgIdFailure :: orgId=%s :: err=%v", orgId, err))
 		return nil, err
 	}
 	return toOrgResponse(savedOrg), nil
+}
+
+func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error) {
+	savedOrg, err := os.orgRepo.GetOrgById(orgId, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=findOrgMembers action=findOrgFailed :: orgId=%s :: err=%v", orgId, err))
+		return nil, err
+	}
+	orgMembers := savedOrg.Members
+	uniqueRoleIds := make(map[string]string)
+
+	userRoleMap := make(map[string][]string)
+	userFps := make([]string, len(orgMembers))
+
+	for _, orgMember := range orgMembers {
+		userFps = append(userFps, orgMember.Fingerprint)
+		// add everyUsers unique roleId
+		for _, roleId := range orgMember.RoleIds {
+			uniqueRoleIds[roleId] = ""
+		}
+		userRoleMap[orgMember.Fingerprint] = orgMember.RoleIds
+	}
+
+	allRoles := make([]string, len(orgMembers))
+	for _, roleId := range uniqueRoleIds {
+		allRoles = append(allRoles, roleId)
+	}
+
+	// Call DB to find all users info
+	foundUsers, err := os.userRepo.FindUsersByFingerPrints(userFps, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findUsersByFingerPrints :: err=%v", err))
+		return nil, err
+	}
+
+	// Call DB to get detailed info about each role
+	foundRoles, err := os.roleRepo.FindRolesByIds(allRoles, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findRoles :: err=%v", err))
+		return nil, err
+	}
+
+	for _, foundRole := range foundRoles {
+		uniqueRoleIds[foundRole.RoleId] = foundRole.Name
+	}
+
+	response := make([]exchange.OrgMemberResponse, len(orgMembers))
+
+	for _, foundUser := range *foundUsers {
+		userRoles := make([]string, 0)
+		for _, userRole := range userRoleMap[foundUser.FingerPrint] {
+			userRoles = append(userRoles, uniqueRoleIds[userRole])
+		}
+		response = append(response, exchange.OrgMemberResponse{
+			Roles:  userRoles,
+			UserId: foundUser.Id,
+			Email:  foundUser.Email,
+		})
+	}
+
+	return response, nil
+}
+
+func (os *organizationService) findOrg(orgId string, ctx context.Context) (*org.Organization, error) {
+	if orgId == "" {
+		return nil, &xrfErr.External{Source: "service/organizationService#findOrg", Message: "Invalid org id"}
+	}
+	savedOrg, err := os.orgRepo.GetOrgById(orgId, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return savedOrg, nil
 }
 
 func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMemberRequest, ctx context.Context) ([]org.Member, error) {
