@@ -61,8 +61,8 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(externalError, w, handler.logger)
 		return
 	}
-	ctx, close := context.WithTimeout(context.Background(), time.Second*2)
-	defer close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
 	foundOrg, err := handler.orgService.GetOrgById(orgId, ctx)
 	if err != nil {
 		writeErrorResponse(err, w, handler.logger)
@@ -84,8 +84,8 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx, close := context.WithTimeout(context.Background(), time.Second*2)
-	defer close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
 
 	foundOrgs, err := handler.orgService.FindOrgMembers(orgId, ctx)
 	if err != nil {

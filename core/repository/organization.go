@@ -28,7 +28,7 @@ type orgRepo struct {
 }
 
 func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (string, error) {
-	internalErr = &xrfErr.Internal{}
+	internalErr := &xrfErr.Internal{}
 	document, err := repo.db.Collection(OrgCollection).InsertOne(ctx, organization)
 	if err != nil {
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveOrg :: err=%s", err))
@@ -42,8 +42,8 @@ func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context)
 }
 
 func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organization, error) {
-	internalErr = &xrfErr.Internal{}
-	externalError = &xrfErr.External{}
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 	internalErr.Source = "core/repository/organization#getOrgById"
 
 	filter := bson.M{constants.OrgId: id}

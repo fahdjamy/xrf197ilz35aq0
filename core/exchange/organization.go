@@ -25,3 +25,9 @@ type OrgMemberRequest struct {
 	Email string   `json:"email"`
 	Roles []string `json:"roles"`
 }
+
+type OrgMemberResponse struct {
+	Roles  []string `json:"roles"`
+	Email  string   `json:"email"`
+	UserId string   `json:"userId"`
+}

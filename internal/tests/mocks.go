@@ -44,6 +44,17 @@ type userRepositoryMock struct {
 	Called map[string]int
 }
 
+func (u *userRepositoryMock) FindUsersByFingerPrints(_ []string, _ context.Context) (*[]user.User, error) {
+	method := "FindUsersByFingerPrints"
+	count, ok := u.Called[method]
+	if !ok {
+		u.Called[method] = 1
+	} else {
+		u.Called[method] = count + 1
+	}
+	return &[]user.User{}, nil
+}
+
 func (u *userRepositoryMock) FindUsersByEmails(_ []string, _ context.Context) (*[]user.User, error) {
 	method := "FindUsersByEmails"
 	count, ok := u.Called[method]
