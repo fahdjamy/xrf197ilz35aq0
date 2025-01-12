@@ -21,6 +21,8 @@ type Organization struct {
 	Id          string             `bson:"orgId" json:"orgId"`
 	Name        string             `bson:"name" json:"name"`
 	Category    string             `bson:"category" json:"category"`
+	DisplayName string             `bson:"displayName" json:"displayName"`
+	IsAnonymous bool               `bson:"isAnonymous" json:"isAnonymous"`
 	Description string             `bson:"description" json:"description"`
 	Members     []Member           `bson:"members" json:"members"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
@@ -28,7 +30,7 @@ type Organization struct {
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 }
 
-func CreateOrganization(name string, category string, desc string, members []Member) (*Organization, error) {
+func CreateOrganization(name string, category string, desc string, anonymous bool, members []Member) (*Organization, error) {
 	externalError = &xrfErr.External{}
 	if members == nil || len(members) == 0 {
 		externalError.Message = "At least one member is required"
@@ -46,8 +48,10 @@ func CreateOrganization(name string, category string, desc string, members []Mem
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		Description: desc,
+		DisplayName: name,
 		Members:     members,
 		Category:    category,
+		IsAnonymous: anonymous,
 		Name:        strings.ToLower(name),
 	}, nil
 }

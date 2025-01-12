@@ -28,18 +28,18 @@ type organizationService struct {
 }
 
 func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {
+	request.Name = strings.TrimSpace(request.Name)
 	err := validateOrgName(request.Name)
 	if err != nil {
 		return "", err
 	}
-	request.Name = strings.TrimSpace(request.Name)
 
 	orgMembers, err := os.validateAndCreateMembers(request.Members, ctx)
 	if err != nil {
 		return "", err
 	}
 
-	newOrg, err := org.CreateOrganization(request.Name, request.Category, request.Description, orgMembers)
+	newOrg, err := org.CreateOrganization(request.Name, request.Category, request.Description, request.IsAnonymous, orgMembers)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=creatOrg:: name=%s :: err=%v", request.Name, err))
 		return "", err
@@ -264,10 +264,10 @@ func validateOrgName(name string) error {
 func toOrgResponse(domainOrg *org.Organization) *exchange.OrgResponse {
 	return &exchange.OrgResponse{
 		OrgId:        domainOrg.Id,
-		Name:         domainOrg.Name,
 		Category:     domainOrg.Category,
 		CreatedAt:    domainOrg.CreatedAt,
 		Description:  domainOrg.Description,
+		Name:         domainOrg.DisplayName,
 		MembersCount: len(domainOrg.Members),
 	}
 }

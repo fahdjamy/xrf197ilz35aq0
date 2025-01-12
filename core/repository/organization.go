@@ -46,7 +46,7 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 	externalError := &xrfErr.External{}
 	internalErr.Source = "core/repository/organization#getOrgById"
 
-	filter := bson.M{constants.OrgId: id}
+	filter := bson.M{constants.OrgId: id, constants.IsAnonymous: false}
 
 	var result org.Organization
 	resp := repo.db.Collection(OrgCollection).FindOne(ctx, filter)
@@ -75,6 +75,12 @@ func NewOrganizationRepository(db *mongo.Database, log internal.Logger) (Organiz
 
 	err := createUniqueIndex(db, log, ctx, OrgCollection, constants.OrgId)
 	if err != nil {
+		log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createOrgIndex :: field='orgId' :: err=%s", err))
+		return nil, err
+	}
+	err = createUniqueIndex(db, log, ctx, OrgCollection, constants.NAME)
+	if err != nil {
+		log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createOrgIndex :: field='Name' :: err=%s", err))
 		return nil, err
 	}
 	return &orgRepo{db: db, log: log}, nil

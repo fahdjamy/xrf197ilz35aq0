@@ -27,7 +27,7 @@ func TestCreateOrganization(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateOrganization(tt.args.name, tt.args.category, tt.args.desc, tt.args.members)
+			got, err := CreateOrganization(tt.args.name, tt.args.category, tt.args.desc, false, tt.args.members)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {

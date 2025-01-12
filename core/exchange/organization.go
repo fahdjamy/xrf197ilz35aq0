@@ -18,6 +18,7 @@ type OrgRequest struct {
 	Category    string             `json:"category"`
 	Description string             `json:"description"`
 	Members     []OrgMemberRequest `json:"members"`
+	IsAnonymous bool               `json:"isAnonymous"`
 }
 
 type OrgMemberRequest struct {
