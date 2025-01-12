@@ -17,9 +17,9 @@ const UserCollection = "user"
 type UserRepository interface {
 	CreateUser(user *user.User, ctx context.Context) (string, error)
 	GetUserById(userId string, ctx context.Context) (*user.User, error)
-	FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error)
+	FindUsersByEmails(emails []string, ctx context.Context) ([]user.User, error)
 	UpdatePassword(userFPrint string, newPassword string, ctx context.Context) (bool, error)
-	FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) (*[]user.User, error)
+	FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) ([]user.User, error)
 }
 
 type userRepo struct {
@@ -91,17 +91,17 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 	return &userResponse, nil
 }
 
-func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) (*[]user.User, error) {
+func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) ([]user.User, error) {
 	return up.findUsersByFilter(emails, "email", ctx)
 }
 
-func (up *userRepo) FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) (*[]user.User, error) {
+func (up *userRepo) FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) ([]user.User, error) {
 	return up.findUsersByFilter(fingerPrints, "fingerPrint", ctx)
 }
 
-func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx context.Context) (*[]user.User, error) {
+func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx context.Context) ([]user.User, error) {
 	if values == nil || len(values) == 0 {
-		return &[]user.User{}, nil
+		return []user.User{}, nil
 	}
 
 	internalErr := &xrfErr.Internal{}
@@ -125,7 +125,7 @@ func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx cont
 		return nil, internalErr
 	}
 
-	return &userResponse, nil
+	return userResponse, nil
 }
 
 func NewUserRepository(db *mongo.Database, log internal.Logger) UserRepository {

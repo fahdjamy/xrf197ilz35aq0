@@ -20,8 +20,8 @@ type RoleRepository interface {
 	SaveRole(role *org.Role, ctx context.Context) (string, error)
 	FindRoleById(id string, ctx context.Context) (*org.Role, error)
 	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
-	FindRolesByIds(ids []string, ctx context.Context) ([]*org.Role, error)
-	FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error)
+	FindRolesByIds(ids []string, ctx context.Context) ([]org.Role, error)
+	FindRolesByNames(names []string, ctx context.Context) ([]org.Role, error)
 }
 
 type roleRepo struct {
@@ -85,17 +85,17 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 	return &result, nil
 }
 
-func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]*org.Role, error) {
+func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]org.Role, error) {
 	return repo.findRolesByFilter(names, "name", ctx)
 }
 
-func (repo *roleRepo) FindRolesByIds(ids []string, ctx context.Context) ([]*org.Role, error) {
+func (repo *roleRepo) FindRolesByIds(ids []string, ctx context.Context) ([]org.Role, error) {
 	return repo.findRolesByFilter(ids, "roleId", ctx)
 }
 
-func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]*org.Role, error) {
+func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]org.Role, error) {
 	if values == nil || len(values) == 0 {
-		return []*org.Role{}, nil
+		return []org.Role{}, nil
 	}
 	internalError := &xrfErr.Internal{}
 	// 1. Build query filter
@@ -112,7 +112,7 @@ func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx co
 	defer cursor.Close(ctx)
 
 	// 3. Decode the results into a slice of Role structs
-	var orgRoles []*org.Role
+	var orgRoles []org.Role
 
 	if err := cursor.All(ctx, &orgRoles); err != nil {
 		internalError.Err = err

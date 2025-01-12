@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/org"
@@ -87,18 +88,42 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		allRoles = append(allRoles, roleId)
 	}
 
-	// Call DB to find all users info
-	foundUsers, err := os.userRepo.FindUsersByFingerPrints(userFps, ctx)
-	if err != nil {
-		os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findUsersByFingerPrints :: err=%v", err))
-		return nil, err
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	// Call DB to get detailed info about each role
-	foundRoles, err := os.roleRepo.FindRolesByIds(allRoles, ctx)
-	if err != nil {
-		os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findRoles :: err=%v", err))
-		return nil, err
+	var usersErr error
+	var foundUsers []user.User
+
+	// Call DB to find all users info asynchronously
+	//dbCtx, dbCancel := context.WithTimeout(ctx, 40*time.Second)
+	//defer dbCancel() // defer the Cancelling the dbCtx context after goroutines are done.
+	go func() {
+		defer wg.Done()
+		foundUsers, usersErr = os.userRepo.FindUsersByFingerPrints(userFps, ctx)
+		if err != nil {
+			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findUsersByFingerPrints :: err=%v", err))
+		}
+	}()
+
+	var rolesErr error
+	var foundRoles []org.Role
+	// Call DB to get detailed info about each role asynchronously
+	go func() {
+		defer wg.Done()
+		foundRoles, rolesErr = os.roleRepo.FindRolesByIds(allRoles, ctx)
+		if err != nil {
+			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findRoles :: err=%v", err))
+		}
+	}()
+
+	// Wait for both goroutines to finish.
+	wg.Wait()
+
+	// Check for errors from either goroutine
+	if usersErr != nil {
+		return nil, usersErr
+	} else if rolesErr != nil {
+		return nil, rolesErr
 	}
 
 	for _, foundRole := range foundRoles {
@@ -107,7 +132,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 
 	response := make([]exchange.OrgMemberResponse, 0)
 
-	for _, foundUser := range *foundUsers {
+	for _, foundUser := range foundUsers {
 		userRoles := make([]string, 0)
 		for _, userRole := range userRoleMap[foundUser.FingerPrint] {
 			userRoles = append(userRoles, uniqueRoleIds[userRole])
@@ -160,7 +185,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 	}
 	// convert users to user map, {userEmail : userObject}
 	dbUserMap := make(map[string]user.User)
-	for _, savedUser := range *foundUsers {
+	for _, savedUser := range foundUsers {
 		dbUserMap[savedUser.Email] = savedUser
 	}
 
