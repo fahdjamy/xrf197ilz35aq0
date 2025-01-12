@@ -29,8 +29,14 @@ type orgRepo struct {
 
 func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (string, error) {
 	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
 	document, err := repo.db.Collection(OrgCollection).InsertOne(ctx, organization)
 	if err != nil {
+		// Check for the duplicate key error
+		if mongo.IsDuplicateKeyError(err) {
+			externalError.Message = fmt.Sprintf("org with name '%s' already exists", organization.DisplayName)
+			return "", externalError
+		}
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveOrg :: err=%s", err))
 		internalErr.Message = "Creating new org in mongodb failed"
 		internalErr.Err = err

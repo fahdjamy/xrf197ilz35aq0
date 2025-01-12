@@ -269,6 +269,7 @@ func toOrgResponse(domainOrg *org.Organization) *exchange.OrgResponse {
 		Description:  domainOrg.Description,
 		Name:         domainOrg.DisplayName,
 		MembersCount: len(domainOrg.Members),
+		IsAnonymous:  domainOrg.IsAnonymous,
 	}
 }
 

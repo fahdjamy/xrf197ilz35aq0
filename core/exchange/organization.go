@@ -11,6 +11,7 @@ type OrgResponse struct {
 	Category     string    `json:"category"`
 	Description  string    `json:"description"`
 	MembersCount int       `json:"membersCount"`
+	IsAnonymous  bool      `json:"isAnonymous"`
 }
 
 type OrgRequest struct {

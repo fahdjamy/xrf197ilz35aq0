@@ -18,7 +18,8 @@ const (
 // Error Constants
 
 const (
-	NotFoundOrgErrMsg = "organization not found"
+	DuplicateNameDBErr = "name already exists"
+	NotFoundOrgErrMsg  = "organization not found"
 )
 
 const ContentType = "Content-Type"
