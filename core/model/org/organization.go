@@ -14,7 +14,7 @@ var externalError *xrfErr.External
 type Member struct {
 	Fingerprint string   `json:"-" bson:"fingerPrint"`
 	Owner       bool     `json:"isOwner" bson:"owner"` // org can have multiple owners
-	RoleIds     []string `json:"roleIds" bson:"roleIds"`
+	Permissions []string `json:"permissions" bson:"permissions"`
 }
 
 type Organization struct {
@@ -24,13 +24,13 @@ type Organization struct {
 	DisplayName string             `bson:"displayName" json:"displayName"`
 	IsAnonymous bool               `bson:"isAnonymous" json:"isAnonymous"`
 	Description string             `bson:"description" json:"description"`
-	Members     []Member           `bson:"members" json:"members"`
+	Members     map[string]Member  `bson:"members" json:"members"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 }
 
-func CreateOrganization(name string, category string, desc string, anonymous bool, members []Member) (*Organization, error) {
+func CreateOrganization(name string, category string, desc string, anonymous bool, members map[string]Member) (*Organization, error) {
 	externalError = &xrfErr.External{}
 	if members == nil || len(members) == 0 {
 		externalError.Message = "At least one member is required"
@@ -56,11 +56,11 @@ func CreateOrganization(name string, category string, desc string, anonymous boo
 	}, nil
 }
 
-func CreateMember(userFp string, isOwner bool, roleIds []string) *Member {
+func CreateMember(userFp string, isOwner bool, permissions []string) *Member {
 	return &Member{
 		Fingerprint: userFp,
 		Owner:       isOwner,
-		RoleIds:     roleIds,
+		Permissions: permissions,
 	}
 }
 

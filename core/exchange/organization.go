@@ -23,13 +23,13 @@ type OrgRequest struct {
 }
 
 type OrgMemberRequest struct {
-	Owner bool     `json:"owner"`
-	Email string   `json:"email"`
-	Roles []string `json:"roles"`
+	Owner       bool     `json:"owner"`
+	Email       string   `json:"email"`
+	Permissions []string `json:"permissions"`
 }
 
 type OrgMemberResponse struct {
-	Roles  []string `json:"roles"`
-	Email  string   `json:"email"`
-	UserId string   `json:"userId"`
+	Email       string   `json:"email"`
+	UserId      string   `json:"userId"`
+	Permissions []string `json:"permissions"`
 }

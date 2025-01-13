@@ -10,11 +10,17 @@ func TestCreateOrganization(t *testing.T) {
 		name     string
 		category string
 		desc     string
-		members  []Member
+		members  map[string]Member
 	}
 	validOrgName := "xrfOrg"
-	roleIds := []string{"admin"}
-	validMembers := []Member{{Fingerprint: "", RoleIds: roleIds}}
+	roleIds := []string{"ADMIN"}
+	validMembers := make(map[string]Member)
+
+	validMembers["xrfOrgTestUser"] = Member{
+		Owner:       false,
+		Permissions: roleIds,
+		Fingerprint: "testFingerprint",
+	}
 
 	tests := []struct {
 		name    string
