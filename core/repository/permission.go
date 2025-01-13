@@ -127,7 +127,7 @@ func (repo *permissionsRepo) findPermissionsByFilter(values []string, filterBy s
 func NewPermissionRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := createUniqueIndex(db, log, ctx, constants.NAME, PermissionsCollection); err != nil {
+	if err := createUniqueIndex(db, log, ctx, PermissionsCollection, constants.NAME); err != nil {
 		return nil, err
 	}
 
