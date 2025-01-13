@@ -30,7 +30,7 @@ type ApiServer struct {
 type Services struct {
 	OrgService  service.OrgService
 	UserService service.UserService
-	RoleService service.RoleService
+	RoleService service.PermissionService
 }
 
 var apiInternalErr = &xrfErr.Internal{

@@ -238,7 +238,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 
 func (os *organizationService) validatePermissions(roles []string, ctx context.Context) (map[string]string, error) {
 	for _, role := range roles {
-		if err := validateRoleName(role); err != nil {
+		if err := validatePermissionName(role); err != nil {
 			return nil, err
 		}
 	}
@@ -309,6 +309,6 @@ func NewOrganizationService(config xrf.Security, logger internal.Logger, allRepo
 		log:      logger,
 		orgRepo:  allRepos.OrgRepo,
 		userRepo: allRepos.UserRepo,
-		roleRepo: allRepos.RoleRepo,
+		roleRepo: allRepos.PermissionRepo,
 	}
 }

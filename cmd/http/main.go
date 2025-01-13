@@ -72,7 +72,7 @@ func main() {
 	logger.Debug(fmt.Sprintf("message='successfully connected to MongoDB' :: dbName=%s", databaseName))
 
 	// create repositories
-	roleRepo, err := repository.NewRoleRepo(mongoDB, logger)
+	permissionRepo, err := repository.NewPermissionRepo(mongoDB, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
 		return
@@ -87,14 +87,14 @@ func main() {
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 
 	allRepos := &repository.Repositories{
-		RoleRepo:     roleRepo,
-		UserRepo:     userRepo,
-		OrgRepo:      orgRepo,
-		SettingsRepo: settingRepo,
+		PermissionRepo: permissionRepo,
+		UserRepo:       userRepo,
+		OrgRepo:        orgRepo,
+		SettingsRepo:   settingRepo,
 	}
 
 	// create services
-	roleService := service.NewRoleService(logger, roleRepo)
+	roleService := service.NewRoleService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)

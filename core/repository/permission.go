@@ -10,6 +10,7 @@ import (
 	"time"
 	"xrf197ilz35aq0/core/model/org"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
@@ -86,11 +87,11 @@ func (repo *permissionsRepo) FindPermissionByName(name string, ctx context.Conte
 }
 
 func (repo *permissionsRepo) FindPermissionsByNames(names []string, ctx context.Context) ([]org.Permission, error) {
-	return repo.findRolesByFilter(names, "name", ctx)
+	return repo.findRolesByFilter(names, constants.NAME, ctx)
 }
 
 func (repo *permissionsRepo) FindPermissionsByIds(ids []string, ctx context.Context) ([]org.Permission, error) {
-	return repo.findRolesByFilter(ids, "permissionId", ctx)
+	return repo.findRolesByFilter(ids, constants.PermissionId, ctx)
 }
 
 func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]org.Permission, error) {
@@ -104,7 +105,7 @@ func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string,
 	// 2. Query mongoDB
 	cursor, err := repo.db.Collection(PermissionsCollection).Find(ctx, filter)
 	if err != nil {
-		internalError.Message = fmt.Sprintf("Failed to query roles by filter: %s", filterBy)
+		internalError.Message = fmt.Sprintf("Failed to query permissions by filter: %s", filterBy)
 		internalError.Err = err
 		return nil, internalError
 	}
@@ -116,14 +117,14 @@ func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string,
 
 	if err := cursor.All(ctx, &orgRoles); err != nil {
 		internalError.Err = err
-		internalError.Message = "Failed to decode role objects"
+		internalError.Message = "Failed to decode permission objects"
 		return nil, internalError
 	}
 
 	return orgRoles, nil
 }
 
-func NewRoleRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
+func NewPermissionRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := createUniqueIndex(db, log, ctx, "name", PermissionsCollection); err != nil {
