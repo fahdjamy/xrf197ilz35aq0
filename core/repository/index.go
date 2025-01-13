@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
@@ -16,13 +17,16 @@ const (
 )
 
 func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Context, colName, indexName string) error {
+	if err := validateDBCollection(colName); err != nil {
+		return err
+	}
 	internalErr := &xrfErr.Internal{}
 
 	collection := db.Collection(colName)
 	// 1. List existing indexes on the collection
 	cursor, err := collection.Indexes().List(ctx)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to list indexes for collection '%s': %v", PermissionsCollection, err))
+		log.Error(fmt.Sprintf("Failed to list indexes for collection '%s': %v", colName, err))
 		// Handle the error appropriately (e.g., exit)
 	}
 	defer cursor.Close(ctx)
@@ -81,5 +85,21 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 		}
 	}
 
+	return nil
+}
+
+func validateDBCollection(collectionName string) error {
+	notInList := true
+	for _, collection := range constants.AllCollections {
+		if collection == collectionName {
+			notInList = false
+		}
+	}
+	if notInList {
+		return &xrfErr.Internal{
+			Message: "Unknown collection name",
+			Source:  "core/repository#validateDBCollection",
+		}
+	}
 	return nil
 }

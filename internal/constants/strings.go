@@ -9,10 +9,12 @@ const (
 	EQUALS       = "="
 	UNDERSCORE   = "_"
 	NAME         = "name"
+	EMAIL        = "email"
 	OrgId        = "orgId"
 	USERID       = "userId"
 	PASSWORD     = "password"
 	IsAnonymous  = "isAnonymous"
+	FINGERPRINT  = "fingerPrint"
 	PermissionId = "permissionId"
 )
 
@@ -26,3 +28,20 @@ const (
 const ContentType = "Content-Type"
 const SlashAPI = SLASH + API // "/api"
 const ContentTypeJson = "application/json"
+
+// Mongo Collections
+
+const (
+	UserCollection     = "user"
+	SettingsCollection = "settings"
+	PermissionsCol     = "permission"
+	OrgCollection      = "organization"
+)
+
+// AllCollections !IMPORTANT: make sure to always add all collection names to this list
+var AllCollections = [...]string{
+	OrgCollection,
+	PermissionsCol,
+	UserCollection,
+	SettingsCollection,
+}

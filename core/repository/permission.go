@@ -14,8 +14,6 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-const PermissionsCollection = "permission"
-
 type PermissionRepository interface {
 	UpdatePermission(permission *org.Permission, ctx context.Context) error
 	CreatePermission(permission *org.Permission, ctx context.Context) (string, error)
@@ -33,7 +31,7 @@ type permissionsRepo struct {
 func (repo *permissionsRepo) CreatePermission(permission *org.Permission, ctx context.Context) (string, error) {
 	internalErr := &xrfErr.Internal{}
 	externalError := &xrfErr.External{}
-	document, err := repo.db.Collection(PermissionsCollection).InsertOne(ctx, permission)
+	document, err := repo.db.Collection(constants.PermissionsCol).InsertOne(ctx, permission)
 	if err != nil {
 		// Check for the duplicate key error
 		if mongo.IsDuplicateKeyError(err) {
@@ -67,7 +65,7 @@ func (repo *permissionsRepo) FindPermissionByName(name string, ctx context.Conte
 	externalError := &xrfErr.External{}
 
 	filter := bson.M{"name": name}
-	resp := repo.db.Collection(PermissionsCollection).FindOne(ctx, filter)
+	resp := repo.db.Collection(constants.PermissionsCol).FindOne(ctx, filter)
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
@@ -103,7 +101,7 @@ func (repo *permissionsRepo) findPermissionsByFilter(values []string, filterBy s
 	filter := bson.M{filterBy: bson.M{"$in": values}}
 
 	// 2. Query mongoDB
-	cursor, err := repo.db.Collection(PermissionsCollection).Find(ctx, filter)
+	cursor, err := repo.db.Collection(constants.PermissionsCol).Find(ctx, filter)
 	if err != nil {
 		internalError.Message = fmt.Sprintf("Failed to query permissions by filter: %s", filterBy)
 		internalError.Err = err
@@ -127,7 +125,7 @@ func (repo *permissionsRepo) findPermissionsByFilter(values []string, filterBy s
 func NewPermissionRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := createUniqueIndex(db, log, ctx, PermissionsCollection, constants.NAME); err != nil {
+	if err := createUniqueIndex(db, log, ctx, constants.PermissionsCol, constants.NAME); err != nil {
 		return nil, err
 	}
 

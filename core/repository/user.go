@@ -12,8 +12,6 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-const UserCollection = "user"
-
 type UserRepository interface {
 	CreateUser(user *user.User, ctx context.Context) (string, error)
 	GetUserById(userId string, ctx context.Context) (*user.User, error)
@@ -33,7 +31,7 @@ func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (string,
 		internalErr.Message = "user is nil"
 		return "", internalErr
 	}
-	document, err := up.db.Collection(UserCollection).InsertOne(ctx, newUser)
+	document, err := up.db.Collection(constants.UserCollection).InsertOne(ctx, newUser)
 	if err != nil {
 		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
 		internalErr.Err = err
@@ -51,10 +49,10 @@ func (up *userRepo) UpdatePassword(userFPrint string, newPassword string, ctx co
 	}
 	internalErr := &xrfErr.Internal{}
 	internalErr.Source = "core/repository/user#updateUser"
-	filter := bson.D{{"fingerprint", userFPrint}}
+	filter := bson.D{{constants.FINGERPRINT, userFPrint}}
 	update := bson.D{{"$set", bson.D{{constants.PASSWORD, newPassword}}}}
 
-	resp, err := up.db.Collection(UserCollection).UpdateOne(ctx, filter, update)
+	resp, err := up.db.Collection(constants.UserCollection).UpdateOne(ctx, filter, update)
 	if err != nil {
 		internalErr.Err = err
 		internalErr.Message = "Updating user failed"
@@ -72,7 +70,7 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 	filter := bson.D{{constants.USERID, userId}}
 
 	var userResponse user.User
-	resp := up.db.Collection(UserCollection).FindOne(ctx, filter)
+	resp := up.db.Collection(constants.UserCollection).FindOne(ctx, filter)
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
@@ -92,11 +90,11 @@ func (up *userRepo) GetUserById(userId string, ctx context.Context) (*user.User,
 }
 
 func (up *userRepo) FindUsersByEmails(emails []string, ctx context.Context) ([]user.User, error) {
-	return up.findUsersByFilter(emails, "email", ctx)
+	return up.findUsersByFilter(emails, constants.EMAIL, ctx)
 }
 
 func (up *userRepo) FindUsersByFingerPrints(fingerPrints []string, ctx context.Context) ([]user.User, error) {
-	return up.findUsersByFilter(fingerPrints, "fingerPrint", ctx)
+	return up.findUsersByFilter(fingerPrints, constants.FINGERPRINT, ctx)
 }
 
 func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx context.Context) ([]user.User, error) {
@@ -110,7 +108,7 @@ func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx cont
 	filter := bson.D{{filterBy, bson.M{"$in": values}}}
 
 	var userResponse []user.User
-	cursor, err := up.db.Collection(UserCollection).Find(ctx, filter)
+	cursor, err := up.db.Collection(constants.UserCollection).Find(ctx, filter)
 
 	if err != nil {
 		internalErr.Err = err

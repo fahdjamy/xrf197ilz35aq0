@@ -8,10 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
-
-const SettingsCollection = "settings"
 
 type SettingsRepository interface {
 	CreateSettings(settings *user.Settings, ctx context.Context) (any, error)
@@ -30,7 +29,7 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 
 	filter := bson.D{{"fingerPrint", userFP}}
 	var userSettings user.Settings
-	resp := sr.db.Collection(SettingsCollection).FindOne(ctx, filter)
+	resp := sr.db.Collection(constants.SettingsCollection).FindOne(ctx, filter)
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
@@ -51,9 +50,9 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 }
 
 func (sr *settingsRepo) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
-	internalErr := &xrfErr.Internal{} // defined in the repository/user file
+	internalErr := &xrfErr.Internal{}
 	internalErr.Source = "core/repository/user#createSettings"
-	document, err := sr.db.Collection(SettingsCollection).InsertOne(ctx, settings)
+	document, err := sr.db.Collection(constants.SettingsCollection).InsertOne(ctx, settings)
 	if err != nil {
 		internalErr.Err = err
 		internalErr.Message = "Saving new user-settings failed"

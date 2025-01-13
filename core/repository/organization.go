@@ -13,10 +13,6 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-const (
-	OrgCollection = "organization"
-)
-
 type OrganizationRepository interface {
 	Create(organization *org.Organization, ctx context.Context) (string, error)
 	GetOrgById(id string, ctx context.Context) (*org.Organization, error)
@@ -30,7 +26,7 @@ type orgRepo struct {
 func (repo *orgRepo) Create(organization *org.Organization, ctx context.Context) (string, error) {
 	internalErr := &xrfErr.Internal{}
 	externalError := &xrfErr.External{}
-	document, err := repo.db.Collection(OrgCollection).InsertOne(ctx, organization)
+	document, err := repo.db.Collection(constants.OrgCollection).InsertOne(ctx, organization)
 	if err != nil {
 		// Check for the duplicate key error
 		if mongo.IsDuplicateKeyError(err) {
@@ -55,7 +51,7 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 	filter := bson.M{constants.OrgId: id, constants.IsAnonymous: false}
 
 	var result org.Organization
-	resp := repo.db.Collection(OrgCollection).FindOne(ctx, filter)
+	resp := repo.db.Collection(constants.OrgCollection).FindOne(ctx, filter)
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
@@ -79,12 +75,12 @@ func NewOrganizationRepository(db *mongo.Database, log internal.Logger) (Organiz
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err := createUniqueIndex(db, log, ctx, OrgCollection, constants.OrgId)
+	err := createUniqueIndex(db, log, ctx, constants.OrgCollection, constants.OrgId)
 	if err != nil {
 		log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createOrgIndex :: field='orgId' :: err=%s", err))
 		return nil, err
 	}
-	err = createUniqueIndex(db, log, ctx, OrgCollection, constants.NAME)
+	err = createUniqueIndex(db, log, ctx, constants.OrgCollection, constants.NAME)
 	if err != nil {
 		log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createOrgIndex :: field='Name' :: err=%s", err))
 		return nil, err
