@@ -16,15 +16,15 @@ type RoleHandler struct {
 }
 
 func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
-	var roleReq *exchange.PermissionRequest
-	err := decodeJSONBody(r, &roleReq)
+	var permissionReq *exchange.PermissionRequest
+	err := decodeJSONBody(r, &permissionReq)
 	if err != nil {
 		writeErrorResponse(err, w, handler.logger)
 		return
 	}
 
-	// create a new role
-	resp, err := handler.permService.CreatePermission(roleReq, context.Background())
+	// create a new permission
+	resp, err := handler.permService.CreatePermission(permissionReq, context.Background())
 	if err != nil {
 		writeErrorResponse(err, w, handler.logger)
 		return
@@ -32,16 +32,16 @@ func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
 	dataResp := dataResponse{
 		Code: 200,
 		Data: struct {
-			RoleId string `json:"roleId"`
+			Id string `json:"id"`
 		}{
-			RoleId: resp,
+			Id: resp,
 		},
 	}
 	writeResponse(dataResp, w, handler.logger)
 }
 
 func (handler *RoleHandler) RegisterAndListen() {
-	handler.router.HandleFunc("/role", handler.createRole).Methods("POST")
+	handler.router.HandleFunc("/permission", handler.createRole).Methods("POST")
 }
 
 func NewRoleHandler(logger xrf.Logger, router *mux.Router, service service.PermissionService) *RoleHandler {

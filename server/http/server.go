@@ -28,9 +28,9 @@ type ApiServer struct {
 }
 
 type Services struct {
-	OrgService  service.OrgService
-	UserService service.UserService
-	RoleService service.PermissionService
+	OrgService        service.OrgService
+	UserService       service.UserService
+	PermissionService service.PermissionService
 }
 
 var apiInternalErr = &xrfErr.Internal{
@@ -48,7 +48,7 @@ func (server *ApiServer) Start() {
 	// handlers
 	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
 	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router).RegisterAndListen()
-	handlers.NewRoleHandler(server.logger, server.router, server.services.RoleService).RegisterAndListen()
+	handlers.NewRoleHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 
 	server.router.Use(loggerMiddleware.Handler)

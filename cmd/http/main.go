@@ -94,15 +94,15 @@ func main() {
 	}
 
 	// create services
-	roleService := service.NewRoleService(logger, permissionRepo)
+	permService := service.NewRoleService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 
 	services := http.Services{
-		OrgService:  orgService,
-		UserService: userService,
-		RoleService: roleService,
+		OrgService:        orgService,
+		UserService:       userService,
+		PermissionService: permService,
 	}
 
 	// create the router and start the server
