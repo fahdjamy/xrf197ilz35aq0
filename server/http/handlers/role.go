@@ -9,13 +9,13 @@ import (
 	xrf "xrf197ilz35aq0/internal"
 )
 
-type RoleHandler struct {
+type PermissionHandler struct {
 	logger      xrf.Logger
 	router      *mux.Router
 	permService service.PermissionService
 }
 
-func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
+func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *http.Request) {
 	var permissionReq *exchange.PermissionRequest
 	err := decodeJSONBody(r, &permissionReq)
 	if err != nil {
@@ -40,12 +40,12 @@ func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
 	writeResponse(dataResp, w, handler.logger)
 }
 
-func (handler *RoleHandler) RegisterAndListen() {
-	handler.router.HandleFunc("/permission", handler.createRole).Methods("POST")
+func (handler *PermissionHandler) RegisterAndListen() {
+	handler.router.HandleFunc("/permission", handler.createPermission).Methods("POST")
 }
 
-func NewRoleHandler(logger xrf.Logger, router *mux.Router, service service.PermissionService) *RoleHandler {
-	return &RoleHandler{
+func NewPermHandler(logger xrf.Logger, router *mux.Router, service service.PermissionService) *PermissionHandler {
+	return &PermissionHandler{
 		logger:      logger,
 		router:      router,
 		permService: service,

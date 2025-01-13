@@ -76,7 +76,7 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 			return &xrfErr.Internal{
 				Err:     err,
 				Message: "Failed to create index",
-				Source:  "core/repository#createRoleDocIndex",
+				Source:  "core/repository#createUniqueIndex",
 			}
 		}
 	}

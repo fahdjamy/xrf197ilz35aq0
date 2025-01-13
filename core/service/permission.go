@@ -27,21 +27,21 @@ func (svc *permissionService) CreatePermission(req *exchange.PermissionRequest, 
 		return "", err
 	}
 
-	newRole := org.CreateRole(req.Name, req.Name)
-	_, err = svc.permissionRepo.CreatePermission(newRole, ctx)
+	newPermission := org.CreatePermission(req.Name, req.Name)
+	_, err = svc.permissionRepo.CreatePermission(newPermission, ctx)
 	if err != nil {
 		svc.log.Error(fmt.Sprintf("event=CreatePermission :: action=savePermissionToDB :: err=%v", err))
 		return "", err
 	}
 
-	savedRole, err := svc.permissionRepo.FindPermissionByName(strings.ToUpper(req.Name), ctx)
+	savedPermission, err := svc.permissionRepo.FindPermissionByName(strings.ToUpper(req.Name), ctx)
 	if err != nil {
 		internalErr := &xrfErr.Internal{Err: err, Message: "internal error", Source: "core/service/permission#createPermission"}
 		svc.log.Error(fmt.Sprintf("event=CreatePermission :: action=savingPermissionToDB :: err=%v", err))
 		return "", internalErr
 	}
 
-	return savedRole.Id, nil
+	return savedPermission.Id, nil
 }
 
 func validatePermissionName(name string) error {
@@ -80,7 +80,7 @@ func validatePermissionName(name string) error {
 	return nil
 }
 
-func NewRoleService(log internal.Logger, permissionRepo repository.PermissionRepository) PermissionService {
+func NewPermissionService(log internal.Logger, permissionRepo repository.PermissionRepository) PermissionService {
 	return &permissionService{
 		log:            log,
 		permissionRepo: permissionRepo,

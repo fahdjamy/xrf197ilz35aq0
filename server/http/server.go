@@ -48,7 +48,7 @@ func (server *ApiServer) Start() {
 	// handlers
 	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
 	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router).RegisterAndListen()
-	handlers.NewRoleHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
+	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 
 	server.router.Use(loggerMiddleware.Handler)

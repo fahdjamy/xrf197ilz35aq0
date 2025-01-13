@@ -37,16 +37,16 @@ func (repo *permissionsRepo) CreatePermission(permission *org.Permission, ctx co
 	if err != nil {
 		// Check for the duplicate key error
 		if mongo.IsDuplicateKeyError(err) {
-			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=duplicateName :: name=%s", permission.Name))
+			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createPermission :: err=duplicateName :: name=%s", permission.Name))
 			externalError.Message = "permission name already exists"
 			return "", externalError
 		}
-		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=%s", err))
+		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createPermission :: err=%s", err))
 		internalErr.Message = "Creating new permission in mongodb failed"
 		internalErr.Err = err
 		return "", err
 	}
-	repo.log.Debug(fmt.Sprintf("event=saveRole :: success=true :: objectID=%v", document.InsertedID))
+	repo.log.Debug(fmt.Sprintf("event=savePermission :: success=true :: objectID=%v", document.InsertedID))
 
 	return document.InsertedID.(primitive.ObjectID).Hex(), nil
 }
@@ -87,14 +87,14 @@ func (repo *permissionsRepo) FindPermissionByName(name string, ctx context.Conte
 }
 
 func (repo *permissionsRepo) FindPermissionsByNames(names []string, ctx context.Context) ([]org.Permission, error) {
-	return repo.findRolesByFilter(names, constants.NAME, ctx)
+	return repo.findPermissionsByFilter(names, constants.NAME, ctx)
 }
 
 func (repo *permissionsRepo) FindPermissionsByIds(ids []string, ctx context.Context) ([]org.Permission, error) {
-	return repo.findRolesByFilter(ids, constants.PermissionId, ctx)
+	return repo.findPermissionsByFilter(ids, constants.PermissionId, ctx)
 }
 
-func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]org.Permission, error) {
+func (repo *permissionsRepo) findPermissionsByFilter(values []string, filterBy string, ctx context.Context) ([]org.Permission, error) {
 	if values == nil || len(values) == 0 {
 		return []org.Permission{}, nil
 	}
@@ -113,21 +113,21 @@ func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string,
 	defer cursor.Close(ctx)
 
 	// 3. Decode the results into a slice of Permission structs
-	var orgRoles []org.Permission
+	var orgPermissions []org.Permission
 
-	if err := cursor.All(ctx, &orgRoles); err != nil {
+	if err := cursor.All(ctx, &orgPermissions); err != nil {
 		internalError.Err = err
 		internalError.Message = "Failed to decode permission objects"
 		return nil, internalError
 	}
 
-	return orgRoles, nil
+	return orgPermissions, nil
 }
 
 func NewPermissionRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := createUniqueIndex(db, log, ctx, "name", PermissionsCollection); err != nil {
+	if err := createUniqueIndex(db, log, ctx, constants.NAME, PermissionsCollection); err != nil {
 		return nil, err
 	}
 

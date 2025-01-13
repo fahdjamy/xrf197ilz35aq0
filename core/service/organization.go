@@ -70,7 +70,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	}
 	uniquePermissionIds := make(map[string]string)
 
-	userRoleMap := make(map[string][]string)
+	userPermissionMap := make(map[string][]string)
 	userFps := make([]string, 0)
 
 	for key, value := range savedOrg.Members { // key is user's fingerPrint
@@ -79,7 +79,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		for _, permissionId := range value.Permissions {
 			uniquePermissionIds[permissionId] = ""
 		}
-		userRoleMap[key] = value.Permissions
+		userPermissionMap[key] = value.Permissions
 	}
 
 	allPermission := make([]string, 0)
@@ -105,11 +105,11 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	}()
 
 	var permissionErr error
-	var foundRoles []org.Permission
+	var foundPermissions []org.Permission
 	// Call DB to get detailed info about each permission asynchronously
 	go func() {
 		defer wg.Done()
-		foundRoles, permissionErr = os.permissionRepo.FindPermissionsByIds(allPermission, ctx)
+		foundPermissions, permissionErr = os.permissionRepo.FindPermissionsByIds(allPermission, ctx)
 		if err != nil {
 			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findPermissions :: err=%v", err))
 		}
@@ -125,16 +125,16 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		return nil, permissionErr
 	}
 
-	for _, foundRole := range foundRoles {
-		uniquePermissionIds[foundRole.Id] = foundRole.Name
+	for _, foundPermission := range foundPermissions {
+		uniquePermissionIds[foundPermission.Id] = foundPermission.Name
 	}
 
 	response := make([]exchange.OrgMemberResponse, 0)
 
 	for _, foundUser := range foundUsers {
 		userPermissions := make([]string, 0)
-		for _, userRole := range userRoleMap[foundUser.FingerPrint] {
-			userPermissions = append(userPermissions, uniquePermissionIds[userRole])
+		for _, userPermission := range userPermissionMap[foundUser.FingerPrint] {
+			userPermissions = append(userPermissions, uniquePermissionIds[userPermission])
 		}
 		response = append(response, exchange.OrgMemberResponse{
 			Permissions: userPermissions,
@@ -243,32 +243,32 @@ func (os *organizationService) validatePermissions(permissions []string, ctx con
 		}
 	}
 
-	savedRoles, err := os.permissionRepo.FindPermissionsByNames(permissions, ctx)
+	savedPermissions, err := os.permissionRepo.FindPermissionsByNames(permissions, ctx)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=validatePermissions:: name=%s :: err=%v", permissions, err))
 		return nil, err
 	}
 	permissionLen := len(permissions)
-	savedRolesLen := len(savedRoles)
+	savedPermissionsLen := len(savedPermissions)
 	permissionMap := make(map[string]string)
 	// map permissions to their ids
-	for _, permission := range savedRoles {
+	for _, permission := range savedPermissions {
 		permissionMap[permission.Name] = permission.Id
 	}
 
-	if permissionLen != savedRolesLen {
-		missingRoles := make([]string, permissionLen-savedRolesLen)
+	if permissionLen != savedPermissionsLen {
+		missingPermissions := make([]string, permissionLen-savedPermissionsLen)
 
 		for _, permission := range permissions {
 			_, ok := permissionMap[permission]
 			if !ok {
-				missingRoles = append(missingRoles, permission)
+				missingPermissions = append(missingPermissions, permission)
 			}
 		}
 
 		return nil, &xrfErr.External{
 			Source:  "service/organization#validatePermissions",
-			Message: fmt.Sprintf("unknown permisions ['%v']", missingRoles),
+			Message: fmt.Sprintf("unknown permisions ['%v']", missingPermissions),
 		}
 	}
 	return permissionMap, nil

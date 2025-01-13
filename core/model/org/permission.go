@@ -17,7 +17,7 @@ type Permission struct {
 	Id          string             `json:"permissionId" bson:"permissionId"`
 }
 
-func CreateRole(name, description string) *Permission {
+func CreatePermission(name, description string) *Permission {
 	now := time.Now()
 	id := createPermissionId()
 	return &Permission{
