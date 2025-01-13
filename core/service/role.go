@@ -18,7 +18,7 @@ type RoleService interface {
 
 type roleService struct {
 	log      internal.Logger
-	roleRepo repository.RoleRepository
+	roleRepo repository.PermissionRepository
 }
 
 func (svc *roleService) CreateRole(req *exchange.RoleRequest, ctx context.Context) (string, error) {
@@ -28,13 +28,13 @@ func (svc *roleService) CreateRole(req *exchange.RoleRequest, ctx context.Contex
 	}
 
 	newRole := org.CreateRole(req.Name, req.Name)
-	_, err = svc.roleRepo.SaveRole(newRole, ctx)
+	_, err = svc.roleRepo.CreatePermission(newRole, ctx)
 	if err != nil {
 		svc.log.Error(fmt.Sprintf("event=CreateRole :: action=saveRoleToDB :: err=%v", err))
 		return "", err
 	}
 
-	savedRole, err := svc.roleRepo.FindRoleByName(strings.ToUpper(req.Name), ctx)
+	savedRole, err := svc.roleRepo.FindPermissionByName(strings.ToUpper(req.Name), ctx)
 	if err != nil {
 		internalErr := &xrfErr.Internal{Err: err, Message: "internal error", Source: "core/service/role#createRole"}
 		svc.log.Error(fmt.Sprintf("event=CreateRole :: action=saveRoleToDB :: err=%v", err))
@@ -50,7 +50,7 @@ func validateRoleName(name string) error {
 		externalErr.Message = "role name should be between 3 and 63 characters"
 		return externalErr
 	}
-	// Role should be all letters or _
+	// Permission should be all letters or _
 	for _, char := range name {
 		if !unicode.IsLetter(char) && char != '_' {
 			externalErr.Message = "role name should all letter characters"
@@ -80,7 +80,7 @@ func validateRoleName(name string) error {
 	return nil
 }
 
-func NewRoleService(log internal.Logger, roleRepo repository.RoleRepository) RoleService {
+func NewRoleService(log internal.Logger, roleRepo repository.PermissionRepository) RoleService {
 	return &roleService{
 		log:      log,
 		roleRepo: roleRepo,

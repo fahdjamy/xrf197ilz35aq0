@@ -13,35 +13,35 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-const RoleCollection = "role"
+const PermissionsCollection = "permission"
 
-type RoleRepository interface {
-	UpdateRole(role *org.Role, ctx context.Context) error
-	SaveRole(role *org.Role, ctx context.Context) (string, error)
-	FindRoleById(id string, ctx context.Context) (*org.Role, error)
-	FindRoleByName(name string, ctx context.Context) (*org.Role, error)
-	FindRolesByIds(ids []string, ctx context.Context) ([]org.Role, error)
-	FindRolesByNames(names []string, ctx context.Context) ([]org.Role, error)
+type PermissionRepository interface {
+	UpdatePermission(permission *org.Permission, ctx context.Context) error
+	CreatePermission(permission *org.Permission, ctx context.Context) (string, error)
+	FindPermissionById(id string, ctx context.Context) (*org.Permission, error)
+	FindPermissionByName(name string, ctx context.Context) (*org.Permission, error)
+	FindPermissionsByIds(ids []string, ctx context.Context) ([]org.Permission, error)
+	FindPermissionsByNames(names []string, ctx context.Context) ([]org.Permission, error)
 }
 
-type roleRepo struct {
+type permissionsRepo struct {
 	db  *mongo.Database
 	log internal.Logger
 }
 
-func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, error) {
+func (repo *permissionsRepo) CreatePermission(permission *org.Permission, ctx context.Context) (string, error) {
 	internalErr := &xrfErr.Internal{}
 	externalError := &xrfErr.External{}
-	document, err := repo.db.Collection(RoleCollection).InsertOne(ctx, role)
+	document, err := repo.db.Collection(PermissionsCollection).InsertOne(ctx, permission)
 	if err != nil {
 		// Check for the duplicate key error
 		if mongo.IsDuplicateKeyError(err) {
-			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=duplicateName :: name=%s", role.Name))
-			externalError.Message = "role name already exists"
+			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=duplicateName :: name=%s", permission.Name))
+			externalError.Message = "permission name already exists"
 			return "", externalError
 		}
 		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=createRole :: err=%s", err))
-		internalErr.Message = "Creating new role in mongodb failed"
+		internalErr.Message = "Creating new permission in mongodb failed"
 		internalErr.Err = err
 		return "", err
 	}
@@ -50,27 +50,27 @@ func (repo *roleRepo) SaveRole(role *org.Role, ctx context.Context) (string, err
 	return document.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (repo *roleRepo) UpdateRole(role *org.Role, ctx context.Context) error {
+func (repo *permissionsRepo) UpdatePermission(permission *org.Permission, ctx context.Context) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (repo *roleRepo) FindRoleById(id string, ctx context.Context) (*org.Role, error) {
+func (repo *permissionsRepo) FindPermissionById(id string, ctx context.Context) (*org.Permission, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Role, error) {
-	var result org.Role
+func (repo *permissionsRepo) FindPermissionByName(name string, ctx context.Context) (*org.Permission, error) {
+	var result org.Permission
 	internalErr := &xrfErr.Internal{}
 	externalError := &xrfErr.External{}
 
 	filter := bson.M{"name": name}
-	resp := repo.db.Collection(RoleCollection).FindOne(ctx, filter)
+	resp := repo.db.Collection(PermissionsCollection).FindOne(ctx, filter)
 
 	if resp.Err() != nil {
 		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
-			externalError.Message = "Role not found"
+			externalError.Message = "Permission not found"
 			return nil, externalError
 		}
 		return nil, resp.Err()
@@ -78,31 +78,31 @@ func (repo *roleRepo) FindRoleByName(name string, ctx context.Context) (*org.Rol
 
 	if err := resp.Decode(&result); err != nil {
 		internalErr.Err = err
-		internalErr.Message = "Failed to decode role object"
-		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=FindRoleByName :: err=%s", err))
+		internalErr.Message = "Failed to decode permission object"
+		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=FindPermissionByName :: err=%s", err))
 		return nil, internalErr
 	}
 	return &result, nil
 }
 
-func (repo *roleRepo) FindRolesByNames(names []string, ctx context.Context) ([]org.Role, error) {
+func (repo *permissionsRepo) FindPermissionsByNames(names []string, ctx context.Context) ([]org.Permission, error) {
 	return repo.findRolesByFilter(names, "name", ctx)
 }
 
-func (repo *roleRepo) FindRolesByIds(ids []string, ctx context.Context) ([]org.Role, error) {
-	return repo.findRolesByFilter(ids, "roleId", ctx)
+func (repo *permissionsRepo) FindPermissionsByIds(ids []string, ctx context.Context) ([]org.Permission, error) {
+	return repo.findRolesByFilter(ids, "permissionId", ctx)
 }
 
-func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]org.Role, error) {
+func (repo *permissionsRepo) findRolesByFilter(values []string, filterBy string, ctx context.Context) ([]org.Permission, error) {
 	if values == nil || len(values) == 0 {
-		return []org.Role{}, nil
+		return []org.Permission{}, nil
 	}
 	internalError := &xrfErr.Internal{}
 	// 1. Build query filter
 	filter := bson.M{filterBy: bson.M{"$in": values}}
 
 	// 2. Query mongoDB
-	cursor, err := repo.db.Collection(RoleCollection).Find(ctx, filter)
+	cursor, err := repo.db.Collection(PermissionsCollection).Find(ctx, filter)
 	if err != nil {
 		internalError.Message = fmt.Sprintf("Failed to query roles by filter: %s", filterBy)
 		internalError.Err = err
@@ -111,8 +111,8 @@ func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx co
 
 	defer cursor.Close(ctx)
 
-	// 3. Decode the results into a slice of Role structs
-	var orgRoles []org.Role
+	// 3. Decode the results into a slice of Permission structs
+	var orgRoles []org.Permission
 
 	if err := cursor.All(ctx, &orgRoles); err != nil {
 		internalError.Err = err
@@ -123,14 +123,14 @@ func (repo *roleRepo) findRolesByFilter(values []string, filterBy string, ctx co
 	return orgRoles, nil
 }
 
-func NewRoleRepo(db *mongo.Database, log internal.Logger) (RoleRepository, error) {
+func NewRoleRepo(db *mongo.Database, log internal.Logger) (PermissionRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := createUniqueIndex(db, log, ctx, "name", RoleCollection); err != nil {
+	if err := createUniqueIndex(db, log, ctx, "name", PermissionsCollection); err != nil {
 		return nil, err
 	}
 
-	return &roleRepo{
+	return &permissionsRepo{
 		db:  db,
 		log: log,
 	}, nil

@@ -1,7 +1,7 @@
 package repository
 
 type Repositories struct {
-	RoleRepo     RoleRepository
+	RoleRepo     PermissionRepository
 	UserRepo     UserRepository
 	OrgRepo      OrganizationRepository
 	SettingsRepo SettingsRepository

@@ -8,7 +8,7 @@ import (
 	"xrf197ilz35aq0/internal/random"
 )
 
-type Role struct {
+type Permission struct {
 	Name        string             `json:"name" bson:"name"`
 	RoleId      string             `json:"roleId" bson:"roleId"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
@@ -17,10 +17,10 @@ type Role struct {
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 }
 
-func CreateRole(name, description string) *Role {
+func CreateRole(name, description string) *Permission {
 	now := time.Now()
-	roleId := createRoleId()
-	return &Role{
+	roleId := createPermissionId()
+	return &Permission{
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		RoleId:      roleId,
@@ -29,6 +29,6 @@ func CreateRole(name, description string) *Role {
 	}
 }
 
-func createRoleId() string {
+func createPermissionId() string {
 	return strconv.FormatInt(random.PositiveInt64(), 10)
 }

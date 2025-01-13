@@ -22,7 +22,7 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 	// 1. List existing indexes on the collection
 	cursor, err := collection.Indexes().List(ctx)
 	if err != nil {
-		log.Error(fmt.Sprintf("Failed to list indexes for collection '%s': %v", RoleCollection, err))
+		log.Error(fmt.Sprintf("Failed to list indexes for collection '%s': %v", PermissionsCollection, err))
 		// Handle the error appropriately (e.g., exit)
 	}
 	defer cursor.Close(ctx)

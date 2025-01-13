@@ -23,7 +23,7 @@ type OrgService interface {
 type organizationService struct {
 	config   xrf.Security
 	log      internal.Logger
-	roleRepo repository.RoleRepository
+	roleRepo repository.PermissionRepository
 	userRepo repository.UserRepository
 	orgRepo  repository.OrganizationRepository
 }
@@ -105,11 +105,11 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	}()
 
 	var rolesErr error
-	var foundRoles []org.Role
+	var foundRoles []org.Permission
 	// Call DB to get detailed info about each role asynchronously
 	go func() {
 		defer wg.Done()
-		foundRoles, rolesErr = os.roleRepo.FindRolesByIds(allRoles, ctx)
+		foundRoles, rolesErr = os.roleRepo.FindPermissionsByIds(allRoles, ctx)
 		if err != nil {
 			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findRoles :: err=%v", err))
 		}
@@ -243,7 +243,7 @@ func (os *organizationService) validatePermissions(roles []string, ctx context.C
 		}
 	}
 
-	savedRoles, err := os.roleRepo.FindRolesByNames(roles, ctx)
+	savedRoles, err := os.roleRepo.FindPermissionsByNames(roles, ctx)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=validatePermissions:: name=%s :: err=%v", roles, err))
 		return nil, err
