@@ -41,7 +41,7 @@ func (svc *permissionService) CreatePermission(req *exchange.PermissionRequest, 
 		return "", internalErr
 	}
 
-	return savedRole.RoleId, nil
+	return savedRole.Id, nil
 }
 
 func validatePermissionName(name string) error {

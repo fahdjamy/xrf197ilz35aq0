@@ -12,7 +12,7 @@ import (
 type RoleHandler struct {
 	logger      xrf.Logger
 	router      *mux.Router
-	roleService service.PermissionService
+	permService service.PermissionService
 }
 
 func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func (handler *RoleHandler) createRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create a new role
-	resp, err := handler.roleService.CreatePermission(roleReq, context.Background())
+	resp, err := handler.permService.CreatePermission(roleReq, context.Background())
 	if err != nil {
 		writeErrorResponse(err, w, handler.logger)
 		return
@@ -48,6 +48,6 @@ func NewRoleHandler(logger xrf.Logger, router *mux.Router, service service.Permi
 	return &RoleHandler{
 		logger:      logger,
 		router:      router,
-		roleService: service,
+		permService: service,
 	}
 }

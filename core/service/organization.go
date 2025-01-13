@@ -21,11 +21,11 @@ type OrgService interface {
 }
 
 type organizationService struct {
-	config   xrf.Security
-	log      internal.Logger
-	roleRepo repository.PermissionRepository
-	userRepo repository.UserRepository
-	orgRepo  repository.OrganizationRepository
+	config         xrf.Security
+	log            internal.Logger
+	userRepo       repository.UserRepository
+	permissionRepo repository.PermissionRepository
+	orgRepo        repository.OrganizationRepository
 }
 
 func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {
@@ -82,9 +82,9 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		userRoleMap[key] = value.Permissions
 	}
 
-	allRoles := make([]string, 0)
-	for _, roleId := range uniquePermissionIds {
-		allRoles = append(allRoles, roleId)
+	allPermission := make([]string, 0)
+	for _, permId := range uniquePermissionIds {
+		allPermission = append(allPermission, permId)
 	}
 
 	var wg sync.WaitGroup
@@ -104,14 +104,14 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 		}
 	}()
 
-	var rolesErr error
+	var permissionErr error
 	var foundRoles []org.Permission
-	// Call DB to get detailed info about each role asynchronously
+	// Call DB to get detailed info about each permission asynchronously
 	go func() {
 		defer wg.Done()
-		foundRoles, rolesErr = os.roleRepo.FindPermissionsByIds(allRoles, ctx)
+		foundRoles, permissionErr = os.permissionRepo.FindPermissionsByIds(allPermission, ctx)
 		if err != nil {
-			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findRoles :: err=%v", err))
+			os.log.Error(fmt.Sprintf("event=findOrgMembers :: action=findPermissions :: err=%v", err))
 		}
 	}()
 
@@ -121,12 +121,12 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	// Check for errors from either goroutine
 	if usersErr != nil {
 		return nil, usersErr
-	} else if rolesErr != nil {
-		return nil, rolesErr
+	} else if permissionErr != nil {
+		return nil, permissionErr
 	}
 
 	for _, foundRole := range foundRoles {
-		uniquePermissionIds[foundRole.RoleId] = foundRole.Name
+		uniquePermissionIds[foundRole.Id] = foundRole.Name
 	}
 
 	response := make([]exchange.OrgMemberResponse, 0)
@@ -193,15 +193,15 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 	}
 
 	memberMap := make(map[string]struct {
-		isOwner bool
-		userFp  string
-		roleIds []string
+		isOwner       bool
+		userFp        string
+		permissionIds []string
 	})
 
 	missingUsers := make([]string, 0)
 
 	for _, member := range req {
-		roleMap, err := os.validatePermissions(member.Permissions, ctx)
+		permissionMap, err := os.validatePermissions(member.Permissions, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -212,13 +212,13 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 			missingUsers = append(missingUsers, member.Email)
 		} else {
 			memberMap[userObj.FingerPrint] = struct {
-				isOwner bool
-				userFp  string
-				roleIds []string
+				isOwner       bool
+				userFp        string
+				permissionIds []string
 			}{
-				isOwner: member.Owner,
-				userFp:  userObj.FingerPrint,
-				roleIds: getUserRoles(roleMap, member.Permissions),
+				isOwner:       member.Owner,
+				userFp:        userObj.FingerPrint,
+				permissionIds: getUserPermissions(permissionMap, member.Permissions),
 			}
 		}
 	}
@@ -231,38 +231,38 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 
 	orgMembers := make(map[string]org.Member)
 	for _, value := range memberMap {
-		orgMembers[value.userFp] = *org.CreateMember(value.userFp, value.isOwner, value.roleIds)
+		orgMembers[value.userFp] = *org.CreateMember(value.userFp, value.isOwner, value.permissionIds)
 	}
 	return orgMembers, nil
 }
 
-func (os *organizationService) validatePermissions(roles []string, ctx context.Context) (map[string]string, error) {
-	for _, role := range roles {
-		if err := validatePermissionName(role); err != nil {
+func (os *organizationService) validatePermissions(permissions []string, ctx context.Context) (map[string]string, error) {
+	for _, permission := range permissions {
+		if err := validatePermissionName(permission); err != nil {
 			return nil, err
 		}
 	}
 
-	savedRoles, err := os.roleRepo.FindPermissionsByNames(roles, ctx)
+	savedRoles, err := os.permissionRepo.FindPermissionsByNames(permissions, ctx)
 	if err != nil {
-		os.log.Error(fmt.Sprintf("event=validatePermissions:: name=%s :: err=%v", roles, err))
+		os.log.Error(fmt.Sprintf("event=validatePermissions:: name=%s :: err=%v", permissions, err))
 		return nil, err
 	}
-	rolesLen := len(roles)
+	permissionLen := len(permissions)
 	savedRolesLen := len(savedRoles)
-	roleMap := make(map[string]string)
-	// map roles to their ids
-	for _, role := range savedRoles {
-		roleMap[role.Name] = role.RoleId
+	permissionMap := make(map[string]string)
+	// map permissions to their ids
+	for _, permission := range savedRoles {
+		permissionMap[permission.Name] = permission.Id
 	}
 
-	if rolesLen != savedRolesLen {
-		missingRoles := make([]string, rolesLen-savedRolesLen)
+	if permissionLen != savedRolesLen {
+		missingRoles := make([]string, permissionLen-savedRolesLen)
 
-		for _, role := range roles {
-			_, ok := roleMap[role]
+		for _, permission := range permissions {
+			_, ok := permissionMap[permission]
 			if !ok {
-				missingRoles = append(missingRoles, role)
+				missingRoles = append(missingRoles, permission)
 			}
 		}
 
@@ -271,13 +271,13 @@ func (os *organizationService) validatePermissions(roles []string, ctx context.C
 			Message: fmt.Sprintf("unknown permisions ['%v']", missingRoles),
 		}
 	}
-	return roleMap, nil
+	return permissionMap, nil
 }
 
-func getUserRoles(roleMap map[string]string, roleIds []string) []string {
+func getUserPermissions(permissionMap map[string]string, permissionIds []string) []string {
 	result := make([]string, 0)
-	for _, role := range roleIds {
-		result = append(result, roleMap[role])
+	for _, permission := range permissionIds {
+		result = append(result, permissionMap[permission])
 	}
 	return result
 }
@@ -305,10 +305,10 @@ func toOrgResponse(domainOrg *org.Organization) *exchange.OrgResponse {
 
 func NewOrganizationService(config xrf.Security, logger internal.Logger, allRepos *repository.Repositories) OrgService {
 	return &organizationService{
-		config:   config,
-		log:      logger,
-		orgRepo:  allRepos.OrgRepo,
-		userRepo: allRepos.UserRepo,
-		roleRepo: allRepos.PermissionRepo,
+		config:         config,
+		log:            logger,
+		orgRepo:        allRepos.OrgRepo,
+		userRepo:       allRepos.UserRepo,
+		permissionRepo: allRepos.PermissionRepo,
 	}
 }

@@ -10,21 +10,21 @@ import (
 
 type Permission struct {
 	Name        string             `json:"name" bson:"name"`
-	RoleId      string             `json:"roleId" bson:"roleId"`
 	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`
 	Description string             `json:"description" bson:"description"`
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
+	Id          string             `json:"permissionId" bson:"permissionId"`
 }
 
 func CreateRole(name, description string) *Permission {
 	now := time.Now()
-	roleId := createPermissionId()
+	id := createPermissionId()
 	return &Permission{
 		CreatedAt:   now,
 		UpdatedAt:   now,
-		RoleId:      roleId,
 		Description: description,
+		Id:          id,
 		Name:        strings.ToUpper(name),
 	}
 }
