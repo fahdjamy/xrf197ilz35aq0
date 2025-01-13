@@ -83,8 +83,8 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	}
 
 	allPermission := make([]string, 0)
-	for _, permId := range uniquePermissionIds {
-		allPermission = append(allPermission, permId)
+	for key, _ := range uniquePermissionIds {
+		allPermission = append(allPermission, key)
 	}
 
 	var wg sync.WaitGroup
@@ -94,7 +94,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	var foundUsers []user.User
 
 	// Call DB to find all users info asynchronously
-	//dbCtx, dbCancel := context.WithTimeout(ctx, 5*time.Second)
+	//dbCtx, dbCancel := context.WithTimeout(ctx, 10*time.Second)
 	//defer dbCancel() // defer the Cancelling the dbCtx context after goroutines are done.
 	go func() {
 		defer wg.Done()
