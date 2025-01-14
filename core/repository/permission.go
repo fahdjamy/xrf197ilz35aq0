@@ -15,10 +15,10 @@ import (
 )
 
 type PermissionRepository interface {
-	UpdatePermission(permission *org.Permission, ctx context.Context) error
-	CreatePermission(permission *org.Permission, ctx context.Context) (string, error)
 	FindPermissionById(id string, ctx context.Context) (*org.Permission, error)
 	FindPermissionByName(name string, ctx context.Context) (*org.Permission, error)
+	UpdatePermission(permission *org.Permission, ctx context.Context) (bool, error)
+	CreatePermission(permission *org.Permission, ctx context.Context) (string, error)
 	FindPermissionsByIds(ids []string, ctx context.Context) ([]org.Permission, error)
 	FindPermissionsByNames(names []string, ctx context.Context) ([]org.Permission, error)
 }
@@ -49,9 +49,38 @@ func (repo *permissionsRepo) CreatePermission(permission *org.Permission, ctx co
 	return document.InsertedID.(primitive.ObjectID).Hex(), nil
 }
 
-func (repo *permissionsRepo) UpdatePermission(permission *org.Permission, ctx context.Context) error {
-	//TODO implement me
-	panic("implement me")
+func (repo *permissionsRepo) UpdatePermission(permission *org.Permission, ctx context.Context) (bool, error) {
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
+	filter := bson.M{constants.PermissionId: permission.Id}
+	update := bson.D{{"$set", bson.D{
+		{"name", permission.Name},
+		{"updatedAt", permission.UpdatedAt},
+		{"description", permission.Description},
+	}}}
+
+	resp, err := repo.db.Collection(constants.PermissionsCol).UpdateOne(ctx, filter, update)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=updatePermission :: err=%s", err))
+			externalError.Message = "permission name already exists"
+			return false, externalError
+		}
+		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=updatePermission :: err=%s", err))
+		internalErr.Message = "Updating permission in mongodb failed"
+		internalErr.Err = err
+		return false, err
+	}
+
+	if (resp.MatchedCount == 1 && resp.ModifiedCount == 0) ||
+		(resp.UpsertedCount == 0 && resp.ModifiedCount == 0) {
+		repo.log.Warn(fmt.Sprintf("event=updatePermission :: success=true :: permissionId=%s :: modified=%d :: upSerted=%d matched=%d",
+			permission.Id, resp.ModifiedCount, resp.UpsertedCount, resp.MatchedCount))
+	}
+
+	// ModifiedCount: The number of documents modified by the operation
+	// Upsert edCount: The number of documents upsert ed by the operation
+	return resp.UpsertedCount == 1 && resp.ModifiedCount == 1, nil
 }
 
 func (repo *permissionsRepo) FindPermissionById(id string, ctx context.Context) (*org.Permission, error) {
