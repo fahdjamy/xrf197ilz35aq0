@@ -14,6 +14,13 @@ type OrgResponse struct {
 	IsAnonymous  bool      `json:"isAnonymous"`
 }
 
+type UpdateOrgRequest struct {
+	Name        string `json:"name"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	IsAnonymous bool   `json:"isAnonymous"`
+}
+
 type OrgRequest struct {
 	Name        string             `json:"name"`
 	Category    string             `json:"category"`
@@ -31,5 +38,9 @@ type OrgMemberRequest struct {
 type OrgMemberResponse struct {
 	Email       string   `json:"email"`
 	UserId      string   `json:"userId"`
+	Permissions []string `json:"permissions"`
+}
+
+type MemberPermissionUpdateReq struct {
 	Permissions []string `json:"permissions"`
 }

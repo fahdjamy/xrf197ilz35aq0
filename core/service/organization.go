@@ -15,9 +15,12 @@ import (
 )
 
 type OrgService interface {
-	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
 	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
 	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
+	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
+	FindOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error)
+	UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error)
+	UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error)
 }
 
 type organizationService struct {
@@ -26,6 +29,21 @@ type organizationService struct {
 	userRepo       repository.UserRepository
 	permissionRepo repository.PermissionRepository
 	orgRepo        repository.OrganizationRepository
+}
+
+func (os *organizationService) FindOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (os *organizationService) UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (os *organizationService) UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {
