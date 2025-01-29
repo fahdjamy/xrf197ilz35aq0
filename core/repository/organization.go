@@ -14,8 +14,9 @@ import (
 )
 
 type OrganizationRepository interface {
-	Create(organization *org.Organization, ctx context.Context) (string, error)
 	GetOrgById(id string, ctx context.Context) (*org.Organization, error)
+	Create(organization *org.Organization, ctx context.Context) (string, error)
+	UpdateOrgById(id string, org *org.Organization, ctx context.Context) (bool, error)
 }
 
 type orgRepo struct {
@@ -69,6 +70,39 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 		return nil, internalErr
 	}
 	return &result, nil
+}
+
+func (repo *orgRepo) UpdateOrgById(id string, org *org.Organization, ctx context.Context) (bool, error) {
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
+	internalErr.Source = "core/repository/organization#updateOrgById"
+	filter := bson.M{constants.OrgId: id, constants.IsAnonymous: false}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "name", Value: org.Name},
+		{Key: "updatedAt", Value: time.Now()},
+		{Key: "displayName", Value: org.DisplayName},
+		{Key: "description", Value: org.Description},
+		{Key: "isAnonymous", Value: org.IsAnonymous},
+	}}}
+	resp := repo.db.Collection(constants.OrgCollection).FindOneAndUpdate(ctx, filter, update)
+
+	if resp.Err() != nil {
+		if mongo.IsDuplicateKeyError(resp.Err()) {
+			repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=updateOrgById :: err=%s", resp.Err()))
+			externalError.Message = "org name already exists"
+			return false, externalError
+		}
+		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
+			externalError.Message = constants.NotFoundOrgErrMsg
+			externalError.Err = errors.New(constants.NotFoundOrgErrMsg)
+			return false, externalError
+		}
+		internalErr.Err = resp.Err()
+		internalErr.Message = "update org failed"
+		return false, resp.Err()
+	}
+
+	return true, nil
 }
 
 func NewOrganizationRepository(db *mongo.Database, log internal.Logger) (OrganizationRepository, error) {
