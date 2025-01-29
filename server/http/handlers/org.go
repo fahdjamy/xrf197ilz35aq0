@@ -52,6 +52,34 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 	writeResponse(dataResp, w, handler.logger)
 }
 
+func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
+	var request exchange.UpdateOrgRequest
+	err := decodeJSONBody(r, &request)
+	if err != nil {
+		writeErrorResponse(err, w, handler.logger)
+		return
+	}
+
+	// make call to update org
+	resp, err := handler.orgService.UpdateOrg(request.OrgId, request, context.Background())
+	if err != nil {
+		writeErrorResponse(err, w, handler.logger)
+		return
+	}
+
+	dataResp := dataResponse{
+		Code: 200,
+		Data: struct {
+			Updated bool                 `json:"updated"`
+			Org     exchange.OrgResponse `json:"org"`
+		}{
+			Org:     *resp,
+			Updated: resp != nil,
+		},
+	}
+	writeResponse(dataResp, w, handler.logger)
+}
+
 func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	orgId, isValid := getAndValidateId(r, "orgId")
 	if !isValid {
@@ -95,10 +123,6 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 	handler.logger.Debug(fmt.Sprintf("event=findOrgMembers :: orgId=%s", orgId))
 	resp := dataResponse{Data: foundOrgs, Code: http.StatusOK}
 	writeResponse(resp, w, handler.logger)
-}
-
-func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
-	// TODO
 }
 
 func (handler *OrgHandler) RegisterAndListen() {

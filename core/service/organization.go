@@ -18,7 +18,6 @@ type OrgService interface {
 	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
 	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
 	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
-	FindOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error)
 	UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error)
 	UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error)
 }
@@ -31,19 +30,50 @@ type organizationService struct {
 	orgRepo        repository.OrganizationRepository
 }
 
-func (os *organizationService) FindOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (os *organizationService) UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
 func (os *organizationService) UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	savedOrg, err := os.findOrg(orgId, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=updateOrg :: action=failedToGetSavedOrg :: err=%v", err))
+		return nil, err
+	}
+	externalErr := &xrfErr.External{Source: "service/organization#UpdateOrg"}
+	if savedOrg == nil {
+		externalErr.Message = "org with id '" + orgId + "' does not exist"
+		return nil, externalErr
+	}
+
+	if request.Name != savedOrg.Name {
+		if err := validateOrgName(request.Name); err != nil {
+			return nil, externalErr
+		}
+		savedOrg.Name = request.Name
+	}
+	if request.Description != savedOrg.Description {
+		savedOrg.Description = request.Description
+	}
+	if request.IsAnonymous != savedOrg.IsAnonymous {
+		savedOrg.IsAnonymous = request.IsAnonymous
+	}
+	if request.Category != savedOrg.Category {
+		savedOrg.Category = request.Category
+	}
+
+	updated, err := os.orgRepo.UpdateOrgById(orgId, savedOrg, ctx)
+	if err != nil {
+		os.log.Error(fmt.Sprintf("event=updateOrg :: action=failedToUpdateOrg :: err=%v", err))
+		return nil, err
+	}
+
+	if !updated {
+		os.log.Warn(fmt.Sprintf("event=updateOrg :: action=failedToUpdateOrg :: orgId=%s updated=false", orgId))
+		return nil, nil
+	}
+	return toOrgResponse(savedOrg), nil
 }
 
 func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {

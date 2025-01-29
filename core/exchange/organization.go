@@ -15,6 +15,7 @@ type OrgResponse struct {
 }
 
 type UpdateOrgRequest struct {
+	OrgId       string `json:"orgId"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	Description string `json:"description"`
