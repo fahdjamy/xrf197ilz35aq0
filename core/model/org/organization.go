@@ -30,6 +30,10 @@ type Organization struct {
 	MongoID     primitive.ObjectID `bson:"_id,omitempty" bson:"_id"` // MongoDB's ObjectID (internal)
 }
 
+func (org *Organization) SetName(name string) {
+	org.Name = strings.ToLower(name)
+}
+
 func CreateOrganization(name string, category string, desc string, anonymous bool, members map[string]Member) (*Organization, error) {
 	externalError = &xrfErr.External{}
 	if members == nil || len(members) == 0 {

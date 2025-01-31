@@ -80,6 +80,7 @@ func (repo *orgRepo) UpdateOrgById(id string, org *org.Organization, ctx context
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "name", Value: org.Name},
 		{Key: "updatedAt", Value: time.Now()},
+		{Key: "category", Value: org.Category},
 		{Key: "displayName", Value: org.DisplayName},
 		{Key: "description", Value: org.Description},
 		{Key: "isAnonymous", Value: org.IsAnonymous},

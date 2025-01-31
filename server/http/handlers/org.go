@@ -53,6 +53,14 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
+	orgId, isValid := getAndValidateId(r, "orgId")
+	if !isValid {
+		externalError := &xrfErr.External{
+			Message: "invalid org id",
+		}
+		writeErrorResponse(externalError, w, handler.logger)
+		return
+	}
 	var request exchange.UpdateOrgRequest
 	err := decodeJSONBody(r, &request)
 	if err != nil {
@@ -61,7 +69,7 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make call to update org
-	resp, err := handler.orgService.UpdateOrg(request.OrgId, request, context.Background())
+	resp, err := handler.orgService.UpdateOrg(orgId, request, context.Background())
 	if err != nil {
 		writeErrorResponse(err, w, handler.logger)
 		return
@@ -84,6 +92,7 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	orgId, isValid := getAndValidateId(r, "orgId")
 	if !isValid {
 		externalError := &xrfErr.External{
+			Code:    404,
 			Message: "invalid org id",
 		}
 		writeErrorResponse(externalError, w, handler.logger)
@@ -131,6 +140,7 @@ func (handler *OrgHandler) RegisterAndListen() {
 	//findByOrgMembers := fmt.Sprintf("/%s/members", findByOrgIdUrl)                       // "/api/v1/org/{orgId}/members"
 
 	handler.router.HandleFunc(findByOrgIdUrl, handler.getOrg).Methods(GET)
+	handler.router.HandleFunc(findByOrgIdUrl, handler.updateOrg).Methods(PUT)
 	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods(POST)
 	handler.router.HandleFunc("/api/v1/org/{orgId}/members", handler.findOrgMembers).Methods(GET)
 }

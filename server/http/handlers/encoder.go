@@ -71,7 +71,11 @@ func writeErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 	case errors.As(error, &externalError):
 		var externalErr *xrfErr.External
 		errors.As(error, &externalErr)
-		statusCode = externalErrorCode(externalError.Message)
+		if externalErr.Code != 0 && externalError.Code >= 400 {
+			statusCode = externalErr.Code
+		} else {
+			statusCode = externalErrorCode(externalError.Message)
+		}
 		msg = externalErr.Message
 	default:
 		statusCode = http.StatusInternalServerError

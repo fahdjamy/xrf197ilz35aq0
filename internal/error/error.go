@@ -8,6 +8,7 @@ type External struct {
 	Err     error
 	Source  string
 	Message string
+	Code    int
 }
 
 func (e *External) WithErr(msg string, err error) *External {

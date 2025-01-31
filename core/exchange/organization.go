@@ -9,13 +9,13 @@ type OrgResponse struct {
 	Name         string    `json:"name"`
 	CreatedAt    time.Time `json:"created"`
 	Category     string    `json:"category"`
+	UpdatedAt    time.Time `json:"lastUpdated"`
 	Description  string    `json:"description"`
 	MembersCount int       `json:"membersCount"`
 	IsAnonymous  bool      `json:"isAnonymous"`
 }
 
 type UpdateOrgRequest struct {
-	OrgId       string `json:"orgId"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	Description string `json:"description"`

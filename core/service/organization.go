@@ -47,12 +47,15 @@ func (os *organizationService) UpdateOrg(orgId string, request exchange.UpdateOr
 		return nil, externalErr
 	}
 
+	request.Name = strings.TrimSpace(request.Name)
 	if request.Name != savedOrg.Name {
 		if err := validateOrgName(request.Name); err != nil {
 			return nil, externalErr
 		}
-		savedOrg.Name = request.Name
+		savedOrg.SetName(request.Name)
+		savedOrg.DisplayName = request.Name
 	}
+
 	if request.Description != savedOrg.Description {
 		savedOrg.Description = request.Description
 	}
@@ -344,6 +347,7 @@ func toOrgResponse(domainOrg *org.Organization) *exchange.OrgResponse {
 		OrgId:        domainOrg.Id,
 		Category:     domainOrg.Category,
 		CreatedAt:    domainOrg.CreatedAt,
+		UpdatedAt:    domainOrg.UpdatedAt,
 		Description:  domainOrg.Description,
 		Name:         domainOrg.DisplayName,
 		MembersCount: len(domainOrg.Members),
