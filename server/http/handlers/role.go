@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/gorilla/mux"
 	"net/http"
-	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/exchange"
 )
 
 type PermissionHandler struct {

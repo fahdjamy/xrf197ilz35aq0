@@ -3,6 +3,7 @@ package exchange
 import (
 	"encoding/json"
 	"fmt"
+	"net/mail"
 	"time"
 	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/internal/custom"
@@ -121,4 +122,18 @@ func (s *SettingResponse) MarshalJSON() ([]byte, error) {
 
 func (s *SettingResponse) String() string {
 	return fmt.Sprintf("{rotateKey: %t: createdAt: %s, updatedAt: %s}", s.RotateKey, s.CreatedAt, s.UpdatedAt)
+}
+
+type AuthRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=55"`
+}
+
+func (req *AuthRequest) String() string {
+	isValid := false
+	_, err := mail.ParseAddress(req.Email)
+	if err == nil {
+		isValid = true
+	}
+	return fmt.Sprintf("email=[REDACTED] :: isValid=%t", isValid)
 }

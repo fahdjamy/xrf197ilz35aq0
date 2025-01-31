@@ -18,13 +18,12 @@ import (
 )
 
 type ApiServer struct {
-	started     bool
-	router      *mux.Router
-	logger      internal.Logger
-	config      xrf197ilz35aq0.Config
-	userService service.UserService
-	ctx         context.Context
-	services    Services
+	started  bool
+	services Services
+	router   *mux.Router
+	logger   internal.Logger
+	ctx      context.Context
+	config   xrf197ilz35aq0.Config
 }
 
 type Services struct {
@@ -48,8 +47,9 @@ func (server *ApiServer) Start() {
 	// handlers
 	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
 	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router).RegisterAndListen()
-	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
+	handlers.NewAuthHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
+	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
 
 	server.router.Use(loggerMiddleware.Handler)
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
+	"xrf197ilz35aq0/internal/exchange"
 )
 
 const (
