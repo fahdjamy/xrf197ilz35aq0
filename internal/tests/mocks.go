@@ -44,7 +44,7 @@ type userRepositoryMock struct {
 	Called map[string]int
 }
 
-func (u *userRepositoryMock) FindUsersByFingerPrints(_ []string, _ context.Context) (*[]user.User, error) {
+func (u *userRepositoryMock) FindUsersByFingerPrints(_ []string, _ context.Context) ([]user.User, error) {
 	method := "FindUsersByFingerPrints"
 	count, ok := u.Called[method]
 	if !ok {
@@ -52,10 +52,10 @@ func (u *userRepositoryMock) FindUsersByFingerPrints(_ []string, _ context.Conte
 	} else {
 		u.Called[method] = count + 1
 	}
-	return &[]user.User{}, nil
+	return make([]user.User, 0), nil
 }
 
-func (u *userRepositoryMock) FindUsersByEmails(_ []string, _ context.Context) (*[]user.User, error) {
+func (u *userRepositoryMock) FindUsersByEmails(_ []string, _ context.Context) ([]user.User, error) {
 	method := "FindUsersByEmails"
 	count, ok := u.Called[method]
 	if !ok {
@@ -63,7 +63,7 @@ func (u *userRepositoryMock) FindUsersByEmails(_ []string, _ context.Context) (*
 	} else {
 		u.Called[method] = count + 1
 	}
-	return &[]user.User{}, nil
+	return make([]user.User, 0), nil
 }
 
 func (u *userRepositoryMock) GetUserById(_ string, _ context.Context) (*user.User, error) {
