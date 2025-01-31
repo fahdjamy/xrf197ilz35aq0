@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync"
 	xrf "xrf197ilz35aq0"
-	"xrf197ilz35aq0/core/exchange"
 	"xrf197ilz35aq0/core/model/org"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
+	"xrf197ilz35aq0/internal/exchange"
 )
 
 type OrgService interface {
