@@ -19,17 +19,11 @@ import (
 
 type ApiServer struct {
 	started  bool
-	services Services
 	router   *mux.Router
 	logger   internal.Logger
 	ctx      context.Context
+	services service.Services
 	config   xrf197ilz35aq0.Config
-}
-
-type Services struct {
-	OrgService        service.OrgService
-	UserService       service.UserService
-	PermissionService service.PermissionService
 }
 
 var apiInternalErr = &xrfErr.Internal{
@@ -47,7 +41,7 @@ func (server *ApiServer) Start() {
 	// handlers
 	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
 	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router).RegisterAndListen()
-	handlers.NewAuthHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
+	handlers.NewAuthHandler(server.logger, server.services, server.router).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
 
@@ -120,7 +114,7 @@ func (server *ApiServer) Stop() {
 	server.started = false
 }
 
-func NewHttpServer(logger internal.Logger, router *mux.Router, config xrf197ilz35aq0.Config, services Services, ctx context.Context) *ApiServer {
+func NewHttpServer(logger internal.Logger, router *mux.Router, config xrf197ilz35aq0.Config, services service.Services, ctx context.Context) *ApiServer {
 	return &ApiServer{
 		ctx:      ctx,
 		logger:   logger,
