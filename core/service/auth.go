@@ -28,7 +28,7 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	if err != nil {
 		return "", err
 	}
-	if len(savedUsers) == 0 {
+	if len(savedUsers) == 0 || savedUsers == nil {
 		return "", externalErr
 	}
 
@@ -46,15 +46,17 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	}
 
 	if !isValid {
+		service.log.Debug(fmt.Sprintf("event=authenticate :: userId=%s :: validPassword=%t", user.Id, isValid))
 		return "", externalErr
 	}
 
 	return "", nil
 }
 
-func NewAuthService(log internal.Logger, userRepo repository.UserRepository) AuthService {
+func NewAuthService(log internal.Logger, userRepo repository.UserRepository, settingsRepo repository.SettingsRepository) AuthService {
 	return &authService{
-		log:      log,
-		userRepo: userRepo,
+		log:          log,
+		userRepo:     userRepo,
+		settingsRepo: settingsRepo,
 	}
 }

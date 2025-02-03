@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/constants"
@@ -27,13 +28,19 @@ type userRepo struct {
 
 func (up *userRepo) CreateUser(newUser *user.User, ctx context.Context) (string, error) {
 	internalErr := &xrfErr.Internal{}
+	externalErr := &xrfErr.External{}
 	if newUser == nil {
 		internalErr.Message = "user is nil"
 		return "", internalErr
 	}
 	document, err := up.db.Collection(constants.UserCollection).InsertOne(ctx, newUser)
 	if err != nil {
-		up.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=saveUser :: err=%s", err))
+		if mongo.IsDuplicateKeyError(err) {
+			up.log.Error(fmt.Sprintf("event=createUser :: action=createUserFailure :: err=%s", err))
+			externalErr.Message = "user with email already exists"
+			return "", externalErr
+		}
+		up.log.Error(fmt.Sprintf("event=createUser :: action=saveUser :: err=%s", err))
 		internalErr.Err = err
 		internalErr.Message = "Saving new user failed"
 		return "", err
@@ -126,9 +133,15 @@ func (up *userRepo) findUsersByFilter(values []string, filterBy string, ctx cont
 	return userResponse, nil
 }
 
-func NewUserRepository(db *mongo.Database, log internal.Logger) UserRepository {
+func NewUserRepository(db *mongo.Database, log internal.Logger) (UserRepository, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := createUniqueIndex(db, log, ctx, constants.UserCollection, constants.EMAIL); err != nil {
+		return nil, err
+	}
+
 	return &userRepo{
 		db:  db,
 		log: log,
-	}
+	}, nil
 }

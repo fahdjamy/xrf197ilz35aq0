@@ -83,7 +83,12 @@ func main() {
 		return
 	}
 
-	userRepo := repository.NewUserRepository(mongoDB, logger)
+	userRepo, err := repository.NewUserRepository(mongoDB, logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		return
+	}
+
 	settingRepo := repository.NewSettingsRepository(mongoDB, logger)
 
 	allRepos := &repository.Repositories{
@@ -95,8 +100,8 @@ func main() {
 
 	// create services
 	permService := service.NewPermissionService(logger, permissionRepo)
+	authService := service.NewAuthService(logger, userRepo, settingRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
-	authService := service.NewAuthService(logger, userRepo)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 
