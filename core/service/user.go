@@ -9,7 +9,6 @@ import (
 	"golang.org/x/crypto/argon2"
 	"net/mail"
 	"regexp"
-	"runtime"
 	"strings"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/model"
@@ -20,6 +19,8 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
 )
+
+const passwordKeyLen = 32
 
 var internalError *xrfErr.Internal
 
@@ -66,9 +67,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%s", newUser.FingerPrint[:7], newUser.Id))
 	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
 	if err != nil {
-		internalError.Err = err
-		internalError.Message = "User creation failed"
-		return nil, internalError
+		return nil, err
 	}
 
 	settingRequest := request.Settings
@@ -179,11 +178,11 @@ func (uc *service) hashPassword(password string) (string, error) {
 	//   - memory:  Memory usage in KiB (higher is more resistant to GPU cracking).
 	//   - threads: Number of parallel threads (can improve performance).
 	//   - keyLen: Length of the generated hash in bytes.
-	var argonThreads = uint8(runtime.NumCPU())
 	var argonMemory = uc.config.PasswordConfig.Memory
+	var argonThreads = uc.config.PasswordConfig.Thread
 	var argonTime = uint32(uc.config.PasswordConfig.Time)
 
-	hash := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, 32)
+	hash := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, passwordKeyLen)
 
 	// Encode the salt and hash as a single Base64 string for storage.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
@@ -222,7 +221,7 @@ func verifyPassword(threads uint8, memory uint32, time uint32, password, hashedP
 	}
 
 	// Use the same parameters used for hashing:
-	testHash := argon2.IDKey([]byte(password), salt, time, memory, threads, 32)
+	testHash := argon2.IDKey([]byte(password), salt, time, memory, threads, passwordKeyLen)
 
 	// Use a constant-time comparison to prevent timing attacks
 	return subtle.ConstantTimeCompare(testHash, passHash) == 1, nil

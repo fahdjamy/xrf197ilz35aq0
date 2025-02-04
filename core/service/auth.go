@@ -14,6 +14,7 @@ type AuthService interface {
 }
 
 type authService struct {
+	secretKey    string
 	log          internal.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.SettingsRepository
@@ -53,10 +54,11 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	return "", nil
 }
 
-func NewAuthService(log internal.Logger, userRepo repository.UserRepository, settingsRepo repository.SettingsRepository) AuthService {
+func NewAuthService(log internal.Logger, authSecret string, userRepo repository.UserRepository, settingsRepo repository.SettingsRepository) AuthService {
 	return &authService{
 		log:          log,
 		userRepo:     userRepo,
+		secretKey:    authSecret,
 		settingsRepo: settingsRepo,
 	}
 }
