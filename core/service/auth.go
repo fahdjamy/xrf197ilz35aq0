@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"xrf197ilz35aq0/core/repository"
+	"xrf197ilz35aq0/core/security"
 	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
@@ -15,6 +16,7 @@ type AuthService interface {
 
 type authService struct {
 	secretKey    string
+	serverId     string
 	log          internal.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.SettingsRepository
@@ -51,13 +53,31 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", externalErr
 	}
 
-	return "", nil
+	tokenPayload := security.UserTokenPayload{
+		ServerId:  service.serverId,
+		UserId:    user.Id,
+		ExpiresAt: 1,
+	}
+	authToken, err := security.GenerateAuthToken(tokenPayload, []byte(service.secretKey))
+	if err != nil {
+		service.log.Error(fmt.Sprintf("event=authenticate :: action=GenerateTokenFailure :: err=%s", err))
+		internalErr := &xrfErr.Internal{
+			Source:  "service/auth#Authenticate",
+			Message: err.Error(),
+			Err:     err,
+		}
+		return "", internalErr
+	}
+
+	return authToken, nil
 }
 
-func NewAuthService(log internal.Logger, authSecret string, userRepo repository.UserRepository, settingsRepo repository.SettingsRepository) AuthService {
+func NewAuthService(serverId string, log internal.Logger, authSecret string, userRepo repository.UserRepository,
+	settingsRepo repository.SettingsRepository) AuthService {
 	return &authService{
 		log:          log,
 		userRepo:     userRepo,
+		serverId:     serverId,
 		secretKey:    authSecret,
 		settingsRepo: settingsRepo,
 	}

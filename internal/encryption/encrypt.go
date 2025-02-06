@@ -11,8 +11,8 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
 
-// Generate a 32-byte (256-bit) key, suitable for AES-256
-const minKeySize = 32
+// Generate a 21-byte (256-bit) key, suitable for AES-256
+const minKeySize = 21
 
 // Larger keys can lead to slightly slower encryption and decryption operations.
 const maxKeySize = 256
@@ -129,7 +129,6 @@ func GenerateKey(keySize int) ([]byte, error) {
 			// io.EOF: This error is returned if the underlying source of randomness (e.g., /dev/urandom)
 			// unexpectedly reaches its end. While rare, it's possible in scenarios where the system is under
 			// extreme stress or there's an issue with the entropy source.
-			fmt.Println("Unexpected end of randomness source")
 			return nil, &xrfErr.Internal{
 				Message: "Unexpected end of randomness source",
 				Source:  "GenerateKey",
