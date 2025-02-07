@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
+	"strconv"
+	"xrf197ilz35aq0/internal/random"
 
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/repository"
@@ -19,9 +21,12 @@ import (
 	"xrf197ilz35aq0/storage/mongo"
 )
 
+const AuthSecretEnvKey = "XRF_AUTH_SECRET_KEY"
+
 func main() {
 	// get the globally set environment variables
 	environment := internal.GetEnvironment()
+	serverId := random.PositiveInt64()
 
 	// get the configuration for the application
 	config, err := xrf.NewConfig(environment.Name)
@@ -42,11 +47,15 @@ func main() {
 	initialFields := []zap.Field{
 		zap.String("os", health.Runtime.OS),
 	}
-	logPrefix := fmt.Sprintf("requestId='%s'", internal.GenerateRequestId())
+	logPrefix := fmt.Sprintf("requestId='%s'", fmt.Sprintf("%d||starting", serverId))
 	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, logPrefix, initialFields)
-	logger.Info(fmt.Sprintf("appVersion='%s' :: os='%s' :: message='application starting...'", health.Version(), health.Runtime.OS))
+	logger.Info(fmt.Sprintf("appVersion='%s' :: os='%s' :: message='application starting...' :: serverId=%d",
+		health.Version(),
+		health.Runtime.OS,
+		serverId),
+	)
 
-	authSecret, exists := os.LookupEnv("XRF_AUTH_SECRET_KEY")
+	authSecret, exists := os.LookupEnv(AuthSecretEnvKey)
 	if !exists {
 		logger.Error(fmt.Sprintf("appStarted=false :: message='Missing _AUTH_SECRET_KEY'"))
 		return
@@ -107,9 +116,9 @@ func main() {
 	// create services
 	permService := service.NewPermissionService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
-	authService := service.NewAuthService(logger, authSecret, userRepo, settingRepo)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
+	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, userRepo, settingRepo)
 
 	services := service.Services{
 		OrgService:        orgService,
