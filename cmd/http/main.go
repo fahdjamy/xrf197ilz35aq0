@@ -46,6 +46,12 @@ func main() {
 	logger := dependency.CustomZapLogger(environment.LogMode, config.Log.Level, logFileOutPut, logPrefix, initialFields)
 	logger.Info(fmt.Sprintf("appVersion='%s' :: os='%s' :: message='application starting...'", health.Version(), health.Runtime.OS))
 
+	authSecret, exists := os.LookupEnv("XRF_AUTH_SECRET_KEY")
+	if !exists {
+		logger.Error(fmt.Sprintf("appStarted=false :: message='Missing _AUTH_SECRET_KEY'"))
+		return
+	}
+
 	// connect to the Mongo Database
 	dbConnStr, err := mongoUri(config)
 	backgroundCtx := context.Background()
@@ -100,8 +106,8 @@ func main() {
 
 	// create services
 	permService := service.NewPermissionService(logger, permissionRepo)
-	authService := service.NewAuthService(logger, userRepo, settingRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
+	authService := service.NewAuthService(logger, authSecret, userRepo, settingRepo)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 
