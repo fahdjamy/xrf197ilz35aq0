@@ -11,6 +11,9 @@ on:
       - master
       - develop
 
+env:
+  XRF_AUTH_SECRET_KEY: aBDK09mXCLTestingEnvABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+
 jobs:
   # This job execute 4 different builds for a combination of 2 (os) x 2 (go-versions) values.
   build:
