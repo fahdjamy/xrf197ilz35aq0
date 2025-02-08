@@ -31,3 +31,10 @@ security:
     time: 4
     thread: 3
     memory: 800
+
+redis:
+  database: 0
+  protocol: 2
+  password: ""
+  maxRetries: 1
+  address: "127.0.0.1:6379"

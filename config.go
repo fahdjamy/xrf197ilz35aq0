@@ -58,12 +58,21 @@ type Database struct {
 	Mongo MongoConfig `yaml:"mongo"`
 }
 
+type RedisConfig struct {
+	Address    string `yaml:"address"`
+	Password   string `yaml:"password"`
+	Database   int    `yaml:"database"`
+	Protocol   int    `yaml:"protocol"`
+	MaxRetries int    `yaml:"maxRetries"`
+}
+
 type Config struct {
 	Environment string            `yaml:"environment"`
 	Log         Log               `yaml:"log"`
 	Database    Database          `yaml:"database"`
 	Application ApplicationConfig `yaml:"application"`
 	Security    Security          `yaml:"security"`
+	Redis       RedisConfig       `yaml:"redis"`
 }
 
 func NewConfig(env string) (Config, error) {
