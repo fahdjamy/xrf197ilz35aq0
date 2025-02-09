@@ -2,30 +2,45 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/core/security"
 	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
+	"xrf197ilz35aq0/storage"
 )
 
 type AuthService interface {
+	VerifyToken(token string, ctx context.Context) (string, error)
 	Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error)
 }
 
 type authService struct {
 	secretKey    string
 	serverId     string
+	cache        storage.Cache
 	log          internal.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.SettingsRepository
+}
+
+type authTokenCache struct {
+	UserId  string `json:"userId"`
+	Revoked bool   `json:"revoked"`
+}
+
+func (at authTokenCache) MarshalBinary() ([]byte, error) {
+	return json.Marshal(at)
 }
 
 func (service *authService) Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error) {
 	email := request.Email
 	password := request.Password
 	externalErr := &xrfErr.External{Code: 400, Message: "invalid credentials"}
+	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
 
 	savedUsers, err := service.userRepo.FindUsersByEmails([]string{email}, ctx)
 	if err != nil {
@@ -42,7 +57,8 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		service.log.Error(fmt.Sprintf("event=authenticate :: userId=%s :: err=%s", user.Id, err))
 		return "", err
 	}
-	isValid, err := verifyPassword(userSettings.Threads, userSettings.Memory, uint32(userSettings.Time), password, user.Password)
+	isValid, err := verifyPassword(
+		userSettings.Threads, userSettings.Memory, uint32(userSettings.Time), password, user.Password)
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: err=%s", err))
 		return "", err
@@ -53,32 +69,45 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", externalErr
 	}
 
+	tokenExpiration := time.Duration(1)
 	tokenPayload := security.UserTokenPayload{
-		ServerId:  service.serverId,
 		UserId:    user.Id,
-		ExpiresAt: 1,
+		ExpiresAt: tokenExpiration,
+		ServerId:  service.serverId,
 	}
 	authToken, err := security.GenerateAuthToken(tokenPayload, []byte(service.secretKey))
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: action=GenerateTokenFailure :: err=%s", err))
-		internalErr := &xrfErr.Internal{
-			Source:  "service/auth#Authenticate",
-			Message: err.Error(),
-			Err:     err,
-		}
+		internalErr.Message = "failed to generate auth token"
+		internalErr.Err = err
+		return "", internalErr
+	}
+
+	authTokenCachePayload := authTokenCache{UserId: user.Id, Revoked: false}
+
+	err = service.cache.Set(authToken, authTokenCachePayload, tokenExpiration, ctx)
+	if err != nil {
+		service.log.Error(fmt.Sprintf("event=authenticate :: action=cacheUserAuthToken :: err=%s", err))
+		internalErr.Message = "failed to store auth token in cache"
+		internalErr.Err = err
 		return "", internalErr
 	}
 
 	return authToken, nil
 }
 
-func NewAuthService(serverId string, log internal.Logger, authSecret string, userRepo repository.UserRepository,
-	settingsRepo repository.SettingsRepository) AuthService {
+func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
+	return "", nil
+}
+
+func NewAuthService(server string,
+	log internal.Logger, authSecret string, cache storage.Cache, repos *repository.Repositories) AuthService {
 	return &authService{
 		log:          log,
-		userRepo:     userRepo,
-		serverId:     serverId,
+		cache:        cache,
+		serverId:     server,
 		secretKey:    authSecret,
-		settingsRepo: settingsRepo,
+		userRepo:     repos.UserRepo,
+		settingsRepo: repos.SettingsRepo,
 	}
 }

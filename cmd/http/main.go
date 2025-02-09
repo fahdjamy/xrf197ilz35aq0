@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"xrf197ilz35aq0/internal/random"
+	"xrf197ilz35aq0/storage"
 
 	"github.com/redis/go-redis/v9"
 	xrf "xrf197ilz35aq0"
@@ -66,7 +67,7 @@ func main() {
 	}
 
 	// connect to redis server
-	_, err = connectRedis(config.Redis, logger)
+	redisClient, err := connectRedis(config.Redis, logger)
 	if err != nil {
 		logger.Error(fmt.Sprintf("appStarted=false :: message='Could not start redis' :: %v", err.Error()))
 		return
@@ -124,12 +125,15 @@ func main() {
 		SettingsRepo:   settingRepo,
 	}
 
+	// set cache service
+	redisCache := storage.NewRedisStorage(redisClient)
+
 	// create services
 	permService := service.NewPermissionService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
-	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, userRepo, settingRepo)
+	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
 
 	services := service.Services{
 		OrgService:        orgService,
