@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -97,7 +99,39 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 }
 
 func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
-	return "", nil
+	externalErr := &xrfErr.External{Code: 401}
+	cachedTokenData, err := service.cache.Get(token, ctx)
+	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
+	if err != nil {
+		internalErr.Err = err
+		internalErr.Message = "failed to fetch auth token"
+		service.log.Error(fmt.Sprintf("event=verifyToken :: action=fetchCachedTokenData :: err=%s", err))
+		return "", internalErr
+	}
+
+	// Use a bytes.Reader for efficient reading from the byte slice.
+	cacheToByte := cachedTokenData.([]byte)
+	if len(cacheToByte) == 0 {
+		externalErr.Message = "invalid/expired token"
+		return "", externalErr
+	}
+	cachedTokenPayload := bytes.NewReader(cacheToByte)
+
+	data := &authTokenCache{}
+	err = binary.Read(cachedTokenPayload, binary.BigEndian, data)
+	if err != nil {
+		service.log.Error(fmt.Sprintf("event=verifyToken :: action=binaryRead :: err=%s", err))
+		internalErr.Message = "failed to read auth token binary data from cache"
+		internalErr.Err = err
+		return "", internalErr
+	}
+
+	if !data.Revoked {
+		externalErr.Message = "token revoked"
+		return "", externalErr
+	}
+
+	return data.UserId, nil
 }
 
 func NewAuthService(server string,
