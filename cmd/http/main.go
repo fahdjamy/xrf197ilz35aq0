@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"xrf197ilz35aq0/internal/random"
 
+	"github.com/redis/go-redis/v9"
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/core/service"
@@ -21,7 +22,10 @@ import (
 	"xrf197ilz35aq0/storage/mongo"
 )
 
-const AuthSecretEnvKey = "XRF_AUTH_SECRET_KEY"
+const (
+	AuthSecretEnvKey = "XRF_AUTH_SECRET_KEY"
+	RedisAddress     = "XRF_REDIS_ADDRESS"
+)
 
 func main() {
 	// get the globally set environment variables
@@ -58,6 +62,13 @@ func main() {
 	authSecret, exists := os.LookupEnv(AuthSecretEnvKey)
 	if !exists {
 		logger.Error(fmt.Sprintf("appStarted=false :: message='Missing _AUTH_SECRET_KEY'"))
+		return
+	}
+
+	// connect to redis server
+	_, err = connectRedis(config.Redis, logger)
+	if err != nil {
+		logger.Error(fmt.Sprintf("appStarted=false :: message='Could not start redis' :: %v", err.Error()))
 		return
 	}
 
@@ -152,4 +163,36 @@ func mongoUri(config xrf.Config) (string, error) {
 		mongoConfig.Acknowledgment,
 		mongoConfig.AppName,
 	), nil
+}
+
+func connectRedis(config xrf.RedisConfig, logger internal.Logger) (*redis.Client, error) {
+	redisAddress := config.Address
+
+	if redisAddress == "" {
+		logger.Error(fmt.Sprintf("event=connectRedis :: message='looking for redis address in environment..."))
+		redisAddressInEnv, ok := os.LookupEnv(RedisAddress)
+		redisAddress = redisAddressInEnv
+		if !ok {
+			return &redis.Client{}, &xrfErr.Internal{
+				Source:  "cmd/cli/main#redis",
+				Message: "missing redis address environment variable $(redis_address)",
+			}
+		}
+	}
+	client := redis.NewClient(&redis.Options{
+		Addr:       config.Address,
+		Password:   config.Password,
+		DB:         config.Database,
+		Protocol:   config.Protocol,
+		MaxRetries: config.MaxRetries,
+	})
+
+	// Ping the Redis server to check the connection
+	_, err := client.Ping(context.Background()).Result()
+	if err != nil {
+		return nil, err
+	}
+	logger.Info(fmt.Sprintf("event=connectRedis :: action=redisServerStarted :: address=%s", config.Address))
+
+	return client, nil
 }
