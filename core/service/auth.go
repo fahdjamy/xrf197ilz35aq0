@@ -39,8 +39,8 @@ func (at authTokenCache) MarshalBinary() ([]byte, error) {
 func (service *authService) Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error) {
 	email := request.Email
 	password := request.Password
-	externalErr := &xrfErr.External{Code: 400, Message: "invalid credentials"}
 	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
+	externalErr := &xrfErr.External{Code: 400, Message: "invalid credentials"}
 
 	savedUsers, err := service.userRepo.FindUsersByEmails([]string{email}, ctx)
 	if err != nil {
@@ -69,7 +69,7 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", externalErr
 	}
 
-	tokenExpiration := time.Duration(1)
+	tokenExpiration := 6 * time.Hour
 	tokenPayload := security.UserTokenPayload{
 		UserId:    user.Id,
 		ExpiresAt: tokenExpiration,
