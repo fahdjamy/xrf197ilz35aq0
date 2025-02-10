@@ -15,6 +15,7 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http/handlers"
 	"xrf197ilz35aq0/server/http/middleware"
+	"xrf197ilz35aq0/storage"
 )
 
 type ApiServer struct {
@@ -23,6 +24,7 @@ type ApiServer struct {
 	logger   internal.Logger
 	ctx      context.Context
 	services service.Services
+	cache    storage.Cache
 	config   xrf197ilz35aq0.Config
 }
 
@@ -37,13 +39,14 @@ func (server *ApiServer) Start() {
 	started := time.Now()
 
 	loggerMiddleware := middleware.NewLoggerHandler(server.logger)
+	authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
 
 	// handlers
 	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
-	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router).RegisterAndListen()
 	handlers.NewAuthHandler(server.logger, server.services, server.router).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
+	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router, authMiddleware).RegisterAndListen()
 
 	server.router.Use(loggerMiddleware.Handler)
 
