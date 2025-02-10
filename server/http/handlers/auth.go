@@ -7,6 +7,8 @@ import (
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/exchange"
+	"xrf197ilz35aq0/server/http/decoder"
+	"xrf197ilz35aq0/server/http/response"
 )
 
 type AuthHandler struct {
@@ -18,18 +20,18 @@ type AuthHandler struct {
 
 func (h *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 	var request exchange.AuthRequest
-	err := decodeJSONBody(r, &request)
+	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
-		writeErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, h.logger)
 		return
 	}
 
 	tokenResp, err := h.authService.Authenticate(&request, context.Background())
 	if err != nil {
-		writeErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, h.logger)
 		return
 	}
-	resp := dataResponse{
+	resp := response.DataResponse{
 		Code: 200,
 		Data: struct {
 			Token string `json:"token"`
@@ -37,7 +39,7 @@ func (h *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 			Token: tokenResp,
 		},
 	}
-	writeResponse(resp, w, h.logger)
+	response.WriteResponse(resp, w, h.logger)
 }
 
 func (h *AuthHandler) RegisterAndListen() {

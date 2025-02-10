@@ -1,4 +1,4 @@
-package handlers
+package response
 
 import (
 	"encoding/json"
@@ -8,9 +8,10 @@ import (
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
+	"xrf197ilz35aq0/server/http/decoder"
 )
 
-type dataResponse struct {
+type DataResponse struct {
 	Code int         `json:"code"`
 	Data interface{} `json:"data,omitempty"`
 }
@@ -27,11 +28,11 @@ type pagination struct {
 	Start  int `json:"start"`
 }
 
-func writeResponse(data dataResponse, w http.ResponseWriter, logger xrf.Logger) {
-	writePaginatedResponse(data, nil, w, logger)
+func WriteResponse(data DataResponse, w http.ResponseWriter, logger xrf.Logger) {
+	WritePaginatedResponse(data, nil, w, logger)
 }
 
-func writePaginatedResponse(data dataResponse, pag *pagination, w http.ResponseWriter, logger xrf.Logger) {
+func WritePaginatedResponse(data DataResponse, pag *pagination, w http.ResponseWriter, logger xrf.Logger) {
 	w.Header().Set(constants.ContentType, constants.ContentTypeJson)
 	w.WriteHeader(data.Code)
 
@@ -43,7 +44,7 @@ func writePaginatedResponse(data dataResponse, pag *pagination, w http.ResponseW
 	} else {
 		err := json.NewEncoder(w).Encode(struct {
 			*pagination
-			dataResponse
+			DataResponse
 		}{})
 		if err != nil {
 			logger.Error(fmt.Sprintf("event=writePaginatedResponseFailure :: error encoding response: %v", err))
@@ -51,20 +52,20 @@ func writePaginatedResponse(data dataResponse, pag *pagination, w http.ResponseW
 	}
 }
 
-func writeErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
+func WriteErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 	msg := "Something went wrong"
 	statusCode := http.StatusInternalServerError
 
-	var decoderError *decoderErr
+	var decoderError *decoder.Err
 	var internalError *xrfErr.Internal
 	var externalError *xrfErr.External
 
 	switch {
 	case errors.As(error, &decoderError):
-		var decErr *decoderErr
+		var decErr *decoder.Err
 		errors.As(error, &decErr)
-		statusCode = decErr.status
-		msg = decErr.msg
+		statusCode = decErr.Status
+		msg = decErr.Msg
 	case errors.As(error, &internalError):
 		var internalErr *xrfErr.Internal
 		errors.As(error, &internalErr)

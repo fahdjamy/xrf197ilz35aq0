@@ -11,6 +11,8 @@ import (
 	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
+	"xrf197ilz35aq0/server/http/decoder"
+	"xrf197ilz35aq0/server/http/response"
 )
 
 type OrgHandler struct {
@@ -29,19 +31,19 @@ func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, router *mux
 
 func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 	var orgReq exchange.OrgRequest
-	err := decodeJSONBody(r, &orgReq)
+	err := decoder.DecodeJSONBody(r, &orgReq)
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 
 	// create a new org
 	resp, err := handler.orgService.CreateOrg(orgReq, context.Background())
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
-	dataResp := dataResponse{
+	dataResp := response.DataResponse{
 		Code: 200,
 		Data: struct {
 			OrgId string `json:"orgId"`
@@ -49,7 +51,7 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 			OrgId: resp,
 		},
 	}
-	writeResponse(dataResp, w, handler.logger)
+	response.WriteResponse(dataResp, w, handler.logger)
 }
 
 func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
@@ -58,24 +60,24 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 		externalError := &xrfErr.External{
 			Message: "invalid org id",
 		}
-		writeErrorResponse(externalError, w, handler.logger)
+		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
 	var request exchange.UpdateOrgRequest
-	err := decodeJSONBody(r, &request)
+	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 
 	// make call to update org
 	resp, err := handler.orgService.UpdateOrg(orgId, request, context.Background())
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 
-	dataResp := dataResponse{
+	dataResp := response.DataResponse{
 		Code: 200,
 		Data: struct {
 			Updated bool                 `json:"updated"`
@@ -85,7 +87,7 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 			Updated: resp != nil,
 		},
 	}
-	writeResponse(dataResp, w, handler.logger)
+	response.WriteResponse(dataResp, w, handler.logger)
 }
 
 func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
@@ -95,20 +97,20 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 			Code:    404,
 			Message: "invalid org id",
 		}
-		writeErrorResponse(externalError, w, handler.logger)
+		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 	foundOrg, err := handler.orgService.GetOrgById(orgId, ctx)
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 	handler.logger.Debug(fmt.Sprintf("event=findOrg :: orgId=%s", orgId))
 
-	resp := dataResponse{Data: foundOrg, Code: http.StatusOK}
-	writeResponse(resp, w, handler.logger)
+	resp := response.DataResponse{Data: foundOrg, Code: http.StatusOK}
+	response.WriteResponse(resp, w, handler.logger)
 }
 
 func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +119,7 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 		externalError := &xrfErr.External{
 			Message: "invalid org id",
 		}
-		writeErrorResponse(externalError, w, handler.logger)
+		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
 
@@ -126,12 +128,12 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 
 	foundOrgs, err := handler.orgService.FindOrgMembers(orgId, ctx)
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 	handler.logger.Debug(fmt.Sprintf("event=findOrgMembers :: orgId=%s", orgId))
-	resp := dataResponse{Data: foundOrgs, Code: http.StatusOK}
-	writeResponse(resp, w, handler.logger)
+	resp := response.DataResponse{Data: foundOrgs, Code: http.StatusOK}
+	response.WriteResponse(resp, w, handler.logger)
 }
 
 func (handler *OrgHandler) RegisterAndListen() {

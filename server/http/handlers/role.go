@@ -7,6 +7,8 @@ import (
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/exchange"
+	"xrf197ilz35aq0/server/http/decoder"
+	"xrf197ilz35aq0/server/http/response"
 )
 
 type PermissionHandler struct {
@@ -17,19 +19,19 @@ type PermissionHandler struct {
 
 func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *http.Request) {
 	var permissionReq *exchange.PermissionRequest
-	err := decodeJSONBody(r, &permissionReq)
+	err := decoder.DecodeJSONBody(r, &permissionReq)
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
 
 	// create a new permission
 	resp, err := handler.permService.CreatePermission(permissionReq, context.Background())
 	if err != nil {
-		writeErrorResponse(err, w, handler.logger)
+		response.WriteErrorResponse(err, w, handler.logger)
 		return
 	}
-	dataResp := dataResponse{
+	dataResp := response.DataResponse{
 		Code: 200,
 		Data: struct {
 			Id string `json:"id"`
@@ -37,7 +39,7 @@ func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *htt
 			Id: resp,
 		},
 	}
-	writeResponse(dataResp, w, handler.logger)
+	response.WriteResponse(dataResp, w, handler.logger)
 }
 
 func (handler *PermissionHandler) RegisterAndListen() {
