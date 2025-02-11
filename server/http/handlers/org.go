@@ -8,10 +8,10 @@ import (
 	"time"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
-	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
 	"xrf197ilz35aq0/server/http/decoder"
+	"xrf197ilz35aq0/server/http/middleware"
 	"xrf197ilz35aq0/server/http/response"
 )
 
@@ -19,13 +19,15 @@ type OrgHandler struct {
 	logger     xrf.Logger
 	router     *mux.Router
 	orgService service.OrgService
+	authMiddle middleware.AuthenticationMiddleware
 }
 
-func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, router *mux.Router) *OrgHandler {
+func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, router *mux.Router, authMiddle middleware.AuthenticationMiddleware) *OrgHandler {
 	return &OrgHandler{
 		logger:     logger,
 		router:     router,
 		orgService: orgService,
+		authMiddle: authMiddle,
 	}
 }
 
@@ -137,12 +139,12 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 }
 
 func (handler *OrgHandler) RegisterAndListen() {
-	slashAPISlashOrg := fmt.Sprintf("%s/%s/%s", constants.SlashAPI, constants.V1, "org") // "/api/v1/org"
-	findByOrgIdUrl := fmt.Sprintf("%s/{%s}", slashAPISlashOrg, constants.OrgId)          // "/api/v1/org/{orgId}"
-	//findByOrgMembers := fmt.Sprintf("/%s/members", findByOrgIdUrl)                       // "/api/v1/org/{orgId}/members"
+	orgSubRoutes := handler.router.PathPrefix("/api/v1/org").Subrouter()
 
-	handler.router.HandleFunc(findByOrgIdUrl, handler.getOrg).Methods(GET)
-	handler.router.HandleFunc(findByOrgIdUrl, handler.updateOrg).Methods(PUT)
-	handler.router.HandleFunc(slashAPISlashOrg, handler.createOrg).Methods(POST)
-	handler.router.HandleFunc("/api/v1/org/{orgId}/members", handler.findOrgMembers).Methods(GET)
+	orgSubRoutes.HandleFunc("", handler.createOrg).Methods(POST)
+	orgSubRoutes.HandleFunc("/{orgId}", handler.getOrg).Methods(GET)
+	orgSubRoutes.HandleFunc("/{orgId}", handler.updateOrg).Methods(PUT)
+	orgSubRoutes.HandleFunc("/{orgId}/members", handler.findOrgMembers).Methods(GET)
+
+	orgSubRoutes.Use(handler.authMiddle.Handle)
 }
