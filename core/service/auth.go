@@ -29,6 +29,7 @@ type authService struct {
 }
 
 type authTokenCache struct {
+	Salt    string `json:"salt"`
 	UserId  string `json:"userId"`
 	Revoked bool   `json:"revoked"`
 }
@@ -84,9 +85,9 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", internalErr
 	}
 
-	authTokenCachePayload := authTokenCache{UserId: user.Id, Revoked: false}
+	authTokenCachePayload := authTokenCache{UserId: user.Id, Revoked: false, Salt: authToken.Salt}
 
-	err = service.cache.Set(authToken, authTokenCachePayload, tokenExpiration, ctx)
+	err = service.cache.Set(authToken.Token, authTokenCachePayload, tokenExpiration, ctx)
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: action=cacheUserAuthToken :: err=%s", err))
 		internalErr.Message = "failed to store auth token in cache"
@@ -94,7 +95,7 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", internalErr
 	}
 
-	return authToken, nil
+	return authToken.Token, nil
 }
 
 func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
