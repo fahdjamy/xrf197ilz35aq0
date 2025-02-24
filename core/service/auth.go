@@ -14,6 +14,7 @@ import (
 )
 
 type AuthService interface {
+	RevokeToken(token string, ctx context.Context) error
 	VerifyToken(token string, ctx context.Context) (string, error)
 	Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error)
 }
@@ -133,6 +134,18 @@ func (service *authService) VerifyToken(token string, ctx context.Context) (stri
 	}
 
 	return data.UserId, nil
+}
+
+func (service *authService) RevokeToken(token string, ctx context.Context) error {
+	internalErr := &xrfErr.Internal{Source: "service/auth#RevokeToken"}
+	deletedValCount, err := service.cache.Delete(token, ctx)
+	if err != nil {
+		internalErr.Message = "failed to delete auth token from cache"
+		internalErr.Err = err
+		return internalErr
+	}
+	service.log.Debug(fmt.Sprintf("event=revokeToken :: tokensDeleted=%d", deletedValCount))
+	return nil
 }
 
 func NewAuthService(server string,
