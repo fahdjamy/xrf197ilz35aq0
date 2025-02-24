@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 )
 
 const (
@@ -86,6 +87,16 @@ func NewConfig(env string) (Config, error) {
 			return Config{}, err
 		}
 		configurations, err := readConfiguration(yamlFile)
+
+		// IF redis environment variables are set, use environment variables
+		redisPortInEnv, portExists := os.LookupEnv(constants.RedisPort)
+		redisPasswordInEnv, redisPassExists := os.LookupEnv(constants.RedisPassword)
+		redisAddressInEnv, redisAddressExists := os.LookupEnv(constants.RedisAddress)
+		if redisAddressExists && portExists && redisPassExists {
+			configurations.Redis.Password = redisPasswordInEnv
+			configurations.Redis.Address = redisAddressInEnv + ":" + redisPortInEnv
+		}
+
 		if err != nil {
 			return Config{}, err
 		}
