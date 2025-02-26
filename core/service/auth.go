@@ -32,6 +32,7 @@ type authTokenCache struct {
 	Salt    string `json:"salt"`
 	UserId  string `json:"userId"`
 	Revoked bool   `json:"revoked"`
+	UserFp  string `json:"userFp"`
 }
 
 func (at authTokenCache) MarshalBinary() ([]byte, error) {
@@ -55,8 +56,9 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	user := savedUsers[0]
 	userSettings, err := service.settingsRepo.FetchUserSettings(ctx, user.FingerPrint)
 
+	userId := user.Id
 	if err != nil {
-		service.log.Error(fmt.Sprintf("event=authenticate :: userId=%s :: err=%s", user.Id, err))
+		service.log.Error(fmt.Sprintf("event=authenticate :: userId=%s :: err=%s", userId, err))
 		return "", err
 	}
 	isValid, err := verifyPassword(
@@ -67,16 +69,12 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	}
 
 	if !isValid {
-		service.log.Debug(fmt.Sprintf("event=authenticate :: userId=%s :: validPassword=%t", user.Id, isValid))
+		service.log.Debug(fmt.Sprintf("event=authenticate :: userId=%s :: validPassword=%t", userId, isValid))
 		return "", externalErr
 	}
 
 	tokenExpiration := 6 * time.Hour
-	tokenPayload := security.UserTokenPayload{
-		UserId:    user.Id,
-		ExpiresAt: tokenExpiration,
-		ServerId:  service.serverId,
-	}
+	tokenPayload := security.UserTokenPayload{UserId: userId, ExpiresAt: tokenExpiration, ServerId: service.serverId}
 	authToken, err := security.GenerateAuthToken(tokenPayload, []byte(service.secretKey))
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: action=GenerateTokenFailure :: err=%s", err))
@@ -85,7 +83,12 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		return "", internalErr
 	}
 
-	authTokenCachePayload := authTokenCache{UserId: user.Id, Revoked: false, Salt: authToken.Salt}
+	authTokenCachePayload := authTokenCache{
+		Revoked: false,
+		UserId:  userId,
+		Salt:    authToken.Salt,
+		UserFp:  user.FingerPrint,
+	}
 
 	err = service.cache.Set(authToken.Token, authTokenCachePayload, tokenExpiration, ctx)
 	if err != nil {
