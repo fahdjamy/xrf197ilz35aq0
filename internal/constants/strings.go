@@ -16,9 +16,9 @@ const (
 	IsAnonymous   = "isAnonymous"
 	FINGERPRINT   = "fingerPrint"
 	PermissionId  = "permissionId"
-	RedisPort     = "XRF_REDIS_PORT"
-	RedisPassword = "XRF_REDIS_PASS"
-	RedisAddress  = "XRF_REDIS_ADDRESS"
+	RedisPort     = "XRF_Q0_REDIS_PORT"
+	RedisPassword = "XRF_Q0_REDIS_PASS"
+	RedisAddress  = "XRF_Q0_REDIS_ADDRESS"
 )
 
 // Error Constants

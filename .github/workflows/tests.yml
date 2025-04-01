@@ -64,9 +64,9 @@ jobs:
 
       - name: Build
         env:
-          XRF_REDIS_PASS: ""
-          XRF_REDIS_PORT: 6379
-          XRF_REDIS_ADDRESS: redis://localhost
+          XRF_Q0_REDIS_PASS: ""
+          XRF_Q0_REDIS_PORT: 6379
+          XRF_Q0_REDIS_ADDRESS: redis://localhost
           LOCAL_MONGO_URI: mongodb://localhost:27017
         run: go build -o bin/cli -v ./cmd/http/main.go
 

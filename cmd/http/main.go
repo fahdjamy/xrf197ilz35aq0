@@ -9,6 +9,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"strconv"
+	"xrf197ilz35aq0/internal/constants"
 	"xrf197ilz35aq0/internal/random"
 	"xrf197ilz35aq0/storage"
 
@@ -24,8 +25,7 @@ import (
 )
 
 const (
-	AuthSecretEnvKey = "XRF_AUTH_SECRET_KEY"
-	RedisAddress     = "XRF_REDIS_ADDRESS"
+	AuthSecretEnvKey = "XRF_Q0_AUTH_SECRET_KEY"
 )
 
 func main() {
@@ -62,7 +62,7 @@ func main() {
 
 	authSecret, exists := os.LookupEnv(AuthSecretEnvKey)
 	if !exists {
-		logger.Error(fmt.Sprintf("appStarted=false :: message='Missing _AUTH_SECRET_KEY'"))
+		logger.Error(fmt.Sprintf("appStarted=false :: message='Missing _Q0_AUTH_SECRET_KEY'"))
 		return
 	}
 
@@ -174,7 +174,7 @@ func connectRedis(config xrf.RedisConfig, logger internal.Logger) (*redis.Client
 
 	if redisAddress == "" {
 		logger.Error(fmt.Sprintf("event=connectRedis :: message='looking for redis address in environment..."))
-		redisAddressInEnv, ok := os.LookupEnv(RedisAddress)
+		redisAddressInEnv, ok := os.LookupEnv(constants.RedisAddress)
 		redisAddress = redisAddressInEnv
 		if !ok {
 			return &redis.Client{}, &xrfErr.Internal{
