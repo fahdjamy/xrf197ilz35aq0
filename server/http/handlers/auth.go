@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 	"xrf197ilz35aq0/core/service"
@@ -14,7 +13,6 @@ import (
 
 type AuthHandler struct {
 	logger         xrf.Logger
-	router         *mux.Router
 	userService    service.UserService
 	authService    service.AuthService
 	contextTimeout time.Duration
@@ -67,14 +65,13 @@ func (h *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) RegisterAndListen() {
-	h.router.HandleFunc("/api/v1/auth", h.getAuthToken).Methods(POST)
-	h.router.HandleFunc("/api/v1/auth/revoke", h.revokeToken).Methods(POST)
+	//h.router.HandleFunc("/api/v1/auth", h.getAuthToken).Methods(POST)
+	//h.router.HandleFunc("/api/v1/auth/revoke", h.revokeToken).Methods(POST)
 }
 
-func NewAuthHandler(logger xrf.Logger, services service.Services, router *mux.Router) *AuthHandler {
+func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {
 	return &AuthHandler{
 		logger:      logger,
-		router:      router,
 		userService: services.UserService,
 		authService: services.AuthService,
 	}

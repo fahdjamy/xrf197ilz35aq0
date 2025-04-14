@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"github.com/gorilla/mux"
 	"net/http"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
@@ -13,7 +12,6 @@ import (
 
 type PermissionHandler struct {
 	logger      xrf.Logger
-	router      *mux.Router
 	permService service.PermissionService
 }
 
@@ -43,13 +41,12 @@ func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *htt
 }
 
 func (handler *PermissionHandler) RegisterAndListen() {
-	handler.router.HandleFunc("/permission", handler.createPermission).Methods("POST")
+	//handler.router.HandleFunc("/permission", handler.createPermission).Methods("POST")
 }
 
-func NewPermHandler(logger xrf.Logger, router *mux.Router, service service.PermissionService) *PermissionHandler {
+func NewPermHandler(logger xrf.Logger, service service.PermissionService) *PermissionHandler {
 	return &PermissionHandler{
 		logger:      logger,
-		router:      router,
 		permService: service,
 	}
 }

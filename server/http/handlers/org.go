@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"time"
 	"xrf197ilz35aq0/core/service"
@@ -17,15 +16,13 @@ import (
 
 type OrgHandler struct {
 	logger     xrf.Logger
-	router     *mux.Router
 	orgService service.OrgService
 	authMiddle middleware.AuthenticationMiddleware
 }
 
-func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, router *mux.Router, authMiddle middleware.AuthenticationMiddleware) *OrgHandler {
+func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, authMiddle middleware.AuthenticationMiddleware) *OrgHandler {
 	return &OrgHandler{
 		logger:     logger,
-		router:     router,
 		orgService: orgService,
 		authMiddle: authMiddle,
 	}
@@ -139,12 +136,12 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 }
 
 func (handler *OrgHandler) RegisterAndListen() {
-	orgSubRoutes := handler.router.PathPrefix("/api/v1/org").Subrouter()
-
-	orgSubRoutes.HandleFunc("", handler.createOrg).Methods(POST)
-	orgSubRoutes.HandleFunc("/{orgId}", handler.getOrg).Methods(GET)
-	orgSubRoutes.HandleFunc("/{orgId}", handler.updateOrg).Methods(PUT)
-	orgSubRoutes.HandleFunc("/{orgId}/members", handler.findOrgMembers).Methods(GET)
-
-	orgSubRoutes.Use(handler.authMiddle.Handle)
+	//orgSubRoutes := handler.router.PathPrefix("/api/v1/org").Subrouter()
+	//
+	//orgSubRoutes.HandleFunc("", handler.createOrg).Methods(POST)
+	//orgSubRoutes.HandleFunc("/{orgId}", handler.getOrg).Methods(GET)
+	//orgSubRoutes.HandleFunc("/{orgId}", handler.updateOrg).Methods(PUT)
+	//orgSubRoutes.HandleFunc("/{orgId}/members", handler.findOrgMembers).Methods(GET)
+	//
+	//orgSubRoutes.Use(handler.authMiddle.Handle)
 }

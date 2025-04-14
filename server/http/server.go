@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,13 +13,11 @@ import (
 	"xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/server/http/handlers"
-	"xrf197ilz35aq0/server/http/middleware"
 	"xrf197ilz35aq0/storage"
 )
 
 type ApiServer struct {
 	started  bool
-	router   *mux.Router
 	logger   internal.Logger
 	ctx      context.Context
 	services service.Services
@@ -38,16 +35,16 @@ func (server *ApiServer) Start() {
 	}
 	started := time.Now()
 
-	loggerMiddleware := middleware.NewLoggerHandler(server.logger)
-	authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
+	//loggerMiddleware := middleware.NewLoggerHandler(server.logger)
+	//authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
 
 	// handlers
-	handlers.NewAuthHandler(server.logger, server.services, server.router).RegisterAndListen()
-	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
-	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
-	handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router, authMiddleware).RegisterAndListen()
+	//handlers.NewAuthHandler(server.logger, server.services, server.router).RegisterAndListen()
+	//handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
+	//handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
+	//handlers.NewOrgHandler(server.logger, server.services.OrgService, server.router, authMiddleware).RegisterAndListen()
 
-	server.router.Use(loggerMiddleware.Handler)
+	//server.router.Use(loggerMiddleware.Handler)
 
 	// start the server
 	appConfig := server.config.Application
@@ -59,7 +56,6 @@ func (server *ApiServer) Start() {
 		appConfig.GracefulTimeout.Seconds()))
 
 	svr := http.Server{
-		Handler:      server.router,
 		ReadTimeout:  appConfig.ReadTimeout,
 		WriteTimeout: appConfig.WriteTimeout,
 		IdleTimeout:  appConfig.IdleTimeout,
@@ -114,16 +110,6 @@ func (server *ApiServer) Stop() {
 		return
 	}
 	server.started = false
-}
-
-func NewHttpServer(logger internal.Logger, router *mux.Router, config xrf197ilz35aq0.Config, services service.Services, ctx context.Context) *ApiServer {
-	return &ApiServer{
-		ctx:      ctx,
-		logger:   logger,
-		router:   router,
-		config:   config,
-		services: services,
-	}
 }
 
 func SetUpHttpServer(logger internal.Logger, config xrf197ilz35aq0.Config, services service.Services, ctx context.Context) http.Handler {

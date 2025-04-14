@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
@@ -18,13 +17,11 @@ const (
 
 type UserHandler struct {
 	logger      xrf.Logger
-	router      *mux.Router
 	userService service.UserService
 }
 
-func NewUserHandler(logger xrf.Logger, userManager service.UserService, router *mux.Router) *UserHandler {
+func NewUserHandler(logger xrf.Logger, userManager service.UserService) *UserHandler {
 	return &UserHandler{
-		router:      router,
 		logger:      logger,
 		userService: userManager,
 	}
@@ -73,6 +70,6 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 }
 
 func (user *UserHandler) RegisterAndListen() {
-	user.router.HandleFunc("/api/v1/user", user.createUser).Methods(POST)
-	user.router.HandleFunc(fmt.Sprintf("/api/v1/user/{%s}", UserIdKey), user.getUserById).Methods(GET)
+	//user.router.HandleFunc("/api/v1/user", user.createUser).Methods(POST)
+	//user.router.HandleFunc(fmt.Sprintf("/api/v1/user/{%s}", UserIdKey), user.getUserById).Methods(GET)
 }

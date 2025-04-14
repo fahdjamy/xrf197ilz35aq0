@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/mux"
 	mongo2 "go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -20,7 +19,6 @@ import (
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/dependency"
 	xrfErr "xrf197ilz35aq0/internal/error"
-	"xrf197ilz35aq0/server/http"
 	"xrf197ilz35aq0/storage/mongo"
 )
 
@@ -135,7 +133,7 @@ func main() {
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
 
-	services := service.Services{
+	_ = service.Services{
 		OrgService:        orgService,
 		UserService:       userService,
 		AuthService:       authService,
@@ -143,9 +141,6 @@ func main() {
 	}
 
 	// create the router and start the server
-	router := mux.NewRouter().StrictSlash(true)
-	server := http.NewHttpServer(logger, router, config, services, backgroundCtx)
-	server.Start()
 }
 
 func mongoUri(config xrf.Config) (string, error) {
