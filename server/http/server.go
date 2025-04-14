@@ -42,7 +42,6 @@ func (server *ApiServer) Start() {
 	authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
 
 	// handlers
-	handlers.NewHealthRoutes(server.logger, server.router).RegisterAndListen()
 	handlers.NewAuthHandler(server.logger, server.services, server.router).RegisterAndListen()
 	handlers.NewUserHandler(server.logger, server.services.UserService, server.router).RegisterAndListen()
 	handlers.NewPermHandler(server.logger, server.router, server.services.PermissionService).RegisterAndListen()
@@ -125,4 +124,16 @@ func NewHttpServer(logger internal.Logger, router *mux.Router, config xrf197ilz3
 		config:   config,
 		services: services,
 	}
+}
+
+func SetUpHttpServer(logger internal.Logger, config xrf197ilz35aq0.Config, services service.Services, ctx context.Context) http.Handler {
+	httpMux := http.NewServeMux()
+	routes := make([]RoutesHandler, 0)
+
+	routes = append(routes, handlers.NewHealthRoutes(logger))
+	SetUpRoutes(httpMux, routes)
+
+	var handler http.Handler = httpMux
+
+	return handler
 }

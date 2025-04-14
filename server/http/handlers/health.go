@@ -2,18 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	xrf "xrf197ilz35aq0/internal"
 )
 
 type HealthRoutes struct {
 	logger xrf.Logger
-	router *mux.Router
-}
-
-func (hr *HealthRoutes) RegisterAndListen() {
-	hr.router.HandleFunc("/health", hr.healthCheck).Methods("GET")
 }
 
 func (hr *HealthRoutes) healthCheck(w http.ResponseWriter, _ *http.Request) {
@@ -25,9 +19,15 @@ func (hr *HealthRoutes) healthCheck(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func NewHealthRoutes(logger xrf.Logger, router *mux.Router) *HealthRoutes {
+func (hr *HealthRoutes) RegisterAndListen() {
+}
+
+func (hr *HealthRoutes) RegisterRoutes(mux *http.ServeMux) {
+	mux.Handle("GET /health", http.Handler(http.HandlerFunc(hr.healthCheck)))
+}
+
+func NewHealthRoutes(logger xrf.Logger) *HealthRoutes {
 	return &HealthRoutes{
 		logger: logger,
-		router: router,
 	}
 }
