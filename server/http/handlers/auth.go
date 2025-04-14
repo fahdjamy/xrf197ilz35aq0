@@ -12,10 +12,9 @@ import (
 )
 
 type AuthHandler struct {
-	logger         xrf.Logger
-	userService    service.UserService
-	authService    service.AuthService
-	contextTimeout time.Duration
+	logger      xrf.Logger
+	userService service.UserService
+	authService service.AuthService
 }
 
 func (h *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +49,7 @@ func (h *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), h.contextTimeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err = h.authService.RevokeToken(request.Token, ctx)
@@ -65,8 +64,8 @@ func (h *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	//h.router.HandleFunc("/api/v1/auth", h.getAuthToken).Methods(POST)
-	//h.router.HandleFunc("/api/v1/auth/revoke", h.revokeToken).Methods(POST)
+	serveMux.Handle("POST /api/v1/auth", http.Handler(http.HandlerFunc(h.getAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/revoke", http.Handler(http.HandlerFunc(h.revokeToken)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {
