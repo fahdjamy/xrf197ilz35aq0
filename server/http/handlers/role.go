@@ -40,7 +40,7 @@ func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *htt
 	response.WriteResponse(dataResp, w, handler.logger)
 }
 
-func (handler *PermissionHandler) RegisterAndListen() {
+func (handler *PermissionHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	//handler.router.HandleFunc("/permission", handler.createPermission).Methods("POST")
 }
 

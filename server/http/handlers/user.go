@@ -69,7 +69,7 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	response.WriteResponse(resp, w, user.logger)
 }
 
-func (user *UserHandler) RegisterAndListen() {
+func (user *UserHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	//user.router.HandleFunc("/api/v1/user", user.createUser).Methods(POST)
 	//user.router.HandleFunc(fmt.Sprintf("/api/v1/user/{%s}", UserIdKey), user.getUserById).Methods(GET)
 }

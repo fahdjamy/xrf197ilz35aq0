@@ -10,21 +10,18 @@ import (
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
 	"xrf197ilz35aq0/server/http/decoder"
-	"xrf197ilz35aq0/server/http/middleware"
 	"xrf197ilz35aq0/server/http/response"
 )
 
 type OrgHandler struct {
 	logger     xrf.Logger
 	orgService service.OrgService
-	authMiddle middleware.AuthenticationMiddleware
 }
 
-func NewOrgHandler(logger xrf.Logger, orgService service.OrgService, authMiddle middleware.AuthenticationMiddleware) *OrgHandler {
+func NewOrgHandler(logger xrf.Logger, orgService service.OrgService) *OrgHandler {
 	return &OrgHandler{
 		logger:     logger,
 		orgService: orgService,
-		authMiddle: authMiddle,
 	}
 }
 
@@ -135,7 +132,7 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 	response.WriteResponse(resp, w, handler.logger)
 }
 
-func (handler *OrgHandler) RegisterAndListen() {
+func (handler *OrgHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	//orgSubRoutes := handler.router.PathPrefix("/api/v1/org").Subrouter()
 	//
 	//orgSubRoutes.HandleFunc("", handler.createOrg).Methods(POST)

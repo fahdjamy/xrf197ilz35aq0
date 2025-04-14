@@ -22,8 +22,8 @@ func (hr *HealthRoutes) healthCheck(w http.ResponseWriter, _ *http.Request) {
 func (hr *HealthRoutes) RegisterAndListen() {
 }
 
-func (hr *HealthRoutes) RegisterRoutes(mux *http.ServeMux) {
-	mux.Handle("GET /health", http.Handler(http.HandlerFunc(hr.healthCheck)))
+func (hr *HealthRoutes) RegisterRoutes(serveMux *http.ServeMux) {
+	serveMux.Handle("GET /health", http.Handler(http.HandlerFunc(hr.healthCheck)))
 }
 
 func NewHealthRoutes(logger xrf.Logger) *HealthRoutes {

@@ -64,7 +64,7 @@ func (h *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(resp, w, h.logger)
 }
 
-func (h *AuthHandler) RegisterAndListen() {
+func (h *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	//h.router.HandleFunc("/api/v1/auth", h.getAuthToken).Methods(POST)
 	//h.router.HandleFunc("/api/v1/auth/revoke", h.revokeToken).Methods(POST)
 }
