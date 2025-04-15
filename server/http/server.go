@@ -14,33 +14,8 @@ import (
 	"xrf197ilz35aq0/server/http/handlers"
 )
 
-func RunServer(logger internal.Logger, config xrf197ilz35aq0.Config, services service.Services) {
+func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, svr *http.Server) {
 	started := time.Now()
-
-	//loggerMiddleware := middleware.NewLoggerHandler(server.logger)
-	//authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
-
-	//server.router.Use(loggerMiddleware.Handler)
-
-	// start the server
-	appConfig := config.Application
-
-	logger.Debug(fmt.Sprintf("timeouts :: readTO=%.2f :: writeTO=%.2f :: idleTO=%.2f :: graceShutdown=%.2f",
-		appConfig.ReadTimeout.Seconds(),
-		appConfig.WriteTimeout.Seconds(),
-		appConfig.IdleTimeout.Seconds(),
-		appConfig.GracefulTimeout.Seconds()))
-
-	httpMux := http.NewServeMux()
-	handlers.SetupHandlers(httpMux, logger, services)
-
-	svr := http.Server{
-		Handler:      httpMux,
-		ReadTimeout:  appConfig.ReadTimeout,
-		WriteTimeout: appConfig.WriteTimeout,
-		IdleTimeout:  appConfig.IdleTimeout,
-		Addr:         fmt.Sprintf(":%d", appConfig.Port),
-	}
 
 	// Run the server in a goroutine so that it doesn't block.
 	go func() {
@@ -51,7 +26,7 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.Config, services se
 	}()
 
 	timeTaken := time.Since(started).Milliseconds()
-	logger.Info(fmt.Sprintf("serverStarted=true :: port=%d :: timeTaken='%d ms' message='application running...'", appConfig.Port, timeTaken))
+	logger.Info(fmt.Sprintf("serverStarted=true :: port=%d :: timeTaken='%d ms' message='application running...'", config.Port, timeTaken))
 
 	ch := make(chan os.Signal, 1)
 	// Accept graceful shutdowns when quit via SIGINT (Ctrl+C)
@@ -62,7 +37,7 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.Config, services se
 	<-ch
 
 	// Create a deadline context to wait for.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*appConfig.ReadTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*config.ReadTimeout)
 	defer func() {
 		cancel()
 	}()
@@ -80,4 +55,31 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.Config, services se
 
 	logger.Info(fmt.Sprintf("serverShutdown=success"))
 	os.Exit(0)
+}
+
+func CreateServer(logger internal.Logger, services service.Services, config xrf197ilz35aq0.ApplicationConfig) *http.Server {
+	idleTimeout := config.IdleTimeout.Seconds()
+	readTimeout := config.ReadTimeout.Seconds()
+	writeTimeout := config.WriteTimeout.Seconds()
+	gracefulTimeout := config.GracefulTimeout.Seconds()
+
+	logger.Debug(fmt.Sprintf("timeouts :: readTO=%.2f :: writeTO=%.2f :: idleTO=%.2f :: graceShutdown=%.2f",
+		readTimeout,
+		writeTimeout,
+		idleTimeout,
+		gracefulTimeout))
+
+	// 1. create mux server
+	httpMux := http.NewServeMux()
+
+	// 2. register handlers
+	handlers.SetupHandlers(httpMux, logger, services)
+
+	return &http.Server{
+		Handler:      httpMux,
+		ReadTimeout:  config.ReadTimeout,
+		WriteTimeout: config.WriteTimeout,
+		IdleTimeout:  config.IdleTimeout,
+		Addr:         fmt.Sprintf(":%d", config.Port),
+	}
 }

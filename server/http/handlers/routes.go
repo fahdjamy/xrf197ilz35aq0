@@ -6,8 +6,16 @@ import (
 	"xrf197ilz35aq0/internal"
 )
 
+// SetupHandlers creates route handlers and calls their RoutesHandler#RegisterRoutes methods for each handler to
+// individually set up their own routes and call the necessary handlers
 func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services service.Services) {
 	routes := make([]RoutesHandler, 0)
+
+	// TODO: Add middlewares
+	//loggerMiddleware := middleware.NewLoggerHandler(server.logger)
+	//authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
+
+	//server.router.Use(loggerMiddleware.Handler)
 
 	// create handlers
 	healthRoutesHandler := NewHealthRoutes(logger)

@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"xrf197ilz35aq0/internal/constants"
 	"xrf197ilz35aq0/internal/random"
+	"xrf197ilz35aq0/server/http"
 	"xrf197ilz35aq0/storage"
 
 	"github.com/redis/go-redis/v9"
@@ -133,14 +134,17 @@ func main() {
 	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
 	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
 
-	_ = service.Services{
+	services := service.Services{
 		OrgService:        orgService,
 		UserService:       userService,
 		AuthService:       authService,
 		PermissionService: permService,
 	}
 
-	// create the router and start the server
+	// create the server
+	server := http.CreateServer(logger, services, config.Application)
+	// start the server to listen
+	http.RunServer(logger, config.Application, server)
 }
 
 func mongoUri(config xrf.Config) (string, error) {
