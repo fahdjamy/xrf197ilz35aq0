@@ -41,7 +41,7 @@ func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *htt
 }
 
 func (handler *PermissionHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	//handler.router.HandleFunc("/permission", handler.createPermission).Methods("POST")
+	serveMux.HandleFunc("POST /api/v1/permission", handler.createPermission)
 }
 
 func NewPermHandler(logger xrf.Logger, service service.PermissionService) *PermissionHandler {

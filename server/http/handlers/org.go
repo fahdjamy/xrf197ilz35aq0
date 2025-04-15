@@ -133,12 +133,12 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 }
 
 func (handler *OrgHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	//orgSubRoutes := handler.router.PathPrefix("/api/v1/org").Subrouter()
-	//
-	//orgSubRoutes.HandleFunc("", handler.createOrg).Methods(POST)
-	//orgSubRoutes.HandleFunc("/{orgId}", handler.getOrg).Methods(GET)
-	//orgSubRoutes.HandleFunc("/{orgId}", handler.updateOrg).Methods(PUT)
-	//orgSubRoutes.HandleFunc("/{orgId}/members", handler.findOrgMembers).Methods(GET)
-	//
+	orgPathV1Prefix := "/api/v1/org"
+
+	serveMux.HandleFunc("POST "+orgPathV1Prefix+"", handler.createOrg)
+	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}", handler.getOrg)
+	serveMux.HandleFunc("PUT "+orgPathV1Prefix+"/{orgId}", handler.updateOrg)
+	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}/members", handler.findOrgMembers)
+
 	//orgSubRoutes.Use(handler.authMiddle.Handle)
 }
