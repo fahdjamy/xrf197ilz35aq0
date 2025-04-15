@@ -70,6 +70,6 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 }
 
 func (user *UserHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	//user.router.HandleFunc("/api/v1/user", user.createUser).Methods(POST)
-	//user.router.HandleFunc(fmt.Sprintf("/api/v1/user/{%s}", UserIdKey), user.getUserById).Methods(GET)
+	serveMux.HandleFunc("POST /api/v1/user", user.createUser)
+	serveMux.HandleFunc("GET /api/v1/user/{userId}", user.getUserById)
 }
