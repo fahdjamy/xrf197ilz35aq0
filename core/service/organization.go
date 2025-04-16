@@ -44,6 +44,7 @@ func (os *organizationService) GetDefaultOrg(ctx context.Context) (*org.Organiza
 func (os *organizationService) CreateDefaultOrg(ctx context.Context) (*org.Organization, error) {
 	savedDefaultOrg, _ := os.GetDefaultOrg(ctx)
 	if savedDefaultOrg != nil {
+		os.log.Warn("default org already exists")
 		return savedDefaultOrg, nil
 	}
 
@@ -51,8 +52,10 @@ func (os *organizationService) CreateDefaultOrg(ctx context.Context) (*org.Organ
 
 	_, err := os.orgRepo.Create(newOrg, ctx)
 	if err != nil {
+		os.log.Error("!!! failed to create default org !!!")
 		return newOrg, err
 	}
+	os.log.Info("... default org created successfully ...")
 	return newOrg, nil
 }
 

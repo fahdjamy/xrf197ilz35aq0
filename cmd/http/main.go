@@ -8,6 +8,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"strconv"
+	"time"
 	"xrf197ilz35aq0/internal/constants"
 	"xrf197ilz35aq0/internal/random"
 	"xrf197ilz35aq0/server/http"
@@ -142,8 +143,22 @@ func main() {
 		PermissionService: permService,
 	}
 
+	// create default org
+	createDefaultOrgCtx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
+	defaultOrg, err := orgService.CreateDefaultOrg(createDefaultOrgCtx)
+	if err != nil {
+		// don't start the app if the default org is not created
+		cancelFunc()
+		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
+		return
+	} else {
+		cancelFunc()
+		logger.Info(fmt.Sprintf("defaultOrgId=%s", defaultOrg.Id))
+	}
+
 	// create the server
 	server := http.CreateServer(logger, services, config.Application)
+
 	// start the server to listen
 	http.RunServer(logger, config.Application, server)
 }

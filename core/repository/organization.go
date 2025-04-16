@@ -51,7 +51,11 @@ func (repo *orgRepo) GetOrgById(id string, ctx context.Context) (*org.Organizati
 	externalError := &xrfErr.External{}
 	internalErr.Source = "core/repository/organization#getOrgById"
 
-	filter := bson.M{constants.OrgId: id, constants.IsAnonymous: false}
+	filter := bson.M{
+		constants.OrgId:       id,
+		constants.IsAnonymous: false,
+		constants.NAME:        bson.D{{"$nin", bson.A{strings.ToLower(constants.DefaultOrgName)}}},
+	}
 
 	var result org.Organization
 	resp := repo.db.Collection(constants.OrgCollection).FindOne(ctx, filter)
