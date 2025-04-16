@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
 )
@@ -48,16 +49,31 @@ func CreateOrganization(name string, category string, desc string, anonymous boo
 	orgId := createOrgId()
 
 	return &Organization{
-		Id:          orgId,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		Description: desc,
 		DisplayName: name,
+		Id:          orgId,
 		Members:     members,
 		Category:    category,
 		IsAnonymous: anonymous,
 		Name:        strings.ToLower(name),
 	}, nil
+}
+
+func CreateDefaultOrg() *Organization {
+	now := time.Now()
+	return &Organization{
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		IsAnonymous: false,
+		Category:    "ALL",
+		DisplayName: "DEFAULT",
+		Id:          createOrgId(),
+		Members:     make(map[string]Member),
+		Name:        strings.ToLower(constants.DefaultOrgName),
+		Description: "The default org will be assigned to any asset for which the owner chose not to assign an organization to",
+	}
 }
 
 func CreateMember(userFp string, isOwner bool, permissions []string) *Member {

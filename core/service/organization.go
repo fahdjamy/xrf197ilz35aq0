@@ -15,6 +15,8 @@ import (
 )
 
 type OrgService interface {
+	GetDefaultOrg(ctx context.Context) (*org.Organization, error)
+	CreateDefaultOrg(ctx context.Context) (*org.Organization, error)
 	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
 	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
 	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
@@ -28,6 +30,26 @@ type organizationService struct {
 	userRepo       repository.UserRepository
 	permissionRepo repository.PermissionRepository
 	orgRepo        repository.OrganizationRepository
+}
+
+func (os *organizationService) GetDefaultOrg(ctx context.Context) (*org.Organization, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (os *organizationService) CreateDefaultOrg(ctx context.Context) (*org.Organization, error) {
+	savedDefaultOrg, _ := os.GetDefaultOrg(ctx)
+	if savedDefaultOrg != nil {
+		return savedDefaultOrg, nil
+	}
+
+	newOrg := org.CreateDefaultOrg()
+
+	_, err := os.orgRepo.Create(newOrg, ctx)
+	if err != nil {
+		return newOrg, err
+	}
+	return newOrg, nil
 }
 
 func (os *organizationService) UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {

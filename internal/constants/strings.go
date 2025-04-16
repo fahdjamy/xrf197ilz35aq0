@@ -21,6 +21,12 @@ const (
 	RedisAddress  = "XRF_Q0_REDIS_ADDRESS"
 )
 
+// Reserved string values
+
+const (
+	DefaultOrgName = "XRF_ILZ_DEFAULT"
+)
+
 // Error Constants
 
 const (
