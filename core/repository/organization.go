@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"strings"
 	"time"
 	"xrf197ilz35aq0/core/model/org"
 	"xrf197ilz35aq0/internal"
@@ -15,6 +16,7 @@ import (
 
 type OrganizationRepository interface {
 	GetOrgById(id string, ctx context.Context) (*org.Organization, error)
+	FindByName(ctx context.Context, name string) (*org.Organization, error)
 	Create(organization *org.Organization, ctx context.Context) (string, error)
 	UpdateOrgById(id string, org *org.Organization, ctx context.Context) (bool, error)
 }
@@ -104,6 +106,34 @@ func (repo *orgRepo) UpdateOrgById(id string, org *org.Organization, ctx context
 	}
 
 	return true, nil
+}
+
+func (repo *orgRepo) FindByName(ctx context.Context, name string) (*org.Organization, error) {
+	internalErr := &xrfErr.Internal{}
+	externalError := &xrfErr.External{}
+	internalErr.Source = "core/repository/organization#findByName"
+
+	filter := bson.M{constants.NAME: strings.ToLower(name), constants.IsAnonymous: false}
+
+	var result org.Organization
+	resp := repo.db.Collection(constants.OrgCollection).FindOne(ctx, filter)
+
+	if resp.Err() != nil {
+		if errors.Is(resp.Err(), mongo.ErrNoDocuments) {
+			externalError.Message = constants.NotFoundOrgErrMsg
+			externalError.Err = errors.New(constants.NotFoundOrgErrMsg)
+			return nil, externalError
+		}
+		return nil, resp.Err()
+	}
+
+	if err := resp.Decode(&result); err != nil {
+		internalErr.Err = err
+		internalErr.Message = "Failed to decode org object"
+		repo.log.Error(fmt.Sprintf("event=mongoDBFailure :: action=findByName :: err=%s", err))
+		return nil, internalErr
+	}
+	return &result, nil
 }
 
 func NewOrganizationRepository(db *mongo.Database, log internal.Logger) (OrganizationRepository, error) {

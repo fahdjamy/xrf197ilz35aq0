@@ -35,7 +35,6 @@ const (
 )
 
 const ContentType = "Content-Type"
-const SlashAPI = SLASH + API // "/api"
 const ContentTypeJson = "application/json"
 
 // Mongo Collections

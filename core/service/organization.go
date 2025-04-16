@@ -10,6 +10,7 @@ import (
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
 )
@@ -33,8 +34,11 @@ type organizationService struct {
 }
 
 func (os *organizationService) GetDefaultOrg(ctx context.Context) (*org.Organization, error) {
-	//TODO implement me
-	panic("implement me")
+	savedOrg, err := os.orgRepo.FindByName(ctx, constants.DefaultOrgName)
+	if err != nil {
+		return nil, err
+	}
+	return savedOrg, nil
 }
 
 func (os *organizationService) CreateDefaultOrg(ctx context.Context) (*org.Organization, error) {
@@ -359,6 +363,10 @@ func validateOrgName(name string) error {
 	externalErr := &xrfErr.External{Source: "service/organization#validateOrgName"}
 	if name == "" || len(name) < 3 || len(name) > 255 {
 		externalErr.Message = "Org name must be between 3 and 255 characters"
+		return externalErr
+	}
+	if name == constants.DefaultOrgName {
+		externalErr.Message = constants.DuplicateNameDBErr
 		return externalErr
 	}
 	return nil
