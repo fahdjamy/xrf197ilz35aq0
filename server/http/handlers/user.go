@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
 	xrfErr "xrf197ilz35aq0/internal/error"
@@ -37,7 +39,10 @@ func (user *UserHandler) createUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// create a user
-	userResp, err := user.userService.CreateUser(&userReq)
+	ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
+	defer cancel()
+
+	userResp, err := user.userService.CreateUser(ctx, &userReq)
 	if err != nil {
 		response.WriteErrorResponse(err, w, user.logger)
 		return
@@ -58,7 +63,9 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	}
 	user.logger.Debug(fmt.Sprintf("event=getUserBy id :: userId=%s", userId))
 
-	userResp, err := user.userService.GetUserById(userId)
+	ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
+	defer cancel()
+	userResp, err := user.userService.GetUserById(ctx, userId)
 
 	if err != nil {
 		response.WriteErrorResponse(err, w, user.logger)

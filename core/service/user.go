@@ -26,20 +26,19 @@ var internalError *xrfErr.Internal
 
 // UserService is a port (Driven side)
 type UserService interface {
-	GetUserById(userId string) (*exchange.UserResponse, error)
-	CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error)
+	GetUserById(ctx context.Context, userId string) (*exchange.UserResponse, error)
+	CreateUser(ctx context.Context, request *exchange.UserRequest) (*exchange.UserResponse, error)
 }
 
 type service struct {
 	log             internal.Logger
 	config          xrf.Security
 	settingsService SettingsService
-	ctx             context.Context
 	userRepo        repository.UserRepository
 	orgService      OrgService
 }
 
-func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
+func (uc *service) CreateUser(ctx context.Context, request *exchange.UserRequest) (*exchange.UserResponse, error) {
 	internalError = &xrfErr.Internal{}
 	internalError.Source = "core/service/user/user#createUser"
 
@@ -66,7 +65,7 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 
 	// SAVE-USER/DB: ACTION 1 - save user and settings to database
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%s", newUser.FingerPrint[:7], newUser.Id))
-	_, err = uc.userRepo.CreateUser(newUser, uc.ctx)
+	_, err = uc.userRepo.CreateUser(newUser, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +90,8 @@ func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResp
 	return userResponse, nil
 }
 
-func (uc *service) GetUserById(userId string) (*exchange.UserResponse, error) {
-	userResponse, err := uc.userRepo.GetUserById(userId, uc.ctx)
+func (uc *service) GetUserById(ctx context.Context, userId string) (*exchange.UserResponse, error) {
+	userResponse, err := uc.userRepo.GetUserById(userId, ctx)
 	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=getUserByIdFromDB :: userId=%s", userId))
 	if err != nil {
 		uc.log.Error(fmt.Sprintf("event=getUserById :: action=getUserByIdFailure :: err=%v", err))
@@ -232,16 +231,12 @@ func NewUserService(
 	log internal.Logger,
 	userSettings SettingsService,
 	userRepo repository.UserRepository,
-	ctx context.Context,
-	config xrf.Security,
-	orgService OrgService) UserService {
+	config xrf.Security) UserService {
 
 	return &service{
-		ctx:             ctx,
 		log:             log,
 		config:          config,
 		userRepo:        userRepo,
-		orgService:      orgService,
 		settingsService: userSettings,
 	}
 }
