@@ -36,6 +36,7 @@ type service struct {
 	settingsService SettingsService
 	ctx             context.Context
 	userRepo        repository.UserRepository
+	orgService      OrgService
 }
 
 func (uc *service) CreateUser(request *exchange.UserRequest) (*exchange.UserResponse, error) {
@@ -231,13 +232,16 @@ func NewUserService(
 	log internal.Logger,
 	userSettings SettingsService,
 	userRepo repository.UserRepository,
-	ctx context.Context, config xrf.Security) UserService {
+	ctx context.Context,
+	config xrf.Security,
+	orgService OrgService) UserService {
 
 	return &service{
 		ctx:             ctx,
 		log:             log,
 		config:          config,
 		userRepo:        userRepo,
+		orgService:      orgService,
 		settingsService: userSettings,
 	}
 }

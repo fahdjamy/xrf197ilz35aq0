@@ -131,7 +131,7 @@ func main() {
 	permService := service.NewPermissionService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
-	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security)
+	userService := service.NewUserService(logger, settingsService, userRepo, backgroundCtx, config.Security, orgService)
 	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
 
 	services := service.Services{

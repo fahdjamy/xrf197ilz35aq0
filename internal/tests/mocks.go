@@ -5,6 +5,7 @@ import (
 	"io"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
+	"xrf197ilz35aq0/internal/exchange"
 )
 
 // MockFileDataCopier for os.Open
@@ -138,4 +139,39 @@ func NewSettingsRepositoryMock() repository.SettingsRepository {
 	return &settingsRepositoryMock{
 		Called: make(map[string]int),
 	}
+}
+
+type OrgServiceMock struct {
+	Called map[string]int
+}
+
+func NewOrgServiceMock() *OrgServiceMock {
+	return &OrgServiceMock{
+		Called: make(map[string]int),
+	}
+}
+
+func (o OrgServiceMock) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (o OrgServiceMock) GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (o OrgServiceMock) FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (o OrgServiceMock) UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (o OrgServiceMock) UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
