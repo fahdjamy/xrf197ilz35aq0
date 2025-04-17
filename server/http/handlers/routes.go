@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"xrf197ilz35aq0/core/service"
 	"xrf197ilz35aq0/internal"
+	"xrf197ilz35aq0/server/http/middleware"
 )
 
 // SetupHandlers creates route handlers and calls their RoutesHandler#RegisterRoutes methods for each handler to
 // individually set up their own routes and call the necessary handlers
-func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services service.Services) {
+func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services service.Services) http.Handler {
 	routes := make([]RoutesHandler, 0)
 
 	// TODO: Add middlewares
@@ -34,6 +35,15 @@ func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services ser
 	for _, handler := range routes {
 		handler.RegisterRoutes(serveMux)
 	}
+
+	loggerMiddleware := middleware.NewLoggerHandler(logger)
+
+	// wrap entire mux with middleware
+	authMiddleware := middleware.NewAuthenticationMiddleware(logger, services.AuthService)
+	wrappedServer := loggerMiddleware.Handler(serveMux)
+	wrappedServer = authMiddleware.Handle(wrappedServer)
+
+	return wrappedServer
 }
 
 type RoutesHandler interface {

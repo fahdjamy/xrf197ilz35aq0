@@ -58,25 +58,25 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, 
 }
 
 func CreateServer(logger internal.Logger, services service.Services, config xrf197ilz35aq0.ApplicationConfig) *http.Server {
-	idleTimeout := config.IdleTimeout.Seconds()
-	readTimeout := config.ReadTimeout.Seconds()
-	writeTimeout := config.WriteTimeout.Seconds()
-	gracefulTimeout := config.GracefulTimeout.Seconds()
+	idleTimeout := config.IdleTimeout
+	readTimeout := config.ReadTimeout
+	writeTimeout := config.WriteTimeout
+	gracefulTimeout := config.GracefulTimeout
 
 	logger.Debug(fmt.Sprintf("timeouts :: readTO=%.2f :: writeTO=%.2f :: idleTO=%.2f :: graceShutdown=%.2f",
 		readTimeout,
 		writeTimeout,
-		idleTimeout,
+		idleTimeout.Seconds(),
 		gracefulTimeout))
 
 	// 1. create mux server
 	httpMux := http.NewServeMux()
 
 	// 2. register handlers
-	handlers.SetupHandlers(httpMux, logger, services)
+	server := handlers.SetupHandlers(httpMux, logger, services)
 
 	return &http.Server{
-		Handler:      httpMux,
+		Handler:      server,
 		ReadTimeout:  config.ReadTimeout,
 		WriteTimeout: config.WriteTimeout,
 		IdleTimeout:  config.IdleTimeout,
