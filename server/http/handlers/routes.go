@@ -12,12 +12,6 @@ import (
 func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services service.Services) http.Handler {
 	routes := make([]RoutesHandler, 0)
 
-	// TODO: Add middlewares
-	//loggerMiddleware := middleware.NewLoggerHandler(server.logger)
-	//authMiddleware := middleware.NewAuthenticationMiddleware(server.logger, server.services.AuthService)
-
-	//server.router.Use(loggerMiddleware.Handler)
-
 	// create handlers
 	healthRoutesHandler := NewHealthRoutes(logger)
 	authRoutesHandler := NewAuthHandler(logger, services)
