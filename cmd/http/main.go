@@ -29,7 +29,7 @@ const (
 )
 
 func main() {
-	// get the globally set environment variables
+	// get the app's globally set environment variables
 	environment := internal.GetEnvironment()
 	serverId := random.PositiveInt64()
 
@@ -143,17 +143,24 @@ func main() {
 		PermissionService: permService,
 	}
 
+	ch := make(chan error)
 	// create default org
-	createDefaultOrgCtx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
-	defaultOrg, err := orgService.CreateDefaultOrg(createDefaultOrgCtx)
+	go func(ch chan<- error) {
+		defaultOrgCtx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancelFunc()
+
+		defaultOrg, err := orgService.CreateDefaultOrg(defaultOrgCtx)
+		if err != nil {
+			ch <- fmt.Errorf("message=failed to create default org :: err=%s", err.Error())
+		} else {
+			logger.Info(fmt.Sprintf("defaultOrgId=%s", defaultOrg.Id))
+			ch <- nil
+		}
+	}(ch)
+
+	err = <-ch
 	if err != nil {
-		// don't start the app if the default org is not created
-		cancelFunc()
-		logger.Error(fmt.Sprintf("appStarted=false :: err%s", err.Error()))
-		return
-	} else {
-		cancelFunc()
-		logger.Info(fmt.Sprintf("defaultOrgId=%s", defaultOrg.Id))
+		logger.Error(err.Error())
 	}
 
 	// create the server
