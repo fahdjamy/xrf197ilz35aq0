@@ -133,16 +133,6 @@ func main() {
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
 	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
 
-	userService := service.NewUserService(logger, settingsService, userRepo, config.Security)
-	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
-
-	services := service.Services{
-		OrgService:        orgService,
-		UserService:       userService,
-		AuthService:       authService,
-		PermissionService: permService,
-	}
-
 	ch := make(chan error)
 	// create default org
 	go func(ch chan<- error) {
@@ -158,6 +148,16 @@ func main() {
 		}
 	}(ch)
 
+	userService := service.NewUserService(logger, settingsService, userRepo, config.Security)
+	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
+
+	services := service.Services{
+		OrgService:        orgService,
+		UserService:       userService,
+		AuthService:       authService,
+		PermissionService: permService,
+	}
+
 	err = <-ch
 	if err != nil {
 		logger.Error(err.Error())
@@ -167,7 +167,7 @@ func main() {
 	server := http.CreateServer(logger, services, config.Application)
 
 	// start the server to listen
-	http.RunServer(logger, config.Application, server)
+	http.RunServer(logger, config.Application, server, serverId)
 }
 
 func mongoUri(config xrf.Config) (string, error) {

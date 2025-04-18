@@ -34,8 +34,9 @@ func SetupHandlers(serveMux *http.ServeMux, logger internal.Logger, services ser
 
 	// wrap entire mux with middleware
 	authMiddleware := middleware.NewAuthenticationMiddleware(logger, services.AuthService)
-	wrappedServer := loggerMiddleware.Handler(serveMux)
-	wrappedServer = authMiddleware.Handle(wrappedServer)
+	wrappedServer := authMiddleware.Handler(serveMux)
+	// should be the last wrapping handler
+	wrappedServer = loggerMiddleware.Handler(wrappedServer)
 
 	return wrappedServer
 }

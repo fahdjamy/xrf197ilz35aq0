@@ -140,5 +140,5 @@ func (handler *OrgHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	serveMux.HandleFunc("PUT "+orgPathV1Prefix+"/{orgId}", handler.updateOrg)
 	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}/members", handler.findOrgMembers)
 
-	//orgSubRoutes.Use(handler.authMiddle.Handle)
+	//orgSubRoutes.Use(handler.authMiddle.Handler)
 }

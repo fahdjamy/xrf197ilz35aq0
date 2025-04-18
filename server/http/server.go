@@ -14,7 +14,7 @@ import (
 	"xrf197ilz35aq0/server/http/handlers"
 )
 
-func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, svr *http.Server) {
+func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, svr *http.Server, serverId int64) {
 	started := time.Now()
 
 	// Run the server in a goroutine so that it doesn't block.
@@ -45,6 +45,7 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, 
 	// Doesn't block if no connections, but will otherwise wait
 	// until the timeout deadline.
 	err := svr.Shutdown(ctx)
+	logger.SetPrefix(fmt.Sprintf("requestId='%d||shutting'", serverId))
 	if err != nil {
 		logger.Error(fmt.Sprintf("serverShutdown=failure :: %s", err))
 		os.Exit(1)

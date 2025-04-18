@@ -75,6 +75,8 @@ func (lh *LoggerHandler) Handler(next http.Handler) http.Handler {
 				wrappedWriter.status,
 				int(duration.Milliseconds())))
 		}
+
+		lh.logger.SetPrefix(fmt.Sprintf("requestId='idleWaitingState'"))
 	})
 }
 
