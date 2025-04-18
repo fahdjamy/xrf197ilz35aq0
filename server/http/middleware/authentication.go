@@ -41,12 +41,16 @@ func (m *AuthenticationMiddleware) Handle(next http.Handler) http.Handler {
 }
 
 func (m *AuthenticationMiddleware) shouldCheckRouteAuth(r *http.Request) bool {
-	unCheckedRoutes := make(map[string]struct{})
-	unCheckedRoutes["/health"] = struct{}{}
+	unCheckedRoutes := make(map[string]string)
+	unCheckedRoutes["/health"] = "ANY"
+	unCheckedRoutes["/api/v1/user"] = "POST"
+	unCheckedRoutes["/api/v1/auth"] = "POST"
 
 	route := r.URL.Path
 
-	if _, ok := unCheckedRoutes[route]; !ok {
+	method, ok := unCheckedRoutes[route]
+
+	if !ok || (method == "" || method != "ANY" && method != r.Method) {
 		return true
 	}
 
