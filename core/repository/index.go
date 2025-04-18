@@ -27,7 +27,7 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 	cursor, err := collection.Indexes().List(ctx)
 	if err != nil {
 		log.Error(fmt.Sprintf("Failed to list indexes for collection '%s': %v", colName, err))
-		// Handle the error appropriately (e.g., exit)
+		// Handler the error appropriately (e.g., exit)
 	}
 	defer cursor.Close(ctx)
 
@@ -36,7 +36,7 @@ func createUniqueIndex(db *mongo.Database, log internal.Logger, ctx context.Cont
 		var index bson.M
 		if err := cursor.Decode(&index); err != nil {
 			log.Error(fmt.Sprintf("Failed to decode index data: %v", err))
-			// Handle the error appropriately
+			// Handler the error appropriately
 			internalErr.Err = err
 			internalErr.Message = "Failed to decode index data"
 			return internalErr

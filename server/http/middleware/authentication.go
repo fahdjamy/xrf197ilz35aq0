@@ -17,7 +17,7 @@ type AuthenticationMiddleware struct {
 	authService service.AuthService
 }
 
-func (m *AuthenticationMiddleware) Handle(next http.Handler) http.Handler {
+func (m *AuthenticationMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m.shouldCheckRouteAuth(r) {
 			authToken := r.Header.Get(XrfAuthToken)
