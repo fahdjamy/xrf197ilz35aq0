@@ -8,6 +8,7 @@ import (
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/exchange"
 	"xrf197ilz35aq0/server/http/decoder"
+	"xrf197ilz35aq0/server/http/middleware"
 	"xrf197ilz35aq0/server/http/response"
 )
 
@@ -17,17 +18,17 @@ type AuthHandler struct {
 	authService service.AuthService
 }
 
-func (h *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
+func (auth *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 	var request exchange.AuthRequest
 	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
-		response.WriteErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, auth.logger)
 		return
 	}
 
-	tokenResp, err := h.authService.Authenticate(&request, context.Background())
+	tokenResp, err := auth.authService.Authenticate(&request, context.Background())
 	if err != nil {
-		response.WriteErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, auth.logger)
 		return
 	}
 	resp := response.DataResponse{
@@ -38,34 +39,34 @@ func (h *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 			Token: tokenResp,
 		},
 	}
-	response.WriteResponse(resp, w, h.logger)
+	response.WriteResponse(resp, w, auth.logger)
 }
 
-func (h *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
+func (auth *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	var request exchange.RevokeTokenRequest
 	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
-		response.WriteErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, auth.logger)
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err = h.authService.RevokeToken(request.Token, ctx)
+	err = auth.authService.RevokeToken(request.Token, ctx)
 	if err != nil {
-		response.WriteErrorResponse(err, w, h.logger)
+		response.WriteErrorResponse(err, w, auth.logger)
 		return
 	}
 	resp := response.DataResponse{
 		Code: 200,
 	}
-	response.WriteResponse(resp, w, h.logger)
+	response.WriteResponse(resp, w, auth.logger)
 }
 
-func (h *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	serveMux.Handle("POST /api/v1/auth", http.Handler(http.HandlerFunc(h.getAuthToken)))
-	serveMux.Handle("POST /api/v1/auth/revoke", http.Handler(http.HandlerFunc(h.revokeToken)))
+func (auth *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
+	serveMux.Handle("POST /api/v1/auth", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {

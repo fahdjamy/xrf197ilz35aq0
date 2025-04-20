@@ -35,7 +35,7 @@ const (
 )
 
 const ContentType = "Content-Type"
-const ContentTypeJson = "application/json"
+const ApplicationJson = "application/json"
 
 // Mongo Collections
 

@@ -33,7 +33,7 @@ func WriteResponse(data DataResponse, w http.ResponseWriter, logger xrf.Logger) 
 }
 
 func WritePaginatedResponse(data DataResponse, pag *pagination, w http.ResponseWriter, logger xrf.Logger) {
-	w.Header().Set(constants.ContentType, constants.ContentTypeJson)
+	w.Header().Set(constants.ContentType, constants.ApplicationJson)
 	w.WriteHeader(data.Code)
 
 	if pag == nil {
@@ -83,7 +83,7 @@ func WriteErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 		msg = "Something went wrong"
 	}
 
-	w.Header().Set(constants.ContentType, constants.ContentTypeJson)
+	w.Header().Set(constants.ContentType, constants.ApplicationJson)
 	w.WriteHeader(statusCode)
 
 	errResp := errorResponse{Error: msg, Code: statusCode}

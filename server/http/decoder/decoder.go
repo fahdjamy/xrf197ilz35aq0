@@ -25,8 +25,8 @@ func DecodeJSONBody[T any](r *http.Request, dst *T) error {
 	ct := r.Header.Get(constants.ContentType)
 	if ct != constants.EMPTY {
 		mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
-		if mediaType != constants.ContentTypeJson {
-			msg := fmt.Sprintf("Content-Type header is not %s", constants.ContentTypeJson)
+		if mediaType != constants.ApplicationJson {
+			msg := fmt.Sprintf("Content-Type header is not %s", constants.ApplicationJson)
 			return &Err{Status: http.StatusUnsupportedMediaType, Msg: msg}
 		}
 	}
