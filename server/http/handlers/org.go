@@ -89,10 +89,7 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	orgId, isValid := getAndValidateId(r, "orgId")
 	if !isValid {
-		externalError := &xrfErr.External{
-			Code:    404,
-			Message: "invalid org id",
-		}
+		externalError := &xrfErr.External{Code: 404, Message: "invalid org id"}
 		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
@@ -112,9 +109,7 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request) {
 	orgId, isValid := getAndValidateId(r, "orgId")
 	if !isValid {
-		externalError := &xrfErr.External{
-			Message: "invalid org id",
-		}
+		externalError := &xrfErr.External{Message: "invalid org id"}
 		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
@@ -139,6 +134,4 @@ func (handler *OrgHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}", handler.getOrg)
 	serveMux.HandleFunc("PUT "+orgPathV1Prefix+"/{orgId}", handler.updateOrg)
 	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}/members", handler.findOrgMembers)
-
-	//orgSubRoutes.Use(handler.authMiddle.Handler)
 }

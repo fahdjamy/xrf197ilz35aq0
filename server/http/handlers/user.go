@@ -55,9 +55,7 @@ func (user *UserHandler) createUser(w http.ResponseWriter, req *http.Request) {
 func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	userId, isValid := getAndValidateId(req, UserIdKey)
 	if !isValid {
-		externalError := &xrfErr.External{
-			Message: "invalid user id",
-		}
+		externalError := &xrfErr.External{Message: "invalid user id"}
 		response.WriteErrorResponse(externalError, w, user.logger)
 		return
 	}
