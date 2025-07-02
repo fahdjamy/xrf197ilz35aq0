@@ -20,7 +20,6 @@ func RunServer(logger internal.Logger, config xrf197ilz35aq0.ApplicationConfig, 
 	// Run the server in a goroutine so that it doesn't block.
 	go func() {
 		if err := svr.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			fmt.Printf("Error starting http server on port 8009: %s\n", err)
 			logger.Error("serverStarted=false :: error starting http server")
 		}
 	}()
