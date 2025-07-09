@@ -63,7 +63,7 @@ func (uc *service) CreateUser(ctx context.Context, request *exchange.UserRequest
 	}
 	newUser := user.NewUser(request.FirstName, request.LastName, request.Email.Data(), hashedPassword)
 
-	// SAVE-USER/DB: ACTION 1 - save user and settings to database
+	// SAVE-USER/DB: ACTION 1 - save user and settings to the database
 	uc.log.Debug(fmt.Sprintf("event=creatUser :: action=saveUserINDB :: userFP=%s :: userId=%s", newUser.FingerPrint[:7], newUser.Id))
 	_, err = uc.userRepo.CreateUser(newUser, ctx)
 	if err != nil {

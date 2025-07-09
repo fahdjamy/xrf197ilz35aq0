@@ -70,14 +70,12 @@ func WriteErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 		var internalErr *xrfErr.Internal
 		errors.As(error, &internalErr)
 	case errors.As(error, &externalError):
-		var externalErr *xrfErr.External
-		errors.As(error, &externalErr)
-		if externalErr.Code != 0 && externalError.Code >= 400 {
-			statusCode = externalErr.Code
+		if externalError.Code != 0 && externalError.Code >= 400 {
+			statusCode = externalError.Code
 		} else {
 			statusCode = externalErrorCode(externalError.Message)
 		}
-		msg = externalErr.Message
+		msg = externalError.Message
 	default:
 		statusCode = http.StatusInternalServerError
 		msg = "Something went wrong"
