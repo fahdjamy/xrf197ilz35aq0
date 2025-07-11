@@ -33,11 +33,7 @@ func (auth *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := response.DataResponse{
 		Code: 200,
-		Data: struct {
-			Token string `json:"token"`
-		}{
-			Token: tokenResp,
-		},
+		Data: tokenResp,
 	}
 	response.WriteResponse(resp, w, auth.logger)
 }

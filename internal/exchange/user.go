@@ -129,6 +129,11 @@ type AuthRequest struct {
 	Password string `json:"password" validate:"required,min=8,max=55"`
 }
 
+type AuthResponse struct {
+	Token  string `json:"token"`
+	Expiry int64  `json:"expiry"`
+}
+
 type RevokeTokenRequest struct {
 	Token string `json:"token"`
 }

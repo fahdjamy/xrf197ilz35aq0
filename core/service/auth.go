@@ -16,7 +16,7 @@ import (
 type AuthService interface {
 	RevokeToken(token string, ctx context.Context) error
 	VerifyToken(token string, ctx context.Context) (string, error)
-	Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error)
+	Authenticate(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error)
 }
 
 type authService struct {
@@ -39,7 +39,7 @@ func (at authTokenCache) MarshalBinary() ([]byte, error) {
 	return json.Marshal(at)
 }
 
-func (service *authService) Authenticate(request *exchange.AuthRequest, ctx context.Context) (string, error) {
+func (service *authService) Authenticate(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error) {
 	email := request.Email
 	password := request.Password
 	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
@@ -47,10 +47,10 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 
 	savedUsers, err := service.userRepo.FindUsersByEmails([]string{email}, ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(savedUsers) == 0 || savedUsers == nil {
-		return "", externalErr
+		return nil, externalErr
 	}
 
 	user := savedUsers[0]
@@ -59,18 +59,18 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 	userId := user.Id
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: userId=%s :: err=%s", userId, err))
-		return "", err
+		return nil, err
 	}
 	isValid, err := verifyPassword(
 		userSettings.Threads, userSettings.Memory, uint32(userSettings.Time), password, user.Password)
 	if err != nil {
 		service.log.Error(fmt.Sprintf("event=authenticate :: err=%s", err))
-		return "", err
+		return nil, err
 	}
 
 	if !isValid {
 		service.log.Debug(fmt.Sprintf("event=authenticate :: userId=%s :: validPassword=%t", userId, isValid))
-		return "", externalErr
+		return nil, externalErr
 	}
 
 	tokenExpiration := 6 * time.Hour
@@ -80,7 +80,7 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		service.log.Error(fmt.Sprintf("event=authenticate :: action=GenerateTokenFailure :: err=%s", err))
 		internalErr.Message = "failed to generate auth token"
 		internalErr.Err = err
-		return "", internalErr
+		return nil, internalErr
 	}
 
 	authTokenCachePayload := authTokenCache{
@@ -95,10 +95,13 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 		service.log.Error(fmt.Sprintf("event=authenticate :: action=cacheUserAuthToken :: err=%s", err))
 		internalErr.Message = "failed to store auth token in cache"
 		internalErr.Err = err
-		return "", internalErr
+		return nil, internalErr
 	}
 
-	return authToken.Token, nil
+	return &exchange.AuthResponse{
+		Token:  authToken.Token,
+		Expiry: int64(tokenExpiration),
+	}, nil
 }
 
 func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
