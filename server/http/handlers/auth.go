@@ -26,7 +26,7 @@ func (auth *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenResp, err := auth.authService.GetAuthToken(&request, context.Background())
+	tokenResp, err := auth.authService.GetAuthToken(r.Context(), &request)
 	if err != nil {
 		response.WriteErrorResponse(err, w, auth.logger)
 		return
@@ -39,17 +39,17 @@ func (auth *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (auth *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
-	var request exchange.RevokeTokenRequest
+	var request exchange.VerifyRevokeTokenReq
 	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
 		response.WriteErrorResponse(err, w, auth.logger)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	err = auth.authService.RevokeToken(request.Token, ctx)
+	err = auth.authService.RevokeToken(ctx, request.Token)
 	if err != nil {
 		response.WriteErrorResponse(err, w, auth.logger)
 		return
@@ -60,9 +60,38 @@ func (auth *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(resp, w, auth.logger)
 }
 
+func (auth *AuthHandler) verifAuthToken(w http.ResponseWriter, r *http.Request) {
+	var request exchange.VerifyRevokeTokenReq
+	err := decoder.DecodeJSONBody(r, &request)
+	if err != nil {
+		response.WriteErrorResponse(err, w, auth.logger)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	userId, err := auth.authService.VerifyToken(ctx, request.Token)
+	if err != nil {
+		response.WriteErrorResponse(err, w, auth.logger)
+		return
+	}
+
+	resp := response.DataResponse{
+		Code: 200,
+		Data: struct {
+			UserId string `json:"userId"`
+		}{
+			UserId: userId,
+		},
+	}
+	response.WriteResponse(resp, w, auth.logger)
+}
+
 func (auth *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	serveMux.Handle("POST /api/v1/auth", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
 	serveMux.Handle("POST /api/v1/auth/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
+	serveMux.Handle("POST /api/v1/auth/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifAuthToken)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {

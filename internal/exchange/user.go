@@ -134,7 +134,7 @@ type AuthResponse struct {
 	Expiry int64  `json:"expiry"`
 }
 
-type RevokeTokenRequest struct {
+type VerifyRevokeTokenReq struct {
 	Token string `json:"token"`
 }
 

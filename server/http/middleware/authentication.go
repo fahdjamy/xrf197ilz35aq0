@@ -28,7 +28,7 @@ func (m *AuthenticationMiddleware) Handler(next http.Handler) http.Handler {
 			}
 
 			ctx := context.WithValue(r.Context(), XrfAuthToken, authToken)
-			userId, err := m.authService.VerifyToken(authToken, ctx)
+			userId, err := m.authService.VerifyToken(ctx, authToken)
 			if err != nil {
 				response.WriteErrorResponse(err, w, m.logger)
 				return

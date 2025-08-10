@@ -14,9 +14,9 @@ import (
 )
 
 type AuthService interface {
-	RevokeToken(token string, ctx context.Context) error
-	VerifyToken(token string, ctx context.Context) (string, error)
-	GetAuthToken(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error)
+	RevokeToken(ctx context.Context, token string) error
+	VerifyToken(ctx context.Context, token string) (string, error)
+	GetAuthToken(ctx context.Context, request *exchange.AuthRequest) (*exchange.AuthResponse, error)
 }
 
 type authService struct {
@@ -39,7 +39,7 @@ func (at authTokenCache) MarshalBinary() ([]byte, error) {
 	return json.Marshal(at)
 }
 
-func (service *authService) GetAuthToken(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error) {
+func (service *authService) GetAuthToken(ctx context.Context, request *exchange.AuthRequest) (*exchange.AuthResponse, error) {
 	email := request.Email
 	password := request.Password
 	internalErr := &xrfErr.Internal{Source: "service/auth#GetAuthToken"}
@@ -104,7 +104,7 @@ func (service *authService) GetAuthToken(request *exchange.AuthRequest, ctx cont
 	}, nil
 }
 
-func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
+func (service *authService) VerifyToken(ctx context.Context, token string) (string, error) {
 	externalErr := &xrfErr.External{Code: 401}
 	cachedTokenData, err := service.cache.Get(token, ctx)
 	internalErr := &xrfErr.Internal{Source: "service/auth#GetAuthToken"}
@@ -143,7 +143,7 @@ func (service *authService) VerifyToken(token string, ctx context.Context) (stri
 	return data.UserId, nil
 }
 
-func (service *authService) RevokeToken(token string, ctx context.Context) error {
+func (service *authService) RevokeToken(ctx context.Context, token string) error {
 	internalErr := &xrfErr.Internal{Source: "service/auth#RevokeToken"}
 	deletedValCount, err := service.cache.Delete(token, ctx)
 	if err != nil {
