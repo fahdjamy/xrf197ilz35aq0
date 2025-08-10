@@ -16,7 +16,7 @@ import (
 type AuthService interface {
 	RevokeToken(token string, ctx context.Context) error
 	VerifyToken(token string, ctx context.Context) (string, error)
-	Authenticate(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error)
+	GetAuthToken(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error)
 }
 
 type authService struct {
@@ -39,10 +39,10 @@ func (at authTokenCache) MarshalBinary() ([]byte, error) {
 	return json.Marshal(at)
 }
 
-func (service *authService) Authenticate(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error) {
+func (service *authService) GetAuthToken(request *exchange.AuthRequest, ctx context.Context) (*exchange.AuthResponse, error) {
 	email := request.Email
 	password := request.Password
-	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
+	internalErr := &xrfErr.Internal{Source: "service/auth#GetAuthToken"}
 	externalErr := &xrfErr.External{Code: 400, Message: "invalid credentials"}
 
 	savedUsers, err := service.userRepo.FindUsersByEmails([]string{email}, ctx)
@@ -107,7 +107,7 @@ func (service *authService) Authenticate(request *exchange.AuthRequest, ctx cont
 func (service *authService) VerifyToken(token string, ctx context.Context) (string, error) {
 	externalErr := &xrfErr.External{Code: 401}
 	cachedTokenData, err := service.cache.Get(token, ctx)
-	internalErr := &xrfErr.Internal{Source: "service/auth#Authenticate"}
+	internalErr := &xrfErr.Internal{Source: "service/auth#GetAuthToken"}
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			externalErr.Message = "invalid / expired token"

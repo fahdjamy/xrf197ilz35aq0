@@ -26,7 +26,7 @@ func (auth *AuthHandler) getAuthToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenResp, err := auth.authService.Authenticate(&request, context.Background())
+	tokenResp, err := auth.authService.GetAuthToken(&request, context.Background())
 	if err != nil {
 		response.WriteErrorResponse(err, w, auth.logger)
 		return
