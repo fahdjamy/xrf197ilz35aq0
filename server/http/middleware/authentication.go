@@ -45,9 +45,10 @@ func (m *AuthenticationMiddleware) shouldCheckRouteAuth(r *http.Request) bool {
 	unCheckedRoutes["/health"] = "ANY"
 	unCheckedRoutes["/api/v1/user"] = "POST"
 	unCheckedRoutes["/api/v1/auth"] = "POST"
+	unCheckedRoutes["/api/v1/auth/revoke"] = "POST"
+	unCheckedRoutes["/api/v1/auth/verify"] = "POST"
 
 	route := r.URL.Path
-
 	method, ok := unCheckedRoutes[route]
 
 	if !ok || (method == "" || method != "ANY" && method != r.Method) {
