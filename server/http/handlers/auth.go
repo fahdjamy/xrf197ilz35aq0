@@ -89,9 +89,9 @@ func (auth *AuthHandler) verifAuthToken(w http.ResponseWriter, r *http.Request) 
 }
 
 func (auth *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	serveMux.Handle("POST /api/v1/auth", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
-	serveMux.Handle("POST /api/v1/auth/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
-	serveMux.Handle("POST /api/v1/auth/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/token", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/token/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
+	serveMux.Handle("POST /api/v1/auth/token/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifAuthToken)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {
