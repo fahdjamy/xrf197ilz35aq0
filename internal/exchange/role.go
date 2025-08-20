@@ -1,6 +1,8 @@
 package exchange
 
-import "xrf197ilz35aq0/core/model"
+import (
+	"time"
+)
 
 type PermissionRequest struct {
 	Name        string `json:"name"`
@@ -8,7 +10,7 @@ type PermissionRequest struct {
 }
 
 type PermissionResponse struct {
-	Name        string     `json:"name"`
-	UpdatedAt   model.Time `json:"updatedAt"`
-	Description string     `json:"description"`
+	Name        string    `json:"name"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Description string    `json:"description"`
 }

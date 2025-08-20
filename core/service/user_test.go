@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 	"xrf197ilz35aq0/internal/exchange"
 	xrfTest "xrf197ilz35aq0/internal/tests"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -132,6 +133,6 @@ func assertUserResponse(t *testing.T, got *exchange.UserResponse) {
 	assert.NotNil(t, got)
 	assert.False(t, got.Anonymous)
 	assert.Equal(t, got.Anonymous, false)
-	assert.True(t, time.Since(got.CreatedAt.Time) > 0)
-	assert.True(t, time.Since(got.UpdatedAt.Time) > 0)
+	assert.True(t, time.Since(got.CreatedAt) > 0)
+	assert.True(t, time.Since(got.UpdatedAt) > 0)
 }

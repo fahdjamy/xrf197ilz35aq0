@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/mail"
 	"time"
-	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/internal/custom"
 	xrfErr "xrf197ilz35aq0/internal/error"
 )
@@ -82,8 +81,8 @@ type UserResponse struct {
 	LastName  string                `json:"lastName,omitempty"`
 	Email     custom.Secret[string] `json:"email"`
 	Anonymous bool                  `json:"anonymous"`
-	CreatedAt model.Time            `json:"createdAt"`
-	UpdatedAt model.Time            `json:"updatedAt"`
+	CreatedAt time.Time             `json:"createdAt"`
+	UpdatedAt time.Time             `json:"updatedAt"`
 	Settings  SettingResponse       `json:"settings,omitempty"`
 }
 

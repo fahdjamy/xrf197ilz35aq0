@@ -6,18 +6,18 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
-	"golang.org/x/crypto/argon2"
 	"net/mail"
 	"regexp"
 	"strings"
 	xrf "xrf197ilz35aq0"
-	"xrf197ilz35aq0/core/model"
 	"xrf197ilz35aq0/core/model/user"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/custom"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
+
+	"golang.org/x/crypto/argon2"
 )
 
 const passwordKeyLen = 32
@@ -194,11 +194,11 @@ func (uc *service) hashPassword(password string) (string, error) {
 func toUserResponse(newUser *user.User) *exchange.UserResponse {
 	return &exchange.UserResponse{
 		UserId:    newUser.Id,
+		CreatedAt: newUser.Joined,
 		LastName:  newUser.LastName,
+		UpdatedAt: newUser.UpdatedAt,
 		FirstName: newUser.FirstName,
 		Anonymous: newUser.IsAnonymous(),
-		CreatedAt: model.NewTime(newUser.Joined),
-		UpdatedAt: model.NewTime(newUser.UpdatedAt),
 		Email:     *custom.NewSecret(newUser.Email),
 	}
 }
