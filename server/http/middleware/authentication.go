@@ -44,9 +44,10 @@ func (m *AuthenticationMiddleware) shouldCheckRouteAuth(r *http.Request) bool {
 	unCheckedRoutes := make(map[string]string)
 	unCheckedRoutes["/health"] = "ANY"
 	unCheckedRoutes["/api/v1/user"] = "POST"
-	unCheckedRoutes["/api/v1/auth"] = "POST"
-	unCheckedRoutes["/api/v1/auth/revoke"] = "POST"
-	unCheckedRoutes["/api/v1/auth/verify"] = "POST"
+	unCheckedRoutes["/api/v1/auth/token"] = "POST"
+	unCheckedRoutes["/api/v1/auth/token/revoke"] = "POST"
+	unCheckedRoutes["/api/v1/auth/token/verify"] = "POST"
+	unCheckedRoutes["/api/v1/auth/token/verify-with-enriched"] = "POST"
 
 	route := r.URL.Path
 	method, ok := unCheckedRoutes[route]

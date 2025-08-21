@@ -6,6 +6,7 @@ import (
 	"time"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
+	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/exchange"
 	"xrf197ilz35aq0/server/http/decoder"
 	"xrf197ilz35aq0/server/http/middleware"
@@ -60,7 +61,7 @@ func (auth *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(resp, w, auth.logger)
 }
 
-func (auth *AuthHandler) verifAuthToken(w http.ResponseWriter, r *http.Request) {
+func (auth *AuthHandler) verifToken(w http.ResponseWriter, r *http.Request) {
 	var request exchange.VerifyRevokeTokenReq
 	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
@@ -88,10 +89,42 @@ func (auth *AuthHandler) verifAuthToken(w http.ResponseWriter, r *http.Request) 
 	response.WriteResponse(resp, w, auth.logger)
 }
 
+func (auth *AuthHandler) verifTokenAndGetEnrichedResponse(w http.ResponseWriter, r *http.Request) {
+	appToAppToken := r.Header.Get("xrf-to-xrf-token")
+	if appToAppToken == "" {
+		auth.logger.Warn("event=verifTokenAndGetEnrichedResponse id :: error=invalid XRF-TO-XRF-TOKEN")
+		response.WriteErrorResponse(xrfErr.InvalidXrfToXrfTokenError, w, auth.logger)
+		return
+	}
+
+	var request exchange.VerifyRevokeTokenReq
+	err := decoder.DecodeJSONBody(r, &request)
+	if err != nil {
+		response.WriteErrorResponse(err, w, auth.logger)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	userResponse, err := auth.authService.VerifyTokenAndGetEnrichedResponse(ctx, request.Token)
+	if err != nil {
+		response.WriteErrorResponse(err, w, auth.logger)
+		return
+	}
+
+	resp := response.DataResponse{
+		Code: 200,
+		Data: userResponse,
+	}
+	response.WriteResponse(resp, w, auth.logger)
+}
+
 func (auth *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	serveMux.Handle("POST /api/v1/auth/token", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/token/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifToken)))
 	serveMux.Handle("POST /api/v1/auth/token/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
-	serveMux.Handle("POST /api/v1/auth/token/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifAuthToken)))
+	serveMux.Handle("POST /api/v1/auth/token/verify-with-enriched", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifTokenAndGetEnrichedResponse)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {

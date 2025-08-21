@@ -1,8 +1,11 @@
 package error
 
 import (
+	"errors"
 	"fmt"
 )
+
+var InvalidXrfToXrfTokenError = errors.New("invalid xrf-to-xrf-token")
 
 type External struct {
 	Err     error

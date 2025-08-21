@@ -23,11 +23,11 @@ type AuthService interface {
 type authService struct {
 	secretKey    string
 	serverId     string
+	userService  UserService
 	cache        storage.Cache
 	log          internal.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.SettingsRepository
-	userService  UserService
 }
 
 type authTokenCache struct {
@@ -123,6 +123,7 @@ func (service *authService) VerifyTokenAndGetEnrichedResponse(ctx context.Contex
 
 	userResponse, err := service.userService.GetUserById(ctx, userId)
 	if err != nil {
+		service.log.Error(fmt.Sprintf("event=authenticate :: userId=%s :: err=%s", userId, err))
 		return nil, err
 	}
 
@@ -176,15 +177,16 @@ func (service *authService) authenticateUser(ctx context.Context, token string) 
 		externalErr.Message = "token revoked"
 		return "", externalErr
 	}
-	return "", nil
+	return data.UserId, nil
 }
 
 func NewAuthService(server string,
-	log internal.Logger, authSecret string, cache storage.Cache, repos *repository.Repositories) AuthService {
+	log internal.Logger, authSecret string, cache storage.Cache, repos *repository.Repositories, userSrv UserService) AuthService {
 	return &authService{
 		log:          log,
 		cache:        cache,
 		serverId:     server,
+		userService:  userSrv,
 		secretKey:    authSecret,
 		userRepo:     repos.UserRepo,
 		settingsRepo: repos.SettingsRepo,

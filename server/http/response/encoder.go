@@ -76,6 +76,9 @@ func WriteErrorResponse(error error, w http.ResponseWriter, logger xrf.Logger) {
 			statusCode = externalErrorCode(externalError.Message)
 		}
 		msg = externalError.Message
+	case errors.Is(error, xrfErr.InvalidXrfToXrfTokenError):
+		statusCode = http.StatusNotFound
+		msg = "Not found"
 	default:
 		statusCode = http.StatusInternalServerError
 		msg = "Something went wrong"
