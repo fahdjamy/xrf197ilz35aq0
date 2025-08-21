@@ -17,6 +17,7 @@ type AuthService interface {
 	RevokeToken(ctx context.Context, token string) error
 	VerifyToken(ctx context.Context, token string) (string, error)
 	GetAuthToken(ctx context.Context, request *exchange.AuthRequest) (*exchange.AuthResponse, error)
+	VerifyTokenAndGetEnrichedResponse(ctx context.Context, token string) (*exchange.UserResponse, error)
 }
 
 type authService struct {
@@ -26,6 +27,7 @@ type authService struct {
 	log          internal.Logger
 	userRepo     repository.UserRepository
 	settingsRepo repository.SettingsRepository
+	userService  UserService
 }
 
 type authTokenCache struct {
@@ -105,9 +107,44 @@ func (service *authService) GetAuthToken(ctx context.Context, request *exchange.
 }
 
 func (service *authService) VerifyToken(ctx context.Context, token string) (string, error) {
+	userId, err := service.authenticateUser(ctx, token)
+	if err != nil {
+		return "", err
+	}
+
+	return userId, nil
+}
+
+func (service *authService) VerifyTokenAndGetEnrichedResponse(ctx context.Context, token string) (*exchange.UserResponse, error) {
+	userId, err := service.authenticateUser(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	userResponse, err := service.userService.GetUserById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return userResponse, nil
+}
+
+func (service *authService) RevokeToken(ctx context.Context, token string) error {
+	internalErr := &xrfErr.Internal{Source: "service/auth#RevokeToken"}
+	deletedValCount, err := service.cache.Delete(token, ctx)
+	if err != nil {
+		internalErr.Message = "failed to delete auth token from cache"
+		internalErr.Err = err
+		return internalErr
+	}
+	service.log.Debug(fmt.Sprintf("event=revokeToken :: tokensDeleted=%d", deletedValCount))
+	return nil
+}
+
+func (service *authService) authenticateUser(ctx context.Context, token string) (string, error) {
 	externalErr := &xrfErr.External{Code: 401}
 	cachedTokenData, err := service.cache.Get(token, ctx)
-	internalErr := &xrfErr.Internal{Source: "service/auth#GetAuthToken"}
+	internalErr := &xrfErr.Internal{}
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			externalErr.Message = "invalid / expired token"
@@ -139,20 +176,7 @@ func (service *authService) VerifyToken(ctx context.Context, token string) (stri
 		externalErr.Message = "token revoked"
 		return "", externalErr
 	}
-
-	return data.UserId, nil
-}
-
-func (service *authService) RevokeToken(ctx context.Context, token string) error {
-	internalErr := &xrfErr.Internal{Source: "service/auth#RevokeToken"}
-	deletedValCount, err := service.cache.Delete(token, ctx)
-	if err != nil {
-		internalErr.Message = "failed to delete auth token from cache"
-		internalErr.Err = err
-		return internalErr
-	}
-	service.log.Debug(fmt.Sprintf("event=revokeToken :: tokensDeleted=%d", deletedValCount))
-	return nil
+	return "", nil
 }
 
 func NewAuthService(server string,
