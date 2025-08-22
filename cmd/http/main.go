@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	mongo2 "go.mongodb.org/mongo-driver/mongo"
-	"go.uber.org/zap"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"strconv"
 	"time"
@@ -14,7 +11,10 @@ import (
 	"xrf197ilz35aq0/server/http"
 	"xrf197ilz35aq0/storage"
 
-	"github.com/redis/go-redis/v9"
+	mongo2 "go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
+	"gopkg.in/natefinch/lumberjack.v2"
+
 	xrf "xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/repository"
 	"xrf197ilz35aq0/core/service"
@@ -22,6 +22,8 @@ import (
 	"xrf197ilz35aq0/internal/dependency"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/storage/mongo"
+
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -149,7 +151,7 @@ func main() {
 	}(ch)
 
 	userService := service.NewUserService(logger, settingsService, userRepo, config.Security)
-	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos)
+	authService := service.NewAuthService(strconv.FormatInt(serverId, 10), logger, authSecret, redisCache, allRepos, userService)
 
 	services := service.Services{
 		OrgService:        orgService,

@@ -61,7 +61,7 @@ func (auth *AuthHandler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(resp, w, auth.logger)
 }
 
-func (auth *AuthHandler) verifToken(w http.ResponseWriter, r *http.Request) {
+func (auth *AuthHandler) verifyToken(w http.ResponseWriter, r *http.Request) {
 	var request exchange.VerifyRevokeTokenReq
 	err := decoder.DecodeJSONBody(r, &request)
 	if err != nil {
@@ -89,10 +89,10 @@ func (auth *AuthHandler) verifToken(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(resp, w, auth.logger)
 }
 
-func (auth *AuthHandler) verifTokenAndGetEnrichedResponse(w http.ResponseWriter, r *http.Request) {
+func (auth *AuthHandler) verifyTokenAndGetEnrichedResponse(w http.ResponseWriter, r *http.Request) {
 	appToAppToken := r.Header.Get("xrf-to-xrf-token")
 	if appToAppToken == "" {
-		auth.logger.Warn("event=verifTokenAndGetEnrichedResponse id :: error=invalid XRF-TO-XRF-TOKEN")
+		auth.logger.Warn("event=verifyTokenAndGetEnrichedResponse id :: error=invalid XRF-TO-XRF-TOKEN")
 		response.WriteErrorResponse(xrfErr.InvalidXrfToXrfTokenError, w, auth.logger)
 		return
 	}
@@ -122,9 +122,9 @@ func (auth *AuthHandler) verifTokenAndGetEnrichedResponse(w http.ResponseWriter,
 
 func (auth *AuthHandler) RegisterRoutes(serveMux *http.ServeMux) {
 	serveMux.Handle("POST /api/v1/auth/token", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.getAuthToken)))
-	serveMux.Handle("POST /api/v1/auth/token/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifToken)))
+	serveMux.Handle("POST /api/v1/auth/token/verify", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifyToken)))
 	serveMux.Handle("POST /api/v1/auth/token/revoke", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.revokeToken)))
-	serveMux.Handle("POST /api/v1/auth/token/verify-with-enriched", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifTokenAndGetEnrichedResponse)))
+	serveMux.Handle("POST /api/v1/auth/token/verify-with-enriched", middleware.EnforceJSONMiddleware(auth.logger, http.HandlerFunc(auth.verifyTokenAndGetEnrichedResponse)))
 }
 
 func NewAuthHandler(logger xrf.Logger, services service.Services) *AuthHandler {
