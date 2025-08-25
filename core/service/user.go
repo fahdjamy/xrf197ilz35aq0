@@ -191,15 +191,16 @@ func (uc *service) hashPassword(password string) (string, error) {
 	return b64Salt + "$" + b64Hash, nil
 }
 
-func toUserResponse(newUser *user.User) *exchange.UserResponse {
+func toUserResponse(user *user.User) *exchange.UserResponse {
 	return &exchange.UserResponse{
-		UserId:    newUser.Id,
-		CreatedAt: newUser.Joined,
-		LastName:  newUser.LastName,
-		UpdatedAt: newUser.UpdatedAt,
-		FirstName: newUser.FirstName,
-		Anonymous: newUser.IsAnonymous(),
-		Email:     *custom.NewSecret(newUser.Email),
+		UserId:      user.Id,
+		CreatedAt:   user.Joined,
+		LastName:    user.LastName,
+		UpdatedAt:   user.UpdatedAt,
+		FirstName:   user.FirstName,
+		Anonymous:   user.IsAnonymous(),
+		Email:       *custom.NewSecret(user.Email),
+		Fingerprint: *custom.NewSecret(user.FingerPrint),
 	}
 }
 

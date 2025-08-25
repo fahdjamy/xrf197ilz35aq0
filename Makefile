@@ -1,3 +1,5 @@
+.PHONY: build test help run-local
+
 # Makefile for Go tests
 
 # Define the Go executable name
@@ -41,3 +43,7 @@ help:
 	@echo "  make test-skipped - Run only skipped tests"
 	@echo "  make clean     - Clean up the built executable"
 	@echo "  make help      - Display this help message"
+
+run-local:
+	@echo "Starting server locally"
+	go run cmd/http/main.go

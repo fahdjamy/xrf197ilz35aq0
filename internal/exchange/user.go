@@ -76,14 +76,15 @@ func (u *UserRequest) String() string {
 }
 
 type UserResponse struct {
-	UserId    string                `json:"userId"`
-	FirstName string                `json:"firstName,omitempty"`
-	LastName  string                `json:"lastName,omitempty"`
-	Email     custom.Secret[string] `json:"email"`
-	Anonymous bool                  `json:"anonymous"`
-	CreatedAt time.Time             `json:"createdAt"`
-	UpdatedAt time.Time             `json:"updatedAt"`
-	Settings  SettingResponse       `json:"settings,omitempty"`
+	UserId      string                `json:"userId"`
+	Fingerprint custom.Secret[string] `json:"fingerprint"`
+	FirstName   string                `json:"firstName,omitempty"`
+	LastName    string                `json:"lastName,omitempty"`
+	Email       custom.Secret[string] `json:"email"`
+	Anonymous   bool                  `json:"anonymous"`
+	CreatedAt   time.Time             `json:"createdAt"`
+	UpdatedAt   time.Time             `json:"updatedAt"`
+	Settings    SettingResponse       `json:"settings,omitempty"`
 }
 
 func (u *UserResponse) String() string {
