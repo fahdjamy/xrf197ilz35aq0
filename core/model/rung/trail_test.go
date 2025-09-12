@@ -1,10 +1,11 @@
 package rung_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0/core/model/rung"
 	"xrf197ilz35aq0/internal"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var validMetadataTrail = rung.TrailMetaData{

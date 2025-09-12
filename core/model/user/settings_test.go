@@ -1,10 +1,11 @@
 package user
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 	"xrf197ilz35aq0/internal"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSettings(t *testing.T) {

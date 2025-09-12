@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0"
 	"xrf197ilz35aq0/core/model/user"
 	xrf "xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/exchange"
 	xrfTest "xrf197ilz35aq0/internal/tests"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var encryptionTestKey = xrf.RandomBytes(32)

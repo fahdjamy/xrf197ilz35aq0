@@ -2,11 +2,12 @@ package dependency
 
 import (
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"io"
 	"os"
 	"xrf197ilz35aq0/internal"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // https://github.com/uber-go/zap

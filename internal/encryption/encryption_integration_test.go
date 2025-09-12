@@ -1,10 +1,11 @@
 package encryption_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0/internal"
 	"xrf197ilz35aq0/internal/encryption"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEncryptAndDecrypt(t *testing.T) {

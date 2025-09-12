@@ -3,13 +3,14 @@ package user
 import (
 	"encoding/json"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"strings"
 	"time"
 	"xrf197ilz35aq0/internal/constants"
 	xrfErr "xrf197ilz35aq0/internal/error"
 	"xrf197ilz35aq0/internal/random"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const fingerPrintLength = 55

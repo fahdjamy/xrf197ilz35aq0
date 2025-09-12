@@ -1,9 +1,10 @@
 package encryption
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"xrf197ilz35aq0/internal"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
