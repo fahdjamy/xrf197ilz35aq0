@@ -34,7 +34,7 @@ func (handler *OrgHandler) createOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create a new org
-	resp, err := handler.orgService.CreateOrg(orgReq, context.Background())
+	resp, err := handler.orgService.CreateOrg(r.Context(), orgReq)
 	if err != nil {
 		response.WriteErrorResponse(err, w, handler.logger)
 		return
@@ -67,7 +67,7 @@ func (handler *OrgHandler) updateOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make call to update org
-	resp, err := handler.orgService.UpdateOrg(orgId, request, context.Background())
+	resp, err := handler.orgService.UpdateOrg(r.Context(), orgId, request)
 	if err != nil {
 		response.WriteErrorResponse(err, w, handler.logger)
 		return
@@ -95,7 +95,7 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
-	foundOrg, err := handler.orgService.GetOrgById(orgId, ctx)
+	foundOrg, err := handler.orgService.GetOrgById(ctx, orgId)
 	if err != nil {
 		response.WriteErrorResponse(err, w, handler.logger)
 		return
@@ -114,10 +114,10 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 	defer cancel()
 
-	foundOrgs, err := handler.orgService.FindOrgMembers(orgId, ctx)
+	foundOrgs, err := handler.orgService.FindOrgMembers(ctx, orgId)
 	if err != nil {
 		response.WriteErrorResponse(err, w, handler.logger)
 		return

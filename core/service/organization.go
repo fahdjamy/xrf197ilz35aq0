@@ -18,11 +18,11 @@ import (
 type OrgService interface {
 	GetDefaultOrg(ctx context.Context) (*org.Organization, error)
 	CreateDefaultOrg(ctx context.Context) (*org.Organization, error)
-	CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error)
-	GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error)
-	FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error)
-	UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error)
-	UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error)
+	CreateOrg(ctx context.Context, request exchange.OrgRequest) (string, error)
+	GetOrgById(ctx context.Context, orgId string) (*exchange.OrgResponse, error)
+	FindOrgMembers(ctx context.Context, orgId string) ([]exchange.OrgMemberResponse, error)
+	UpdateOrgMember(ctx context.Context, orgId string, userId string) (*exchange.OrgMemberResponse, error)
+	UpdateOrg(ctx context.Context, orgId string, request exchange.UpdateOrgRequest) (*exchange.OrgResponse, error)
 }
 
 type organizationService struct {
@@ -59,13 +59,13 @@ func (os *organizationService) CreateDefaultOrg(ctx context.Context) (*org.Organ
 	return newOrg, nil
 }
 
-func (os *organizationService) UpdateOrgMember(orgId string, userId string, ctx context.Context) (*exchange.OrgMemberResponse, error) {
+func (os *organizationService) UpdateOrgMember(ctx context.Context, orgId string, userId string) (*exchange.OrgMemberResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (os *organizationService) UpdateOrg(orgId string, request exchange.UpdateOrgRequest, ctx context.Context) (*exchange.OrgResponse, error) {
-	savedOrg, err := os.findOrg(orgId, ctx)
+func (os *organizationService) UpdateOrg(ctx context.Context, orgId string, request exchange.UpdateOrgRequest) (*exchange.OrgResponse, error) {
+	savedOrg, err := os.findOrg(ctx, orgId)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=updateOrg :: action=failedToGetSavedOrg :: err=%v", err))
 		return nil, err
@@ -108,14 +108,14 @@ func (os *organizationService) UpdateOrg(orgId string, request exchange.UpdateOr
 	return toOrgResponse(savedOrg), nil
 }
 
-func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx context.Context) (string, error) {
+func (os *organizationService) CreateOrg(ctx context.Context, request exchange.OrgRequest) (string, error) {
 	request.Name = strings.TrimSpace(request.Name)
 	err := validateOrgName(request.Name)
 	if err != nil {
 		return "", err
 	}
 
-	orgMembers, err := os.validateAndCreateMembers(request.Members, ctx)
+	orgMembers, err := os.validateAndCreateMembers(ctx, request.Members)
 	if err != nil {
 		return "", err
 	}
@@ -133,8 +133,8 @@ func (os *organizationService) CreateOrg(request exchange.OrgRequest, ctx contex
 	return orgId, nil
 }
 
-func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (*exchange.OrgResponse, error) {
-	savedOrg, err := os.findOrg(orgId, ctx)
+func (os *organizationService) GetOrgById(ctx context.Context, orgId string) (*exchange.OrgResponse, error) {
+	savedOrg, err := os.findOrg(ctx, orgId)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=getOrgIdFailure :: orgId=%s :: err=%v", orgId, err))
 		return nil, err
@@ -142,7 +142,7 @@ func (os *organizationService) GetOrgById(orgId string, ctx context.Context) (*e
 	return toOrgResponse(savedOrg), nil
 }
 
-func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context) ([]exchange.OrgMemberResponse, error) {
+func (os *organizationService) FindOrgMembers(ctx context.Context, orgId string) ([]exchange.OrgMemberResponse, error) {
 	savedOrg, err := os.orgRepo.GetOrgById(orgId, ctx)
 	if err != nil {
 		os.log.Error(fmt.Sprintf("event=findOrgMembers action=findOrgFailed :: orgId=%s :: err=%v", orgId, err))
@@ -226,7 +226,7 @@ func (os *organizationService) FindOrgMembers(orgId string, ctx context.Context)
 	return response, nil
 }
 
-func (os *organizationService) findOrg(orgId string, ctx context.Context) (*org.Organization, error) {
+func (os *organizationService) findOrg(ctx context.Context, orgId string) (*org.Organization, error) {
 	if orgId == "" {
 		return nil, &xrfErr.External{Source: "service/organizationService#findOrg", Message: "Invalid org id"}
 	}
@@ -237,7 +237,7 @@ func (os *organizationService) findOrg(orgId string, ctx context.Context) (*org.
 	return savedOrg, nil
 }
 
-func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMemberRequest, ctx context.Context) (map[string]org.Member, error) {
+func (os *organizationService) validateAndCreateMembers(ctx context.Context, req []exchange.OrgMemberRequest) (map[string]org.Member, error) {
 	externalErr := &xrfErr.External{Source: "service/organization#validateAndCreateMembers"}
 	if req == nil || len(req) == 0 {
 		externalErr.Message = "an org should have at least one member"
@@ -281,7 +281,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 	missingUsers := make([]string, 0)
 
 	for _, member := range req {
-		permissionMap, err := os.validatePermissions(member.Permissions, ctx)
+		permissionMap, err := os.validatePermissions(ctx, member.Permissions)
 		if err != nil {
 			return nil, err
 		}
@@ -316,7 +316,7 @@ func (os *organizationService) validateAndCreateMembers(req []exchange.OrgMember
 	return orgMembers, nil
 }
 
-func (os *organizationService) validatePermissions(permissions []string, ctx context.Context) (map[string]string, error) {
+func (os *organizationService) validatePermissions(ctx context.Context, permissions []string) (map[string]string, error) {
 	for _, permission := range permissions {
 		if err := validatePermissionName(permission); err != nil {
 			return nil, err
