@@ -13,7 +13,7 @@ import (
 )
 
 type PermissionService interface {
-	CreatePermission(req *exchange.PermissionRequest, ctx context.Context) (string, error)
+	CreatePermission(ctx context.Context, req *exchange.PermissionRequest) (string, error)
 }
 
 type permissionService struct {
@@ -21,7 +21,7 @@ type permissionService struct {
 	permissionRepo repository.PermissionRepository
 }
 
-func (svc *permissionService) CreatePermission(req *exchange.PermissionRequest, ctx context.Context) (string, error) {
+func (svc *permissionService) CreatePermission(ctx context.Context, req *exchange.PermissionRequest) (string, error) {
 	err := validatePermissionName(req.Name)
 	if err != nil {
 		return "", err

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"xrf197ilz35aq0/core/service"
 	xrf "xrf197ilz35aq0/internal"
@@ -24,7 +23,7 @@ func (handler *PermissionHandler) createPermission(w http.ResponseWriter, r *htt
 	}
 
 	// create a new permission
-	resp, err := handler.permService.CreatePermission(permissionReq, context.Background())
+	resp, err := handler.permService.CreatePermission(r.Context(), permissionReq)
 	if err != nil {
 		response.WriteErrorResponse(err, w, handler.logger)
 		return
