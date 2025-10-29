@@ -18,18 +18,17 @@ import (
 )
 
 type SettingsService interface {
-	GetUserSettings(userFPrint string) (*exchange.SettingResponse, error)
-	NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error)
+	GetUserSettings(ctx context.Context, userFPrint string) (*exchange.SettingResponse, error)
+	NewSettings(ctx context.Context, request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error)
 }
 
 type settingService struct {
 	config       xrf.Security
 	log          internal.Logger
-	ctx          context.Context
 	settingsRepo repository.SettingsRepository
 }
 
-func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error) {
+func (s *settingService) NewSettings(ctx context.Context, request *exchange.SettingRequest, userFPrint string) (*exchange.SettingResponse, error) {
 	s.log.Debug(fmt.Sprintf("event=creatUserSettings :: action=creatingSettings :: userFP=%s", userFPrint[:5]))
 
 	rotateAfter := internal.AddMonths(time.Now(), request.RotateAfter)
@@ -57,7 +56,7 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrin
 	settings.Memory = s.config.PasswordConfig.Memory
 	settings.Threads = s.config.PasswordConfig.Thread
 
-	insertId, err := s.settingsRepo.CreateSettings(settings, s.ctx)
+	insertId, err := s.settingsRepo.CreateSettings(ctx, settings)
 	if err != nil {
 		return nil, err
 	}
@@ -66,8 +65,8 @@ func (s *settingService) NewSettings(request *exchange.SettingRequest, userFPrin
 	return toSettingsResponse(settings), nil
 }
 
-func (s *settingService) GetUserSettings(userFPrint string) (*exchange.SettingResponse, error) {
-	userSettings, err := s.settingsRepo.FetchUserSettings(s.ctx, userFPrint)
+func (s *settingService) GetUserSettings(ctx context.Context, userFPrint string) (*exchange.SettingResponse, error) {
+	userSettings, err := s.settingsRepo.FetchUserSettings(ctx, userFPrint)
 	if err != nil {
 		return nil, err
 	}
@@ -113,13 +112,8 @@ func (s *settingService) validateSettings(request *exchange.SettingRequest) erro
 	return nil
 }
 
-func NewSettingService(
-	logger internal.Logger,
-	settingsRepo repository.SettingsRepository,
-	ctx context.Context,
-	config xrf.Security) SettingsService {
+func NewSettingService(logger internal.Logger, settingsRepo repository.SettingsRepository, config xrf.Security) SettingsService {
 	return &settingService{
-		ctx:          ctx,
 		log:          logger,
 		config:       config,
 		settingsRepo: settingsRepo,

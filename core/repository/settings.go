@@ -14,7 +14,7 @@ import (
 )
 
 type SettingsRepository interface {
-	CreateSettings(settings *user.Settings, ctx context.Context) (any, error)
+	CreateSettings(ctx context.Context, settings *user.Settings) (any, error)
 	FetchUserSettings(ctx context.Context, userFP string) (settings *user.Settings, err error)
 }
 
@@ -50,7 +50,7 @@ func (sr *settingsRepo) FetchUserSettings(ctx context.Context, userFP string) (s
 	return &userSettings, nil
 }
 
-func (sr *settingsRepo) CreateSettings(settings *user.Settings, ctx context.Context) (any, error) {
+func (sr *settingsRepo) CreateSettings(ctx context.Context, settings *user.Settings) (any, error) {
 	internalErr := &xrfErr.Internal{}
 	internalErr.Source = "core/repository/user#createSettings"
 	document, err := sr.db.Collection(constants.SettingsCollection).InsertOne(ctx, settings)

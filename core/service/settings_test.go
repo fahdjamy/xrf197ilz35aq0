@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"xrf197ilz35aq0"
@@ -73,7 +72,7 @@ func TestNewSettings(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			manager := NewSettingService(logger, settingsRepoMock, context.TODO(), securityConfig)
+			manager := NewSettingService(logger, settingsRepoMock, securityConfig)
 			got, err := manager.NewSettings(tt.args.request, "userTestVVFingerXXPrintLL")
 			if !tt.wantErr(t, err, fmt.Sprintf("NewSettings(%v, %v)", tt.args.request, tt.args.userModel)) {
 				return

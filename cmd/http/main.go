@@ -133,7 +133,7 @@ func main() {
 	// create services
 	permService := service.NewPermissionService(logger, permissionRepo)
 	orgService := service.NewOrganizationService(config.Security, logger, allRepos)
-	settingsService := service.NewSettingService(logger, settingRepo, backgroundCtx, config.Security)
+	settingsService := service.NewSettingService(logger, settingRepo, config.Security)
 
 	ch := make(chan error)
 	// create default org

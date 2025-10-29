@@ -79,7 +79,7 @@ func (uc *service) CreateUser(ctx context.Context, request *exchange.UserRequest
 	}
 
 	// SAVE-USER/DB: ACTION 2 - create user settings
-	settings, err := uc.settingsService.NewSettings(settingRequest, newUser.FingerPrint)
+	settings, err := uc.settingsService.NewSettings(ctx, settingRequest, newUser.FingerPrint)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (uc *service) GetUserById(ctx context.Context, userId string) (*exchange.Us
 	}
 
 	uc.log.Debug(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDB :: userId=%s", userResponse.Id))
-	userSettings, err := uc.settingsService.GetUserSettings(userResponse.FingerPrint)
+	userSettings, err := uc.settingsService.GetUserSettings(ctx, userResponse.FingerPrint)
 
 	if err != nil {
 		uc.log.Error(fmt.Sprintf("event=getUserById :: action=fetchedUserByIdFromDBFailure :: err=%v", err))
