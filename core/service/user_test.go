@@ -27,7 +27,7 @@ func newSettingServiceMock() *settingServiceMock {
 	}
 }
 
-func (s *settingServiceMock) GetUserSettings(_ string) (*exchange.SettingResponse, error) {
+func (s *settingServiceMock) GetUserSettings(_ context.Context, _ string) (*exchange.SettingResponse, error) {
 	method := "getSettingsForUser"
 	count, ok := s.Called[method]
 	if !ok {
@@ -42,7 +42,7 @@ var settingResponseMock = &exchange.SettingResponse{
 	EncryptionKey: *custom.NewSecret[string](string(encryptionTestKey)),
 }
 
-func (s *settingServiceMock) NewSettings(_ *exchange.SettingRequest, _ string) (*exchange.SettingResponse, error) {
+func (s *settingServiceMock) NewSettings(_ context.Context, _ *exchange.SettingRequest, _ string) (*exchange.SettingResponse, error) {
 	method := "newSettings"
 	count, ok := s.Called[method]
 	if !ok {

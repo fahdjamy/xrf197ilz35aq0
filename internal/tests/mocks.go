@@ -123,7 +123,7 @@ func (s *settingsRepositoryMock) FetchUserSettings(_ context.Context, _ string) 
 	return &user.Settings{}, nil
 }
 
-func (s *settingsRepositoryMock) CreateSettings(settings *user.Settings, _ context.Context) (any, error) {
+func (s *settingsRepositoryMock) CreateSettings(_ context.Context, settings *user.Settings) (any, error) {
 	method := "CreateSettings"
 	count, ok := s.Called[method]
 	if !ok {
