@@ -93,7 +93,7 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 		response.WriteErrorResponse(externalError, w, handler.logger)
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
 	defer cancel()
 	foundOrg, err := handler.orgService.GetOrgById(ctx, orgId)
 	if err != nil {
@@ -102,6 +102,25 @@ func (handler *OrgHandler) getOrg(w http.ResponseWriter, r *http.Request) {
 	}
 	handler.logger.Debug(fmt.Sprintf("event=findOrg :: orgId=%s", orgId))
 
+	resp := response.DataResponse{Data: foundOrg, Code: http.StatusOK}
+	response.WriteResponse(resp, w, handler.logger)
+}
+
+func (handler *OrgHandler) getOrgOrDefault(w http.ResponseWriter, r *http.Request) {
+	orgId, isValid := getAndValidateId(r, "orgId")
+	if !isValid {
+		externalError := &xrfErr.External{Code: 404, Message: "invalid org id"}
+		response.WriteErrorResponse(externalError, w, handler.logger)
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*2)
+	defer cancel()
+	foundOrg, err := handler.orgService.GetOrgOrDefault(ctx, orgId)
+	if err != nil {
+		response.WriteErrorResponse(err, w, handler.logger)
+		return
+	}
+	handler.logger.Debug(fmt.Sprintf("event=getOrgOrDefault :: orgId=%s", orgId))
 	resp := response.DataResponse{Data: foundOrg, Code: http.StatusOK}
 	response.WriteResponse(resp, w, handler.logger)
 }
@@ -128,10 +147,9 @@ func (handler *OrgHandler) findOrgMembers(w http.ResponseWriter, r *http.Request
 }
 
 func (handler *OrgHandler) RegisterRoutes(serveMux *http.ServeMux) {
-	orgPathV1Prefix := "/api/v1/org"
-
-	serveMux.HandleFunc("POST "+orgPathV1Prefix+"", handler.createOrg)
-	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}", handler.getOrg)
-	serveMux.HandleFunc("PUT "+orgPathV1Prefix+"/{orgId}", handler.updateOrg)
-	serveMux.HandleFunc("GET "+orgPathV1Prefix+"/{orgId}/members", handler.findOrgMembers)
+	serveMux.HandleFunc("POST /api/v1/org", handler.createOrg)
+	serveMux.HandleFunc("GET /api/v1/org/{orgId}", handler.getOrg)
+	serveMux.HandleFunc("PUT /api/v1/org/{orgId}", handler.updateOrg)
+	serveMux.HandleFunc("GET /api/v1/org/{orgId}/members", handler.findOrgMembers)
+	serveMux.HandleFunc("GET /api/v1/org-or-default/{orgId}", handler.getOrgOrDefault)
 }

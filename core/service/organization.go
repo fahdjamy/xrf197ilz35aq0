@@ -20,6 +20,7 @@ type OrgService interface {
 	CreateDefaultOrg(ctx context.Context) (*org.Organization, error)
 	CreateOrg(ctx context.Context, request exchange.OrgRequest) (string, error)
 	GetOrgById(ctx context.Context, orgId string) (*exchange.OrgResponse, error)
+	GetOrgOrDefault(ctx context.Context, orgId string) (*exchange.OrgResponse, error)
 	FindOrgMembers(ctx context.Context, orgId string) ([]exchange.OrgMemberResponse, error)
 	UpdateOrgMember(ctx context.Context, orgId string, userId string) (*exchange.OrgMemberResponse, error)
 	UpdateOrg(ctx context.Context, orgId string, request exchange.UpdateOrgRequest) (*exchange.OrgResponse, error)
@@ -140,6 +141,19 @@ func (os *organizationService) GetOrgById(ctx context.Context, orgId string) (*e
 		return nil, err
 	}
 	return toOrgResponse(savedOrg), nil
+}
+
+func (os *organizationService) GetOrgOrDefault(ctx context.Context, orgId string) (*exchange.OrgResponse, error) {
+	savedOrg, err := os.GetOrgById(ctx, orgId)
+	if err != nil {
+		return nil, err
+	}
+	if savedOrg != nil {
+		return savedOrg, nil
+	}
+	os.log.Info(fmt.Sprintf("event=getOrgOrDefault :: message=fetching default org"))
+	defaultOrg, err := os.GetDefaultOrg(ctx)
+	return toOrgResponse(defaultOrg), err
 }
 
 func (os *organizationService) FindOrgMembers(ctx context.Context, orgId string) ([]exchange.OrgMemberResponse, error) {
