@@ -39,7 +39,7 @@ func (user *UserHandler) createUser(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// create a user
-	ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
 	defer cancel()
 
 	userResp, err := user.userService.CreateUser(ctx, &userReq)
@@ -61,7 +61,7 @@ func (user *UserHandler) getUserById(w http.ResponseWriter, req *http.Request) {
 	}
 	user.logger.Debug(fmt.Sprintf("event=getUserBy id :: userId=%s", userId))
 
-	ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(req.Context(), 2*time.Second)
 	defer cancel()
 	userResp, err := user.userService.GetUserById(ctx, userId)
 
